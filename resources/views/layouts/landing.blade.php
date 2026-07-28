@@ -1,289 +1,78 @@
 <!DOCTYPE html>
-<html lang="id" data-bs-spy="scroll" data-bs-target="#navbarNav" data-bs-offset="80" tabindex="0">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BakoelKembang</title>
+    <title>{{ config('app.name', 'BakoelKembang V3') }} - Botanical Nursery & Fintech</title>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts - Plus Jakarta Sans & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <!-- AOS Animate On Scroll -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Bootstrap core -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- AlpineJS -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+            },
+            colors: {
+              brand: {
+                emerald: '#0B4F35',
+                sage: '#8FA882',
+                slate: '#475569',
+                offwhite: '#FAF9F6',
+                accent: '#E4E4D9'
+              }
+            }
+          }
+        }
+      }
+    </script>
 
-    <!-- Custom Styles -->
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fc;
-            scroll-behavior: smooth;
-        }
-
-        .navbar-brand span {
-            color: #003322;
-        }
-
-        .nav-link {
-            position: relative;
-            transition: color 0.3s;
-        }
-
-        .nav-link:hover {
-            color: #003322;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 0;
-            height: 2px;
-            background-color: #003322;
-            transition: width 0.3s;
-        }
-
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            width: 100%;
-        }
-
-        .btn-animated {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .btn-animated:disabled .spinner-border {
-            display: inline-block;
-        }
-
-        .btn-animated .spinner-border {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 1rem;
-            height: 1rem;
-            margin-top: -0.5rem;
-            margin-left: -0.5rem;
-        }
-
-        .parallax-section {
-            background-image: url("{{ asset('images/bg-parallax.jpg') }}");
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-            padding: 100px 0;
-            color: white;
-            text-align: center;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            transition: 0.3s;
-        }
-        
-        .breadcrumb-item,
-        .breadcrumb-item a,
-        .breadcrumb-item.active {
-            color: #79b687 !important; /* hijau Bootstrap "success" */
-        }
-        .nav-pills .nav-link {
-        color: #ffffff !important;   /* teks hijau */
-        background-color: transparent !important; /* hapus background */
-        border-radius: 0 !important; /* biar rata */
-    }
-
-    /* Hover effect */
-    .nav-pills .nav-link:hover {
-        color: #1e7e34 !important; /* hijau tua pas hover */
-    }
-
-    /* Tab aktif: kasih underline */
-    .nav-pills .nav-link.active {
-        font-weight: bold; /* tebalkan biar beda */
-        border-bottom: 2px solid #18231b; /* underline hijau */
-        color: #ffffff !important; /* tetap hijau */
-        background-color: transparent !important;
-    }
-
-    
-
-    
-
-
-
-        footer {
-            background-color: #f1f3f5;
-        }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        #mainNavbar.scrolled {
-            background-color: #ffffff !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease-in-out;
-        }
-
-        .transition {
-            transition: all 0.3s ease-in-out;
-        }
-
-        .feature-box {
-            border: none;
-            background-color: #ffffff;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .feature-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-
-        @media (min-width: 768px) {
-            .accordion-desktop {
-                display: none;
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            .card-grid-desktop {
-                display: none;
-            }
-        }
-
-        @media (min-width: 992px) {
-            .navbar .dropdown:hover .dropdown-menu {
-                display: block;
-                margin-top: 0;
-            }
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FAF9F6;
+            color: #1A1A1A;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
     </style>
-
-    @stack('styles')
 </head>
-<body>
-    <!-- Navbar -->
-    <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top transition">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">
-                <span style="color: #79b687">GUDANG</span><span style="color: #003322">KU</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<body class="min-h-screen flex flex-col antialiased bg-brand-offwhite text-gray-900">
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('profil') }}">Profil BakoelKembang</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="{{ url('/#fitur') }}" id="navbarFitur" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Fitur
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarFitur">
-                            <li><a class="dropdown-item" href="{{ route('gudang') }}">Gudang</a></li>
-                            <li><a class="dropdown-item" href="{{ route('superadmin') }}">Superadmin</a></li>
-                            <li><a class="dropdown-item" href="{{ route('viewer') }}">Viewer</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('faq') }}">FAQ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('kontak') }}">Kontak Kami</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://e-katalog.bakoelkembang.com" target="_blank" rel="noopener noreferrer">e-Katalog</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    @auth
-                        @php
-                            $role = Auth::user()->role;
-                            $dashboardRoute = match ($role) {
-                                'superadmin' => route('dashboard.superadmin'),
-                                'viewer' => route('dashboard.viewer'),
-                                'gudang' => route('dashboard.gudang'),
-                                default => route('dashboard'), // fallback
-                            };
-                        @endphp
-                        <li class="nav-item me-3">
-                            <a class="nav-link" href="{{ $dashboardRoute }}">
-                                <i class="bi bi-person-circle"></i> Akun Saya
-                            </a>
-                        </li>
-                    @else
-                        <li class="nav-item me-3">
-                            <a class="nav-link" href="{{ route('login') }}">
-                                <i class="bi bi-person-circle"></i> Login
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">
-                                <i class="bi bi-person-plus"></i> Register
-                            </a>
-                        </li>
-                    @endauth
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Header Banner Mode Lansia -->
+    <div class="bg-brand-emerald text-brand-offwhite py-3 px-6 text-center text-xs md:text-sm font-black tracking-wider flex items-center justify-center gap-2 border-b border-white/10">
+        <span class="animate-pulse">🟢</span>
+        DESAIN RAMAH LANSIA V3 ACTIVE • TEKS EKSTRA BESAR (18px+) • TOMBOL LAPANG • FORM SAT-SET BEBAS BINGUNG!
+    </div>
 
-    <!-- Main Content -->
-    <main class="py-1" style="margin-top: 90px;" data-aos="fade-up" data-aos-duration="800">
+    <!-- Main Navigation Header -->
+    @include('partials.header')
+
+    <main class="flex-grow">
         @yield('content')
     </main>
 
+    <!-- Toast Modal -->
+    @include('partials.toast')
+
     <!-- Footer -->
-    <footer class="text-center py-4 mt-5 border-top">
-        <div class="container">
-            <p class="mb-0">&copy; {{ date('Y') }} PKMBIMA-BAKOELKEMBANG. All rights reserved.</p>
-        </div>
-    </footer>
+    @include('partials.footer')
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            AOS.init();
-        });
-
-        // Sticky navbar animation
-        window.addEventListener('scroll', function () {
-            const navbar = document.getElementById('mainNavbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        // Remove dropdown toggle on desktop to allow hover dropdown
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.innerWidth >= 992) {
-                const dropdowns = document.querySelectorAll('.navbar .dropdown-toggle');
-                dropdowns.forEach(dd => {
-                    dd.removeAttribute('data-bs-toggle');
-                });
-            }
-        });
-    </script>
-
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
 </html>
