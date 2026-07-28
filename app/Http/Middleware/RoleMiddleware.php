@@ -16,7 +16,14 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!in_array(auth()->user()->role, $roles)) {
+        $userRole = auth()->user()->role;
+
+        // Superadmin selalu punya akses penuh ke semua fitur
+        if ($userRole === 'superadmin') {
+            return $next($request);
+        }
+
+        if (!in_array($userRole, $roles)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki izin.');
         }
         return $next($request);
