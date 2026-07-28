@@ -77,7 +77,7 @@ Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])
 | Dashboard (global)
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', fn () => view('dashboard'))
+Route::get('/dashboard', fn () => redirect(App\Providers\RouteServiceProvider::redirectByRole()))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
