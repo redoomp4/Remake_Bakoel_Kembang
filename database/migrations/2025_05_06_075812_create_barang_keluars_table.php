@@ -18,8 +18,8 @@ return new class extends Migration
             // data transaksi
             $table->date('tanggal_keluar');
             $table->unsignedInteger('jumlah_keluar');
-            $table->unsignedDecimal('harga_jual', 15, 2)->nullable();
-            $table->unsignedDecimal('total_harga_jual', 18, 2)->nullable();
+            $table->decimal('harga_jual', 15, 2)->unsigned()->nullable();
+            $table->decimal('total_harga_jual', 18, 2)->unsigned()->nullable();
             $table->string('penerima');
             $table->string('lokasi_tujuan');
 

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('id_pemasok')->constrained('pemasoks')->cascadeOnDelete();
 
             $table->unsignedInteger('stok_minimum')->default(0);
-            $table->unsignedDecimal('harga_dasar', 15, 2)->default(0);
+            $table->decimal('harga_dasar', 15, 2)->unsigned()->default(0);
 
             $table->text('deskripsi')->nullable();
             $table->string('foto')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->index(['user_id', 'id_kategori']);
             $table->index(['user_id', 'id_satuan']);
             $table->index(['user_id', 'id_pemasok']);
-            $table->index(['user_id', 'kode_barang'], 'items_user_kode_idx');
+            $table->unique(['user_id', 'kode_barang'], 'items_user_kode_unique');
         });
     }
 
