@@ -14,6 +14,7 @@ class UserSeeder extends Seeder
             'name' => 'Admin',
             'username' => 'admin111',
             'email' => 'orchid.bpn@gmail.com',
+            'email_verified_at' => now(),
             'password' => Hash::make('password123'),
             'role' => 'superadmin', 
             'status'=> 'aktif',
