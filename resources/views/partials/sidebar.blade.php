@@ -8,7 +8,7 @@
 
   <nav class="flex flex-col gap-2">
     <!-- Dashboard Keuangan -->
-    <a href="{{ route('dashboard') }}" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl font-black text-lg transition-all {{ request()->routeIs('dashboard*') && !request()->query('tab') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+    <a href="{{ route('dashboard.gudang') }}" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl font-black text-lg transition-all {{ request()->routeIs('dashboard.gudang') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate font-extrabold hover:bg-brand-offwhite' }}">
       <span class="flex items-center gap-3"><i class="fas fa-wallet w-6"></i> Dashboard Keuangan</span>
     </a>
 
@@ -24,9 +24,9 @@
       <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-black uppercase border border-emerald-100">IN</span>
     </a>
 
-    <!-- Master Item Baru -->
+    <!-- Tambah Item Baru -->
     <a href="{{ route('item.index') }}" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('item*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <i class="fas fa-plus-circle w-6 text-brand-sage"></i> Master Item Bunga
+      <i class="fas fa-plus-circle w-6 text-brand-sage"></i> Tambah Item Baru
     </a>
 
     <!-- Master Database -->
