@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ItemController extends Controller
 {
@@ -111,7 +113,19 @@ class ItemController extends Controller
 
             $item->save();
 
-            return redirect()->route('item.index')->with('success', 'Item berhasil ditambahkan.');
+            // Generate QR Code otomatis saat menambahkan bunga
+            try {
+                Storage::disk('public')->makeDirectory('qrcodes');
+                $filename = 'qr_' . $item->kode_barang . '_' . Str::random(6) . '.png';
+                $relative = 'qrcodes/' . $filename;
+                $qrLink   = route('barang-masuk.qrshow.kode', $item->kode_barang);
+                $png      = QrCode::format('png')->size(300)->margin(2)->generate($qrLink);
+                Storage::disk('public')->put($relative, $png, 'public');
+            } catch (\Throwable $ex) {
+                // Ignore if QR generation fails
+            }
+
+            return redirect()->route('item.index')->with('success', 'Item varietas bunga berhasil ditambahkan & QR Code di-generate.');
         } catch (QueryException $e) {
             // Duplicate key (SQLSTATE 23000) atau constraint lainnya
             $sqlState = $e->errorInfo[0] ?? null; // 23000
