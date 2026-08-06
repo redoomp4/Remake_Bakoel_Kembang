@@ -302,8 +302,15 @@
             <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Tanggal Akhir</label>
             <input type="date" name="end_date" class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder-white/50">
           </div>
-          <button type="submit" class="bg-white text-brand-emerald font-black text-sm px-8 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
-            <i class="fas fa-file-excel text-lg"></i> UNDUH EXCEL KEUANGAN
+          <div class="space-y-1.5 min-w-[130px]">
+            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Format File</label>
+            <select name="format" class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-[#0A452E] text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage cursor-pointer">
+              <option value="xlsx">📊 Excel (.xlsx)</option>
+              <option value="csv">📄 CSV (.csv)</option>
+            </select>
+          </div>
+          <button type="submit" class="bg-white text-brand-emerald font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+            <i class="fas fa-download text-lg"></i> UNDUH KEUANGAN
           </button>
         </form>
 

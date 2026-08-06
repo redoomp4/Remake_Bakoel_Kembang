@@ -95,7 +95,8 @@
         <div class="export-buttons">
             {{-- request()->query() sudah otomatis membawa start_date & end_date --}}
             <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank">📄 Cetak PDF</a>
-            <a href="{{ route('laporan.excel', request()->query()) }}">📊 Export Excel</a>
+            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}">📊 Export Excel (.xlsx)</a>
+            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'csv'])) }}" style="background-color: #059669;">📄 Export CSV (.csv)</a>
         </div>
     @endif
 

@@ -349,8 +349,13 @@ private function fetchUnifiedTransactions(
         );
 
         $data = $this->summarizeStock($merged)->values();
+        $format = strtolower($request->input('format', 'xlsx'));
 
-        return Excel::download(new \App\Exports\ArrayExport($data->toArray()), 'laporan_stok_barang.xlsx');
+        if ($format === 'csv') {
+            return Excel::download(new \App\Exports\ArrayExport($data->toArray()), 'laporan_stok_barang.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+
+        return Excel::download(new \App\Exports\ArrayExport($data->toArray()), 'laporan_stok_barang.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     // =========================
@@ -495,7 +500,11 @@ private function fetchUnifiedTransactions(
 
     public function exportArusExcel(Request $request): BinaryFileResponse
     {
-        return Excel::download(new LaporanArusExport($request), 'laporan_arus_barang.xlsx');
+        $format = strtolower($request->input('format', 'xlsx'));
+        if ($format === 'csv') {
+            return Excel::download(new LaporanArusExport($request), 'laporan_arus_barang.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+        return Excel::download(new LaporanArusExport($request), 'laporan_arus_barang.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     // =========================
@@ -589,8 +598,11 @@ private function fetchUnifiedTransactions(
 
     public function exportOmzetExcel(Request $request): BinaryFileResponse
     {
-        // Tetap gunakan export class agar konsisten
-        return Excel::download(new OmzetExport($request), 'laporan_omzet.xlsx');
+        $format = strtolower($request->input('format', 'xlsx'));
+        if ($format === 'csv') {
+            return Excel::download(new OmzetExport($request), 'laporan_omzet.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+        return Excel::download(new OmzetExport($request), 'laporan_omzet.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     // =========================
@@ -599,7 +611,11 @@ private function fetchUnifiedTransactions(
 
     public function exportAsetExcel(Request $request): BinaryFileResponse
     {
-        return Excel::download(new LaporanAsetExport($request), 'laporan_aset.xlsx');
+        $format = strtolower($request->input('format', 'xlsx'));
+        if ($format === 'csv') {
+            return Excel::download(new LaporanAsetExport($request), 'laporan_aset.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+        return Excel::download(new LaporanAsetExport($request), 'laporan_aset.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function exportAsetPdf(Request $request): Response
@@ -763,9 +779,21 @@ private function fetchUnifiedTransactions(
         $periodeStart = $startDate ? Carbon::parse($startDate)->format('d/m/Y') : 'Awal';
         $periodeEnd   = $endDate   ? Carbon::parse($endDate)->format('d/m/Y')   : Carbon::now()->format('d/m/Y');
 
+        $format   = strtolower($request->input('format', 'xlsx'));
+        $filename = 'Laporan_Keuangan_Bakoelkembang_' . now()->format('Ymd_His');
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new LaporanKeuanganExport($exportData, $periodeStart, $periodeEnd, $user->name),
+                $filename . '.csv',
+                \Maatwebsite\Excel\Excel::CSV
+            );
+        }
+
         return Excel::download(
             new LaporanKeuanganExport($exportData, $periodeStart, $periodeEnd, $user->name),
-            'Laporan_Keuangan_Bakoelkembang_' . now()->format('Ymd_His') . '.xlsx'
+            $filename . '.xlsx',
+            \Maatwebsite\Excel\Excel::XLSX
         );
     }
 }
