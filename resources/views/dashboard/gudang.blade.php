@@ -280,6 +280,37 @@
 
         </div>
       </div>
+
+      <!-- F. EXPORT LAPORAN KEUANGAN EXCEL -->
+      <div class="bg-gradient-to-r from-brand-emerald via-[#0A452E] to-[#052C1E] rounded-3xl p-6 md:p-8 shadow-lg border border-white/5 space-y-5">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-white/80 bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl inline-block mb-3">
+              📊 LAPORAN KEUANGAN (LABA RUGI)
+            </span>
+            <h3 class="text-2xl font-black text-white tracking-tight">Unduh Laporan Keuangan Excel</h3>
+            <p class="text-xs font-semibold text-brand-sage mt-1">Rincian lengkap omzet, modal, laba bersih, & nilai aset inventaris kebun Anda.</p>
+          </div>
+        </div>
+
+        <form action="{{ route('export.keuangan.excel') }}" method="GET" class="flex flex-col sm:flex-row items-end gap-4">
+          <div class="space-y-1.5 flex-1">
+            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Tanggal Mulai</label>
+            <input type="date" name="start_date" class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder-white/50">
+          </div>
+          <div class="space-y-1.5 flex-1">
+            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Tanggal Akhir</label>
+            <input type="date" name="end_date" class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder-white/50">
+          </div>
+          <button type="submit" class="bg-white text-brand-emerald font-black text-sm px-8 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+            <i class="fas fa-file-excel text-lg"></i> UNDUH EXCEL KEUANGAN
+          </button>
+        </form>
+
+        <p class="text-[10px] font-medium text-white/40">
+          Kosongkan tanggal untuk mengunduh semua data keuangan sejak awal.
+        </p>
+      </div>
     </section>
 
   </main>
