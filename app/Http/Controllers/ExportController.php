@@ -15,6 +15,7 @@ use App\Exports\LaporanStokExport;
 use App\Exports\LaporanArusExport;
 use App\Exports\OmzetExport;
 use App\Exports\LaporanAsetExport;
+use App\Exports\LaporanKeuanganExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -696,5 +697,75 @@ private function fetchUnifiedTransactions(
                 'username'     => $first['username'] ?? '-',
             ];
         });
+    }
+
+    /**
+     * Export Laporan Keuangan (Laba Rugi) ke Excel
+     */
+    public function exportKeuanganExcel(Request $request)
+    {
+        $user = auth()->user();
+
+        $startDate = $this->normalizeDate($request->input('start_date'));
+        $endDate   = $this->normalizeDate($request->input('end_date'));
+
+        // Barang Masuk (Modal/Pembelian)
+        $barangMasukQuery = BarangMasuk::with(['item', 'pemasok'])
+            ->where('user_id', $user->id)
+            ->when($startDate, fn ($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
+            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
+            ->get();
+
+        $barangMasukData = $barangMasukQuery->map(function ($bm) {
+            return [
+                'nama_barang'   => optional($bm->item)->nama_barang ?? '-',
+                'kode_barang'   => $bm->kode_barang,
+                'jumlah'        => $bm->jumlah,
+                'harga_satuan'  => $bm->harga_satuan,
+                'total_harga'   => $bm->total_harga,
+                'tanggal_masuk' => $bm->tanggal_masuk ? Carbon::parse($bm->tanggal_masuk)->format('d/m/Y') : '-',
+                'pemasok'       => optional($bm->pemasok)->nama_pemasok ?? '-',
+            ];
+        })->toArray();
+
+        // Barang Keluar (Penjualan/Omzet)
+        $barangKeluarQuery = BarangKeluar::with(['item'])
+            ->where('user_id', $user->id)
+            ->when($startDate, fn ($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
+            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
+            ->get();
+
+        $barangKeluarData = $barangKeluarQuery->map(function ($bk) {
+            return [
+                'nama_barang'      => optional($bk->item)->nama_barang ?? '-',
+                'kode_barang'      => $bk->kode_barang,
+                'jumlah'           => $bk->jumlah_keluar,
+                'harga_jual'       => $bk->harga_jual ?? 0,
+                'total_harga_jual' => $bk->total_harga_jual ?? 0,
+                'tanggal_keluar'   => $bk->tanggal_keluar ? Carbon::parse($bk->tanggal_keluar)->format('d/m/Y') : '-',
+                'penerima'         => $bk->penerima ?? '-',
+            ];
+        })->toArray();
+
+        // Nilai Aset Inventaris
+        $nilaiAset = Item::where('user_id', $user->id)->sum('harga_dasar');
+
+        $exportData = [
+            'total_omzet'        => $barangKeluarQuery->sum('total_harga_jual'),
+            'total_modal'        => $barangMasukQuery->sum('total_harga'),
+            'nilai_aset'         => $nilaiAset,
+            'total_masuk_count'  => $barangMasukQuery->count(),
+            'total_keluar_count' => $barangKeluarQuery->count(),
+            'barang_masuk'       => $barangMasukData,
+            'barang_keluar'      => $barangKeluarData,
+        ];
+
+        $periodeStart = $startDate ? Carbon::parse($startDate)->format('d/m/Y') : 'Awal';
+        $periodeEnd   = $endDate   ? Carbon::parse($endDate)->format('d/m/Y')   : Carbon::now()->format('d/m/Y');
+
+        return Excel::download(
+            new LaporanKeuanganExport($exportData, $periodeStart, $periodeEnd, $user->name),
+            'Laporan_Keuangan_Bakoelkembang_' . now()->format('Ymd_His') . '.xlsx'
+        );
     }
 }
