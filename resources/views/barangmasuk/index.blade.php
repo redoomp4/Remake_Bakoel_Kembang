@@ -272,15 +272,23 @@
                         <td>{{ $bm->lokasi->nama_lokasi ?? '-' }}</td>
                         <td>{{ $bm->kondisi->nama_kondisi ?? '-' }}</td>
                         <td>
-                            @if($bm->qr_code)
-                                <a href="{{ route('barang-masuk.qr-card', $bm->id) }}"
-                                   class="back-button"
-                                   style="background-color: #60a5fa; color: white;">
-                                    Lihat
-                                </a>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                @if($bm->qr_code)
+                                    <a href="{{ route('barang-masuk.qr-card', $bm->id) }}"
+                                       class="back-button"
+                                       style="background-color: #60a5fa; color: white;">
+                                        Lihat
+                                    </a>
+                                    <a href="{{ route('barang-masuk.qrshow.kode', $bm->kode_barang) }}"
+                                       class="back-button"
+                                       style="background-color: #10b981; color: white;"
+                                       target="_blank" title="Detail QR Bunga (Harga, Stok, Umur)">
+                                        🌸 QR
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
