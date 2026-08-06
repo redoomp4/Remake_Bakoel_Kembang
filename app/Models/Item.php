@@ -38,6 +38,34 @@ class Item extends Model
 
 
 
+    // Accessor Umur Tanaman & Total Stok
+    public function getUmurTanamanAttribute()
+    {
+        $firstEntry = $this->barangMasuk()->oldest('tanggal_masuk')->first();
+        $startDate = $firstEntry->tanggal_masuk ?? $this->created_at ?? now();
+        $diffDays = (int) \Carbon\Carbon::parse($startDate)->diffInDays(now());
+
+        if ($diffDays <= 0) {
+            return 'Baru Ditanam (1 Hari)';
+        } elseif ($diffDays < 30) {
+            return $diffDays . ' Hari';
+        } elseif ($diffDays < 365) {
+            $months = floor($diffDays / 30);
+            $remainingDays = $diffDays % 30;
+            return $months . ' Bulan' . ($remainingDays > 0 ? ' ' . $remainingDays . ' Hari' : '');
+        } else {
+            $years = floor($diffDays / 365);
+            return $years . ' Tahun';
+        }
+    }
+
+    public function getTotalStokAttribute()
+    {
+        $totalIn = (int) $this->barangMasuk()->sum('jumlah');
+        $totalOut = (int) $this->barangKeluar()->sum('jumlah_keluar');
+        return max(0, $totalIn - $totalOut);
+    }
+
     // ✅ Barang Masuk berdasarkan kode_barang
     public function barangMasuk()
     {

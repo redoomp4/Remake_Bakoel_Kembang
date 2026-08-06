@@ -137,6 +137,9 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     Route::get('/export/omzet/pdf', [ExportController::class, 'exportOmzetPdf'])->name('export.omzet.pdf');
     Route::get('/export/omzet/excel', [ExportController::class, 'exportOmzetExcel'])->name('export.omzet.excel');
 
+    // Laporan Keuangan (Laba Rugi) Excel
+    Route::get('/export/keuangan/excel', [ExportController::class, 'exportKeuanganExcel'])->name('export.keuangan.excel');
+
     /*
     |--------------------------------------------------------------------------
     | Resource per Role
