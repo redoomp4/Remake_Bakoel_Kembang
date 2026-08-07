@@ -197,7 +197,7 @@ td:before {
     }}
 </style>
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h2>Daftar User</h2>
     </div>
