@@ -2,9 +2,6 @@
 
 @section('content')
 <style>
-    body {
-        padding-top: 40px; /* Sesuaikan dengan tinggi navbar */
-    }
     .container-laporan {
         max-width: 1200px;
         margin: auto;
@@ -218,7 +215,7 @@
     }
 </style>
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h4>Daftar Kategori</h4>
         <a href="{{ route('kategori.create') }}" class="btn btn-primary">+ Tambah Kategori</a>

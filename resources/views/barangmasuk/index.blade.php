@@ -3,8 +3,6 @@
 
 @section('content')
 <style>
-    /* Hindari nempel ke navbar */
-    body { padding-top: 40px; }
 
 
     .container-laporan {
@@ -196,7 +194,7 @@
 </style>
 
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h4>Daftar Barang Masuk</h4>
         <a href="{{ route('barang-masuk.create') }}" class="btn btn-primary">+ Tambah Barang Masuk</a>

@@ -2,9 +2,6 @@
 
 @section('content')
 <style>
-    /* Hindari nempel ke navbar */
-    body { padding-top: 40px; }
-
     .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
 
     /* ==== HEADER ==== */
@@ -161,7 +158,7 @@
     }
 </style>
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h4>Daftar Item</h4>
         <a href="{{ route('item.create') }}" class="create-button">+ Tambah Item</a>

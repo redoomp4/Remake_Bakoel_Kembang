@@ -2,7 +2,7 @@
 
 
 @section('content')
-<div class="container"  style="margin-top: 50px;"><!-- turunin dikit dari navbar -->
+<div class="container">
     <h2>Form Barang Keluar</h2>
 
 
