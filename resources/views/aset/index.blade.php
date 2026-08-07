@@ -143,7 +143,7 @@
 
 
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h4>Laporan Total Aset</h4>
     </div>

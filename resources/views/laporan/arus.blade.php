@@ -97,7 +97,7 @@
     tr { box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05); }
 </style>
 
-<div class="container mt-5">
+<div class="container">
     <div class="header">
         <h4>Laporan Arus Barang</h4>
         <a href="{{ route('laporan') }}" class="back-button">← Kembali ke Laporan Stok</a>
