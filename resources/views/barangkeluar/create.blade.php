@@ -1,230 +1,165 @@
 @extends('layouts.app')
-
-
 @section('content')
-<div class="container">
-    <h2>Form Barang Keluar</h2>
-
-
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @elseif(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-
-    <form action="{{ route('barang-keluar.store') }}" method="POST" id="barangKeluarForm">
-        @csrf
-
-
-        <div class="mb-3">
-            <label for="kode_lokasi_kondisi">Pilih Barang (Kode - Lokasi - Kondisi)</label>
-            <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" class="form-control @error('kode_lokasi_kondisi') is-invalid @enderror" required>
-                <option value="" disabled selected>-- Pilih Barang --</option>
-            </select>
-            @error('kode_lokasi_kondisi') <div class="text-danger">{{ $message }}</div> @enderror
+    <div style="background:#FAF9F6;min-height:100vh;padding:2rem 1.25rem;">
+        <div style="max-width:900px;margin:auto;">
+            <div style="margin-bottom:1.5rem;">
+                <p style="color:#8FA882;font-weight:800;font-size:.75rem;text-transform:uppercase;">Inventori · Barang Keluar
+                </p>
+                <h2 style="color:#0B4F35;font-size:1.9rem;font-weight:900;margin:0;">Form Barang Keluar</h2>
+            </div>
+            @if (session('error'))
+                <div style="background:#fef2f2;color:#b91c1c;padding:1rem;border-radius:1rem;margin-bottom:1rem;">
+                    {{ session('error') }}</div>
+            @elseif(session('success'))
+                <div style="background:#ecfdf5;color:#047857;padding:1rem;border-radius:1rem;margin-bottom:1rem;">
+                    {{ session('success') }}</div>
+            @endif
+            <form action="{{ route('barang-keluar.store') }}" method="POST" id="barangKeluarForm"
+                style="background:#fff;border:1px solid #E4E4D9;border-radius:1.5rem;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+                @csrf<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.15rem;">
+                    <div style="grid-column:1/-1;"><label for="kode_lokasi_kondisi"
+                            style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">Pilih Barang (Kode -
+                            Lokasi - Kondisi)</label>
+                        <div style="display:flex;gap:.5rem;"><select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi"
+                                required style="flex:1;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;">
+                                <option value="" disabled selected>-- Pilih Barang --</option>
+                            </select><button type="button"
+                                onclick="alert('Gunakan kamera perangkat untuk memindai nota.');"
+                                style="border:0;background:#ecfdf5;color:#047857;border-radius:.75rem;padding:0 1rem;font-weight:800;">📷
+                                Scan</button></div>
+                        @error('kode_lokasi_kondisi')
+                            <p style="color:#ef4444;font-size:.75rem;font-weight:700;">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <input type="hidden" name="kode_barang" id="kode_barang"><input type="hidden" name="id_lokasi"
+                        id="id_lokasi"><input type="hidden" name="id_kondisi" id="id_kondisi">
+                    @foreach ([['nama_barang', 'Nama Barang'], ['satuan', 'Satuan'], ['stok_tersedia', 'Stok Tersedia'], ['harga_dasar', 'Harga Rata-Rata']] as $field)
+                        <div><label for="{{ $field[0] }}"
+                                style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">{{ $field[1] }}</label><input
+                                type="text" id="{{ $field[0] }}" readonly
+                                style="width:100%;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;background:#f8fafc;">
+                        </div>
+                    @endforeach
+                    <div>
+                        <label for="jumlah_keluar"
+                            style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">Jumlah
+                            Keluar</label><input type="number" name="jumlah_keluar" id="jumlah_keluar" required
+                            style="width:100%;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;">
+                        <div id="jumlah_warning" style="color:#ef4444;font-size:.75rem;margin-top:.3rem;"></div>
+                    </div>
+                    <div><label for="harga_jual"
+                            style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">Harga Jual /
+                            Unit</label><input type="number" name="harga_jual" id="harga_jual" required
+                            style="width:100%;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;"></div>
+                    <div><label for="total_harga"
+                            style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">Total Harga
+                            Jual</label><input type="number" id="total_harga" readonly value="0"
+                            style="width:100%;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;background:#f8fafc;">
+                    </div>
+                    <div><label for="catatan"
+                            style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">Catatan</label><select
+                            name="catatan" id="catatan" required
+                            style="width:100%;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;">
+                            <option value="" disabled selected>-- Pilih Catatan --</option>
+                            <option value="Penerimaan Penjualan">Penerimaan Penjualan</option>
+                            <option value="Penghapusan">Penghapusan</option>
+                            <option value="Retur">Retur</option>
+                        </select></div>
+                    @foreach ([['penerima', 'Penerima'], ['lokasi_tujuan', 'Lokasi Tujuan']] as $field)
+                        <div><label for="{{ $field[0] }}"
+                                style="display:block;color:#475569;font-weight:800;margin-bottom:.5rem;">{{ $field[1] }}</label>
+                            <div style="display:flex;gap:.5rem;"><input type="text" name="{{ $field[0] }}"
+                                    id="{{ $field[0] }}" required
+                                    style="flex:1;padding:.85rem;border:1px solid #E4E4D9;border-radius:.75rem;">
+                                @if ($field[0] === 'penerima')
+                                    <button type="button" onclick="speakField('penerima')"
+                                        style="border:0;background:#ecfdf5;color:#047857;border-radius:.75rem;padding:0 .9rem;font-size:1.2rem;">🎙</button>
+                                @endif
+                            </div>
+                            @error($field[0])
+                                <p style="color:#ef4444;font-size:.75rem;font-weight:700;">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endforeach
+                </div><button type="submit" id="submitBtn"
+                    style="margin-top:1.5rem;background:#0B4F35;color:#fff;border:0;padding:.9rem 1.5rem;border-radius:.85rem;font-weight:800;">Simpan
+                    Transaksi</button></form>
         </div>
+    </div>
+    <script>
+        function num(v) {
+            const n = parseFloat(String(v ?? '').replace(/[^\d.-]/g, ''));
+            return isNaN(n) ? 0 : n
+        }
 
+        function pickHarga(o) {
+            return num(o?.harga_dasar ?? o?.harga ?? o?.harga_satuan ?? o?.item?.harga_dasar)
+        }
 
-        <input type="hidden" name="kode_barang" id="kode_barang">
-        <input type="hidden" name="id_lokasi" id="id_lokasi">
-        <input type="hidden" name="id_kondisi" id="id_kondisi">
+        function speakField(id) {
+            if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('Masukkan ' + id))
+        }
+        async function loadPilihanBarang() {
+            const res = await fetch("{{ route('barang-keluar.pilihan-barang') }}"),
+                data = await res.json(),
+                select = document.getElementById('kode_lokasi_kondisi');
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = `${item.kode}|${item.lokasi_id}|${item.kondisi_id}`;
+                opt.text = `${item.kode} - ${item.nama_barang} - ${item.lokasi} - ${item.kondisi}`;
+                Object.assign(opt.dataset, {
+                    nama: item.nama_barang,
+                    satuan: item.satuan,
+                    stok: item.stok,
+                    harga: pickHarga(item)
+                });
+                select.appendChild(opt)
+            })
+        }
+        async function fetchDetail(k, l, c) {
+            const res = await fetch(
+                    `{{ route('barang-keluar.detail-barang') }}?kode_barang=${encodeURIComponent(k)}&id_lokasi=${encodeURIComponent(l)}&id_kondisi=${encodeURIComponent(c)}`
+                    ),
+                d = await res.json();
+            nama_barang.value = d.nama_barang ?? '';
+            satuan.value = d.satuan ?? '';
+            stok_tersedia.value = num(d.stok);
+            harga_dasar.value = pickHarga(d)
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const s = document.getElementById('kode_lokasi_kondisi'),
+                q = document.getElementById('jumlah_keluar'),
+                h = document.getElementById('harga_jual'),
+                t = document.getElementById('total_harga'),
+                b = document.getElementById('submitBtn');
+            loadPilihanBarang();
+            s.addEventListener('change', async () => {
+                const [k, l, c] = s.value.split('|'), o = s.options[s.selectedIndex];
+                kode_barang.value = k;
+                id_lokasi.value = l;
+                id_kondisi.value = c;
+                nama_barang.value = o.dataset.nama || '';
+                satuan.value = o.dataset.satuan || '';
+                stok_tersedia.value = num(o.dataset.stok);
+                harga_dasar.value = num(o.dataset.harga);
+                await fetchDetail(k, l, c);
+                t.value = num(q.value) * num(h.value)
+            });
 
-
-        <div class="mb-3">
-            <label>Nama Barang</label>
-            <input type="text" id="nama_barang" class="form-control" readonly>
-        </div>
-
-
-        <div class="mb-3">
-            <label>Satuan</label>
-            <input type="text" id="satuan" class="form-control" readonly>
-        </div>
-
-
-        <div class="mb-3">
-            <label for="stok_tersedia">Stok Tersedia</label>
-            <input type="number" class="form-control" id="stok_tersedia" readonly value="0">
-        </div>
-
-
-        <!-- Harga Rata-Rata otomatis -->
-        <div class="mb-3">
-            <label for="harga_dasar">Harga Rata-Rata (diambil dari Harga Beli)</label>
-            <input type="number" id="harga_dasar" class="form-control" readonly value="0">
-        </div>
-
-
-        <div class="mb-3">
-            <label for="jumlah_keluar">Jumlah Keluar</label>
-            <input type="number" name="jumlah_keluar" id="jumlah_keluar" class="form-control" required>
-            <div id="jumlah_warning" class="text-danger mt-1"></div>
-        </div>
-
-
-        <div class="mb-3">
-            <label for="harga_jual">Harga Jual / Unit</label>
-            <input type="number" name="harga_jual" id="harga_jual" class="form-control" required>
-        </div>
-
-
-        <div class="mb-3">
-            <label for="total_harga">Total Harga Jual</label>
-            <input type="number" class="form-control" id="total_harga" readonly value="0">
-        </div>
-
-
-        <div class="mb-3">
-            <label for="catatan">Catatan</label>
-            <select name="catatan" id="catatan" class="form-control" required>
-                <option value="" disabled selected>-- Pilih Catatan --</option>
-                <option value="Penerimaan Penjualan">Penerimaan Penjualan</option>
-                <option value="Penghapusan">Penghapusan</option>
-                <option value="Retur">Retur</option>
-            </select>
-        </div>
-
-
-        <div class="mb-3">
-            <label for="penerima">Penerima</label>
-            <input type="text" name="penerima" id="penerima" class="form-control @error('penerima') is-invalid @enderror" required>
-            @error('penerima') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-
-        <div class="mb-3">
-            <label for="lokasi_tujuan">Lokasi Tujuan</label>
-            <input type="text" name="lokasi_tujuan" id="lokasi_tujuan" class="form-control @error('lokasi_tujuan') is-invalid @enderror" required>
-            @error('lokasi_tujuan') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-
-        <button type="submit" class="btn btn-primary" id="submitBtn">Simpan</button>
-    </form>
-</div>
-
-
-<script>
-// helper angka
-function num(val){
-  if(val==null) return 0;
-  const n = parseFloat(String(val).replace(/[^\d.-]/g,''));
-  return isNaN(n) ? 0 : n;
-}
-
-
-// Ambil harga dari response
-function pickHarga(obj){
-  if(!obj || typeof obj!=='object') return 0;
-  if (obj.harga_dasar  != null) return num(obj.harga_dasar);   // dari API (kita isi = harga_satuan)
-  if (obj.harga        != null) return num(obj.harga);
-  if (obj.harga_satuan != null) return num(obj.harga_satuan);   // fallback ekstra
-  if (obj.item && obj.item.harga_dasar != null) return num(obj.item.harga_dasar);
-  return 0;
-}
-
-
-// load opsi dropdown
-async function loadPilihanBarang() {
-  const res = await fetch("{{ route('barang-keluar.pilihan-barang') }}");
-  const data = await res.json();
-  const select = document.getElementById("kode_lokasi_kondisi");
-  data.forEach(item => {
-    const opt = document.createElement("option");
-    opt.value = `${item.kode}|${item.lokasi_id}|${item.kondisi_id}`;
-    opt.text  = `${item.kode} - ${item.nama_barang} - ${item.lokasi} - ${item.kondisi}`;
-    if (item.nama_barang) opt.dataset.nama = item.nama_barang;
-    if (item.satuan)      opt.dataset.satuan = item.satuan;
-    if (item.stok!=null)  opt.dataset.stok = item.stok;
-    const harga = pickHarga(item);
-    if (item.harga_dasar!==undefined || item.harga!==undefined || item.harga_satuan!==undefined) {
-      opt.dataset.harga = harga; // simpan meski 0
-    }
-    select.appendChild(opt);
-  });
-}
-
-
-// ambil detail untuk isi stok/harga dst
-async function fetchDetail(kode,lokasi,kondisi){
-  const DETAIL_URL = "{{ route('barang-keluar.detail-barang') }}";
-  const url = `${DETAIL_URL}?kode_barang=${encodeURIComponent(kode)}&id_lokasi=${encodeURIComponent(lokasi)}&id_kondisi=${encodeURIComponent(kondisi)}`;
-  const res = await fetch(url);
-  const data = await res.json();
-
-
-  document.getElementById('nama_barang').value   = data.nama_barang ?? document.getElementById('nama_barang').value;
-  document.getElementById('satuan').value        = data.satuan ?? document.getElementById('satuan').value;
-  document.getElementById('stok_tersedia').value = num(data.stok ?? document.getElementById('stok_tersedia').value);
-  document.getElementById('harga_dasar').value   = pickHarga(data);
-}
-
-
-document.addEventListener('DOMContentLoaded', function () {
-  const select        = document.getElementById('kode_lokasi_kondisi');
-  const jumlahKeluar  = document.getElementById('jumlah_keluar');
-  const hargaJual     = document.getElementById('harga_jual');
-  const totalHarga    = document.getElementById('total_harga');
-  const submitBtn     = document.getElementById('submitBtn');
-
-
-  // setelah opsi dimuat, trigger sekali supaya field keisi
-  loadPilihanBarang().then(() => {
-    if (select.value) select.dispatchEvent(new Event('change'));
-  });
-
-
-  async function onSelectChange(){
-    const val = select.value; if(!val) return;
-    const [kode,lokasi,kondisi] = val.split('|');
-
-
-    document.getElementById('kode_barang').value = kode;
-    document.getElementById('id_lokasi').value   = lokasi;
-    document.getElementById('id_kondisi').value  = kondisi;
-
-
-    const opt = select.options[select.selectedIndex];
-    if (opt){
-      if (opt.dataset.nama)   document.getElementById('nama_barang').value = opt.dataset.nama;
-      if (opt.dataset.satuan) document.getElementById('satuan').value      = opt.dataset.satuan;
-      if (opt.dataset.stok!=null) document.getElementById('stok_tersedia').value = num(opt.dataset.stok);
-      if (opt.dataset.harga !== undefined) document.getElementById('harga_dasar').value = num(opt.dataset.harga);
-    }
-
-
-    await fetchDetail(kode,lokasi,kondisi);
-    updateTotal();
-  }
-  select.addEventListener('change', onSelectChange);
-
-
-  function updateTotal(){
-    totalHarga.value = num(jumlahKeluar.value) * num(hargaJual.value);
-  }
-
-
-  jumlahKeluar.addEventListener('input', function(){
-    const jumlahStr = this.value;
-    const jumlah = num(jumlahStr);
-    const stok   = num(document.getElementById('stok_tersedia').value);
-    const warning = document.getElementById('jumlah_warning');
-
-
-    if (!/^\d+$/.test(jumlahStr)) { warning.textContent="Jumlah harus bilangan bulat positif."; submitBtn.disabled=true; }
-    else if (jumlah < 1)          { warning.textContent="Jumlah tidak boleh kurang dari 1.";   submitBtn.disabled=true; }
-    else if (jumlah > stok)       { warning.textContent=`Jumlah melebihi stok (${stok}).`;     submitBtn.disabled=true; }
-    else                          { warning.textContent="";                                    submitBtn.disabled=false; }
-    updateTotal();
-  });
-
-
-  hargaJual.addEventListener('input', function(){
-    const harga = num(this.value);
-    submitBtn.disabled = (harga < 0 || isNaN(harga));
-    updateTotal();
-  });
-});
-</script>
+            function update() {
+                t.value = num(q.value) * num(h.value);
+                b.disabled = num(q.value) < 1 || num(q.value) > num(stok_tersedia.value)
+            }
+            q.addEventListener('input', update);
+            h.addEventListener('input', update)
+        })
+    </script>
 @endsection
+<style>
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #0B4F35 !important;
+        box-shadow: 0 0 0 3px rgba(11, 79, 53, .12)
+    }
+</style>
