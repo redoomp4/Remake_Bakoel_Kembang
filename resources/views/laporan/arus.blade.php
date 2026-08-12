@@ -2,6 +2,9 @@
 
 @section('content')
 <style>
+body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.container{max-width:1280px!important;padding:2rem 1.25rem 3rem}.header{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.header h4{color:#0B4F35;font-weight:900;font-size:1.75rem}.filter-form{background:#fff!important;border:1px solid #e2e8f0!important;border-radius:1.25rem!important;padding:1.5rem!important;box-shadow:0 2px 8px rgba(15,23,42,.05)}.filter-form label{font-size:.7rem;font-weight:900;text-transform:uppercase;color:#475569;letter-spacing:.05em}.filter-form input,.filter-form select{padding:.75rem;border:1px solid #cbd5e1;border-radius:.75rem}.filter-form button{background:#0B4F35;border-radius:.75rem}.export-buttons{display:flex;flex-wrap:wrap;gap:.75rem}.export-buttons a{margin:0!important;border-radius:.75rem;font-weight:700}.table-responsive{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;overflow:auto;box-shadow:0 2px 8px rgba(15,23,42,.05)}table{border-spacing:0!important}th{background:#f8fafc!important;color:#64748b;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}td{border-bottom:1px solid #f1f5f9!important;color:#334155;font-weight:500}tr:hover td{background:#f8fafc!important}
+</style>
+<style>
     .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
 
     .header {
@@ -65,7 +68,7 @@
 
     .filter-form button {
         padding: 8px 16px;
-        background-color: #3b82f6;
+        background-color: #059669;
         color: white;
         border: none;
         border-radius: 6px;
@@ -73,20 +76,20 @@
         cursor: pointer;
         transition: background 0.2s ease;
     }
-    .filter-form button:hover { background-color: #2563eb; }
+    .filter-form button:hover { background-color: #047857; }
 
     /* Export Buttons */
     .export-buttons { margin-bottom: 20px; }
     .export-buttons a {
         padding: 8px 12px;
-        background-color: #2563eb;
+        background-color: #047857;
         color: #fff;
         border-radius: 6px;
         margin-right: 10px;
         text-decoration: none;
         font-size: 14px;
     }
-    .export-buttons a:hover { background-color: #1d4ed8; }
+    .export-buttons a:hover { background-color: #065f46; }.export-buttons a:first-child{background:#e11d48;}.export-buttons a:first-child:hover{background:#be123c;}.export-buttons a:nth-child(2),.export-buttons a:nth-child(3){background:#059669;}.export-buttons a:nth-child(2):hover,.export-buttons a:nth-child(3):hover{background:#047857;}
 
     /* Table */
     table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
@@ -114,7 +117,7 @@
             <label>Tanggal Selesai:</label>
             <input type="date" name="end_date" value="{{ request('end_date') }}">
         </div>
-        
+
         <div class="form-group">
             <label>Lokasi:</label>
             <select name="lokasi" class="form-control">

@@ -2,6 +2,9 @@
 
 @section('content')
 <style>
+body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.container{max-width:1280px!important;padding:2rem 1.25rem 3rem}.header{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.header h4{color:#0B4F35;font-weight:900;font-size:1.75rem}.filter-form{background:#fff!important;border:1px solid #e2e8f0!important;border-radius:1.25rem!important;padding:1.5rem!important;box-shadow:0 2px 8px rgba(15,23,42,.05)}.filter-form label{font-size:.7rem;font-weight:900;text-transform:uppercase;color:#475569;letter-spacing:.05em}.filter-form input,.filter-form select{padding:.75rem;border:1px solid #cbd5e1;border-radius:.75rem}.filter-form button{background:#0B4F35;border-radius:.75rem}.export-buttons{display:flex;flex-wrap:wrap;gap:.75rem}.export-buttons a{margin:0!important;border-radius:.75rem;font-weight:700}.table-responsive{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;overflow:auto;box-shadow:0 2px 8px rgba(15,23,42,.05)}table{border-spacing:0!important}th{background:#f8fafc!important;color:#64748b;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}td{border-bottom:1px solid #f1f5f9!important;color:#334155;font-weight:500}tr:hover td{background:#f8fafc!important}
+</style>
+<style>
     .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
     .header{margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
     .back-button{padding:8px 14px;background:#e5e7eb;color:#111827;border-radius:6px;font-size:14px;text-decoration:none;transition:background .2s;text-align:center;}
@@ -12,12 +15,12 @@
     .filter-form label{font-size:14px;font-weight:500;margin-bottom:4px;}
     .filter-form input,.filter-form select{padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;}
     .filter-form .action-group{display:flex;flex-direction:row;gap:10px;flex-shrink:0;}
-    .filter-form button{padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-weight:500;cursor:pointer;transition:background .2s;}
-    .filter-form button:hover{background:#2563eb;}
+    .filter-form button{padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:6px;font-weight:500;cursor:pointer;transition:background .2s;}
+    .filter-form button:hover{background:#047857;}
 
     .export-buttons{margin-bottom:20px;}
-    .export-buttons a{padding:8px 12px;background:#2563eb;color:#fff;border-radius:6px;margin-right:10px;text-decoration:none;font-size:14px;}
-    .export-buttons a:hover{background:#1d4ed8;}
+    .export-buttons a{padding:8px 12px;background:#047857;color:#fff;border-radius:6px;margin-right:10px;text-decoration:none;font-size:14px;}
+    .export-buttons a:hover{background:#065f46;}.export-buttons a:first-child{background:#e11d48;}.export-buttons a:first-child:hover{background:#be123c;}.export-buttons a:nth-child(2),.export-buttons a:nth-child(3){background:#059669;}.export-buttons a:nth-child(2):hover,.export-buttons a:nth-child(3):hover{background:#047857;}
 
     table{width:100%;border-collapse:separate;border-spacing:0 10px;}
     th,td{padding:12px;background:#fff;text-align:center;}
@@ -56,7 +59,7 @@
             <label>Tanggal Selesai:</label>
             <input type="date" name="end_date" value="{{ request('end_date') }}">
         </div>
-        
+
         <div class="form-group">
             <label>Nama Barang:</label>
             <input type="text" name="nama_barang" placeholder="Nama Barang..." value="{{ request('nama_barang') }}">
@@ -184,7 +187,7 @@
     const ctx = document.getElementById('stokChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Stok Akhir', data: stokData, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] },
+        data: { labels, datasets: [{ label: 'Stok Akhir', data: stokData, backgroundColor: 'rgba(16, 185, 129, 0.6)' }] },
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
 </script>

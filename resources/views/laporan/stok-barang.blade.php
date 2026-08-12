@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.container{max-width:1280px!important;padding:2rem 1.25rem 3rem}.container>header{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;padding:1.25rem 1.5rem}.container>header h2{color:#0B4F35;font-weight:900}.container>.bg-white{border:1px solid #e2e8f0!important;border-radius:1.25rem!important;box-shadow:0 2px 8px rgba(15,23,42,.05)}form{background:#f8fafc;border:1px solid #e2e8f0;padding:1.25rem;border-radius:1rem}input,select{border:1px solid #cbd5e1!important;border-radius:.75rem!important;padding:.7rem!important}button{border-radius:.75rem!important;font-weight:800}table{border-radius:1rem;overflow:hidden}thead{background:#f8fafc}th{color:#64748b;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}td{color:#334155;border-color:#f1f5f9!important}
+</style>
 <header class="d-flex justify-content-between align-items-center py-3 px-4 bg-white border-bottom">
     <h2>Selamat Datang, {{ Auth::user()->name ?? 'User' }}</h2>
     <div>
