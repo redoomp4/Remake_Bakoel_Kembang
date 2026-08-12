@@ -122,7 +122,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/laporan/arus-barang', [LaporanController::class, 'arus'])->name('laporan.arus');
-    
+
     Route::get('/laporan', [ExportController::class, 'laporan'])->name('laporan');
 
     Route::get('/laporan/print/pdf', [ExportController::class, 'exportPdf'])->name('laporan.pdf');
@@ -148,7 +148,8 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     // GUDANG ONLY
     Route::middleware(['role:gudang'])->group(function () {
-        // Master data 
+        // Master data
+        Route::view('/master', 'master.index')->name('master.index');
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);
         Route::resource('satuan', SatuanController::class);
@@ -159,7 +160,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::resource('omzet', OmzetController::class);
         Route::resource('barang-masuk', BarangMasukController::class);
         Route::resource('barang-keluar', BarangKeluarController::class);
-        
+
         // Cetak / detail khusus
         Route::get('/barang-masuk/{id}/qr-card', [BarangMasukController::class, 'qrCard'])->name('barang-masuk.qr-card');
         Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
@@ -190,7 +191,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile/{user}', [ProfileController::class, 'update'])->name('profile.update');
 
-    
+
 });
 
 /*
