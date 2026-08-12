@@ -1,182 +1,55 @@
 @extends('layouts.app')
-
-
 @section('content')
-<style>
-    .qr-card {
-        max-width: 900px;
-        display: flex;
-        border: 1px solid #ddd;
-        padding: 20px;
-        border-radius: 12px;
-        margin: 30px auto;
-        font-family: 'Segoe UI', sans-serif;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        background-color: #fff;
-        align-items: flex-start;
-    }
-    .qr-left {
-        flex: 0 0 250px;
-        text-align: center;
-        margin-right: 30px;
-    }
-    .qr-left img {
-        width: 100%;
-        height: auto;
-        border-radius: 8px;
-        object-fit: contain;
-        border: 1px solid #ccc;
-        padding: 5px;
-        background-color: #f9f9f9;
-    }
-    .qr-right {
-        flex: 1;
-    }
-    .qr-card h4 {
-        text-align: left;
-        margin-bottom: 15px;
-    }
-    .qr-info {
-        font-size: 14px;
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .qr-info tr {
-        display: flex;
-        margin-bottom: 6px;
-    }
-    .qr-info td:first-child {
-        width: 90px;
-        font-weight: bold;
-    }
-    .qr-info td:nth-child(2) {
-        padding-right: 5px;
-    }
-    .qr-info td:last-child {
-        flex: 1;
-    }
-    .qr-info img {
-        width: 120px;
-        height: auto;
-        padding: 6px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background-color: #fafafa;
-    }
-    .back-btn {
-        margin-top: 20px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-
-    @media (max-width: 768px) {
-    .qr-card {
-        flex-direction: column;
-        align-items: center;
-        padding: 15px;
-    }
-
-
-    .qr-left {
-        margin-right: 0;
-        margin-bottom: 20px;
-        flex: unset;
-        width: 100%;
-        max-width: 250px;
-    }
-
-
-    .qr-right {
-        width: 100%;
-    }
-
-
-    .qr-info tr {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-
-    .qr-info td:first-child {
-        width: 100%;
-        margin-bottom: 2px;
-    }
-
-
-    .qr-info td:nth-child(2) {
-        display: none; /* Sembunyikan tanda ':' di mobile */
-    }
-
-
-    .qr-info td:last-child {
-        width: 100%;
-    }
-
-
-    .back-btn {
-        flex-direction: column;
-        width: 100%;
-    }
-
-
-    .back-btn a {
-        width: 100%;
-        text-align: center;
-    }
-}
-
-
-</style>
-
-
-<div class="qr-card">
-    <div class="qr-left">
-        @if($barangMasuk->item && $barangMasuk->item->foto && Storage::disk('public')->exists($barangMasuk->item->foto))
-            <img src="{{ asset('storage/' . $barangMasuk->item->foto) }}" alt="Foto Barang">
-        @else
-            <em style="display: block;">Tidak tersedia</em>
-        @endif
-    </div>
-
-
-    <div class="qr-right">
-        <h4>Detail Barang</h4>
-        <table class="qr-info">
-            <tr><td>Kode</td><td>:</td><td>{{ $barangMasuk->kode_barang }}</td></tr>
-            <tr><td>Nama</td><td>:</td><td>{{ $barangMasuk->item->nama_barang ?? '-' }}</td></tr>
-            <tr><td>Jumlah</td><td>:</td><td>{{ $barangMasuk->jumlah }}</td></tr>
-            <tr><td>Harga</td><td>:</td><td>Rp {{ number_format($barangMasuk->harga_satuan, 0, ',', '.') }}</td></tr>
-            <tr><td>Total</td><td>:</td><td>Rp {{ number_format($barangMasuk->total_harga, 0, ',', '.') }}</td></tr>
-            <tr><td>Tanggal</td><td>:</td><td>{{ \Carbon\Carbon::parse($barangMasuk->tanggal_masuk)->format('d-m-Y') }}</td></tr>
-            <tr><td>Kondisi</td><td>:</td><td>{{ $barangMasuk->kondisi->nama_kondisi ?? '-' }}</td></tr>
-            <tr><td>Petugas</td><td>:</td><td>{{ $barangMasuk->user->name ?? '-' }}</td></tr>
-            <tr>
-                <td>Kode QR</td><td>:</td>
-                <td>
-                    @php
-                        $qrPath = $barangMasuk->qr_code;
-                    @endphp
-
-                    @if(filled($qrPath) && Storage::disk('public')->exists($qrPath))
-                        <img src="{{ Storage::url($qrPath) }}" alt="QR Code">
-                    @else
-                        <em>Tidak tersedia</em>
+    <div style="background:#FAF9F6;min-height:100vh;padding:2rem 1.25rem;">
+        <div
+            style="max-width:900px;margin:auto;background:#fff;border:1px solid #E4E4D9;border-radius:1.5rem;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+                <div>
+                    <p style="color:#8FA882;font-weight:800;font-size:.75rem;text-transform:uppercase;">Inventori · Detail
+                    </p>
+                    <h4 style="color:#0B4F35;font-size:1.8rem;font-weight:900;margin:0;">Detail Barang Masuk</h4>
+                </div><a href="{{ route('barang-masuk.index') }}"
+                    style="background:#E4E4D9;color:#475569;padding:.75rem 1rem;border-radius:.75rem;text-decoration:none;font-weight:800;">Kembali</a>
+            </div>
+            <div style="display:grid;grid-template-columns:240px 1fr;gap:2rem;align-items:start;">
+                <div style="background:#FAF9F6;border-radius:1rem;padding:1rem;text-align:center;">
+                    @if ($barangMasuk->item && $barangMasuk->item->foto && Storage::disk('public')->exists($barangMasuk->item->foto))
+                        <img src="{{ asset('storage/' . $barangMasuk->item->foto) }}" alt="Foto Barang"
+                        style="width:100%;border-radius:.75rem;">@else<span style="color:#8FA882;">Tidak tersedia</span>
                     @endif
-                </td>
-            </tr>
-
-        </table>
-
-
-        {{-- Tombol --}}
-        <div class="back-btn">
-            <a href="{{ route('barang-masuk.index') }}" class="btn btn-outline-secondary">Kembali</a>
-            <a href="{{ route('barang-masuk.cetak-qr-kecil', $barangMasuk->id) }}" target="_blank" class="btn btn-outline-primary">Cetak QR</a>
-            <a href="{{ route('barang-masuk.cetak.pdf', $barangMasuk->id) }}" target="_blank" class="btn btn-outline-primary">Cetak Label</a>
-            <a href="{{ route('barang-masuk.cetak-berita-acara', $barangMasuk->id) }}" target="_blank" class="btn btn-outline-primary" target="_blank">Cetak Berita Acara</a>
+                </div>
+                <div>
+                    <h5 style="color:#0B4F35;font-weight:900;font-size:1.35rem;">
+                        {{ $barangMasuk->item->nama_barang ?? '-' }}</h5>
+                    <table style="width:100%;border-collapse:collapse;">
+                        @foreach ([['Kode', $barangMasuk->kode_barang], ['Jumlah', $barangMasuk->jumlah], ['Harga', 'Rp ' . number_format($barangMasuk->harga_satuan, 0, ',', '.')], ['Total', 'Rp ' . number_format($barangMasuk->total_harga, 0, ',', '.')], ['Tanggal', \Carbon\Carbon::parse($barangMasuk->tanggal_masuk)->format('d-m-Y')], ['Kondisi', $barangMasuk->kondisi->nama_kondisi ?? '-'], ['Petugas', $barangMasuk->user->name ?? '-']] as $row)
+                            <tr style="border-bottom:1px solid #E4E4D9;">
+                                <th style="padding:.7rem;text-align:left;color:#475569;">{{ $row[0] }}</th>
+                                <td style="padding:.7rem;">{{ $row[1] }}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+                    @php $qrPath = $barangMasuk->qr_code; @endphp<div style="margin-top:1rem;">
+                        @if (filled($qrPath) && Storage::disk('public')->exists($qrPath))
+                            <img src="{{ Storage::url($qrPath) }}" alt="QR Code"
+                            style="width:120px;padding:.5rem;border:1px solid #E4E4D9;border-radius:.75rem;">@else<span
+                                style="color:#999;">QR tidak tersedia</span>
+                        @endif
+                    </div>
+                    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.25rem;"><a
+                            href="{{ route('barang-masuk.cetak-qr-kecil', $barangMasuk->id) }}" target="_blank"
+                            style="background:#0B4F35;color:#fff;padding:.7rem .9rem;border-radius:.7rem;text-decoration:none;font-weight:700;">Cetak
+                            QR</a><a href="{{ route('barang-masuk.cetak.pdf', $barangMasuk->id) }}" target="_blank"
+                            style="background:#60a5fa;color:#fff;padding:.7rem .9rem;border-radius:.7rem;text-decoration:none;font-weight:700;">Cetak
+                            Label</a><a
+                            href="https://wa.me/?text={{ urlencode('Detail barang masuk: ' . $barangMasuk->kode_barang) }}"
+                            target="_blank"
+                            style="background:#16a34a;color:#fff;padding:.7rem .9rem;border-radius:.7rem;text-decoration:none;font-weight:700;">Kirim
+                            Struk WA</a></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 @endsection
+<style>@media(max-width:640px){div[style*="grid-template-columns:240px"]{grid-template-columns:1fr!important}}</style>
