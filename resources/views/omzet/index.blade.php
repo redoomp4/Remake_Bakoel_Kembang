@@ -138,6 +138,7 @@
         .filter-form .action-group button { width: 100%; }
         .container-laporan { padding: 15px 10px; }
     }
+    :root{--emerald:#059669;--emerald-dark:#065f46;--emerald-soft:#ecfdf5;--slate:#1e293b;--border:#e2e8f0} body{background:#f7faf8;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.container{max-width:1280px!important;padding:2rem 1.25rem 3rem}.header{background:#fff;border:1px solid var(--border);border-radius:1.25rem;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.header h4{color:var(--emerald-dark);font-weight:900;font-size:1.75rem;margin:0}.filter-form{background:#fff!important;border:1px solid var(--border)!important;border-radius:1.25rem!important;padding:1.5rem!important;box-shadow:0 2px 8px rgba(15,23,42,.05)}.filter-form label{font-size:.7rem;font-weight:900;text-transform:uppercase;color:#64748b;letter-spacing:.05em}.filter-form input,.filter-form select{border:1px solid #cbd5e1;border-radius:.75rem;padding:.75rem}.filter-form button{background:var(--emerald)!important;border-radius:.75rem}.back-button{border-radius:.75rem}.export-buttons{display:flex;flex-wrap:wrap;gap:.75rem}.export-buttons a{margin:0;background:var(--emerald)!important;border-radius:.75rem;font-weight:800}.widget-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.5rem 0}.widget{background:#fff;border:1px solid var(--border);border-radius:1.25rem;padding:1.25rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.widget-kicker{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#64748b}.widget-value{font-size:clamp(1.5rem,3vw,2rem);font-weight:900;color:var(--emerald-dark);margin:.5rem 0}.widget-sub{font-size:.85rem;color:#64748b}.widget-icon{display:grid;place-items:center;width:2.75rem;height:2.75rem;border-radius:.9rem;background:var(--emerald-soft);color:var(--emerald-dark);font-size:1.3rem}.table-wrapper{background:#fff;border:1px solid var(--border);border-radius:1.25rem;overflow:auto;box-shadow:0 2px 8px rgba(15,23,42,.05)}table{border-spacing:0!important}th{background:#f8fafc!important;color:#64748b;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}td{border-bottom:1px solid #f1f5f9!important;color:#334155;padding:1rem}tr:hover td{background:#f8fafc!important}.total-row td{background:#ecfdf5!important;color:#065f46;font-weight:900}@media(max-width:768px){.widget-grid{grid-template-columns:1fr}.container{padding:1rem}.widget-value{font-size:1.5rem}}
 </style>
 
 
@@ -204,6 +205,17 @@
 
 
 
+
+    @php
+        $omzetTotal = $total_omzet ?? $totalOmzet ?? 0;
+        $transactionCount = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->total() : (is_countable($data) ? count($data) : collect($data)->count());
+        $averageOmzet = $transactionCount > 0 ? $omzetTotal / $transactionCount : 0;
+    @endphp
+    <section class="widget-grid" aria-label="Ringkasan omzet">
+        <article class="widget"><div class="widget-icon">↗</div><div class="widget-kicker">Total Omzet Pendapatan</div><div class="widget-value">Rp {{ number_format($omzetTotal, 0, ',', '.') }}</div><div class="widget-sub">Total pendapatan terbaca</div></article>
+        <article class="widget"><div class="widget-icon">▤</div><div class="widget-kicker">Total Transaksi Penjualan</div><div class="widget-value">{{ $transactionCount }}</div><div class="widget-sub">Volume nota dan pesanan</div></article>
+        <article class="widget"><div class="widget-icon">◎</div><div class="widget-kicker">Rata-rata Per Transaksi</div><div class="widget-value">Rp {{ number_format($averageOmzet, 0, ',', '.') }}</div><div class="widget-sub">Berdasarkan filter aktif</div></article>
+    </section>
 
     {{-- Table --}}
     <div class="table-wrapper">
