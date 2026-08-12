@@ -1,42 +1,136 @@
-<aside class="w-full lg:w-80 bg-white border-r border-brand-accent p-6 flex flex-col gap-3 shrink-0">
-  <div class="mb-4 px-2 py-3 border-b border-brand-accent/50">
-    <p class="text-xs font-black text-brand-slate uppercase tracking-widest">Akses Admin Kebun</p>
-    <p class="text-[13px] text-brand-emerald font-bold mt-1">
-      <i class="fas fa-shield-alt mr-1 text-brand-sage"></i> Panel Laci Kas V3
-    </p>
-  </div>
+<aside class="w-full lg:w-72 bg-white border-r border-brand-accent p-4 md:p-6 shrink-0" aria-label="Navigasi admin">
+    <div class="mb-4 px-2 pb-4 border-b border-brand-accent/60">
+        <p class="text-[11px] font-black text-brand-slate uppercase tracking-[.14em]">Akses Admin Kebun</p>
+        <p class="text-xs text-brand-emerald font-bold mt-1"><i class="fas fa-shield-alt mr-1 text-brand-sage"></i>Panel
+            Laci Kas V3</p>
+    </div>
 
-  <nav class="flex flex-col gap-2">
-    <!-- Dashboard Keuangan -->
-    <a href="{{ route('dashboard.gudang') }}" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl font-black text-lg transition-all {{ request()->routeIs('dashboard.gudang') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate font-extrabold hover:bg-brand-offwhite' }}">
-      <span class="flex items-center gap-3"><i class="fas fa-wallet w-6"></i> Dashboard Keuangan</span>
-    </a>
+    <nav class="flex flex-col gap-2">
+        <!-- Dashboard -->
+        <a href="{{ route('dashboard.gudang') }}"
+            class="flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('dashboard.gudang') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+            <i class="fas fa-wallet w-5"></i>Dashboard Keuangan
+        </a>
 
-    <!-- Barang Keluar (OUT) -->
-    <a href="{{ route('barang-keluar.index') }}" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('barang-keluar*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <span class="flex items-center gap-3"><i class="fas fa-arrow-circle-up w-6 text-rose-500"></i> Barang Keluar</span>
-      <span class="text-xs bg-rose-50 text-rose-600 px-2.5 py-1 rounded-full font-black uppercase border border-rose-100">OUT</span>
-    </a>
+        <!-- Barang Keluar -->
+        <a href="{{ route('barang-keluar.index') }}"
+            class="flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('barang-keluar*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+            <span><i class="fas fa-arrow-circle-up w-5 mr-2 text-rose-500"></i>Barang Keluar</span>
+            <span class="text-[10px] bg-rose-50 text-rose-600 px-2 py-1 rounded-full font-black">OUT</span>
+        </a>
 
-    <!-- Barang Masuk (IN) -->
-    <a href="{{ route('barang-masuk.index') }}" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('barang-masuk*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <span class="flex items-center gap-3"><i class="fas fa-arrow-circle-down w-6 text-emerald-600"></i> Barang Masuk</span>
-      <span class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-black uppercase border border-emerald-100">IN</span>
-    </a>
+        <!-- Barang Masuk -->
+        <a href="{{ route('barang-masuk.index') }}"
+            class="flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('barang-masuk*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+            <span><i class="fas fa-arrow-circle-down w-5 mr-2 text-emerald-600"></i>Barang Masuk</span>
+            <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full font-black">IN</span>
+        </a>
 
-    <!-- Tambah Item Baru -->
-    <a href="{{ route('item.index') }}" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('item*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <i class="fas fa-plus-circle w-6 text-brand-sage"></i> Tambah Item Baru
-    </a>
+        <!-- Item & Persediaan -->
+        <a href="{{ route('item.index') }}"
+            class="flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('item*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+            <i class="fas fa-boxes w-5 text-brand-sage"></i>Item & Persediaan
+        </a>
 
-    <!-- Master Database -->
-    <a href="{{ route('pemasok.index') }}" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('pemasok*') || request()->routeIs('kategori*') || request()->routeIs('satuan*') || request()->routeIs('lokasi*') || request()->routeIs('kondisi*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <i class="fas fa-database w-6 text-brand-sage"></i> Master Database
-    </a>
+        <!-- ACCORDION / DROPDOWN MASTER DATABASE -->
+        @php
+            $isMasterActive =
+                request()->routeIs('kategori*') ||
+                request()->routeIs('satuan*') ||
+                request()->routeIs('pemasok*') ||
+                request()->routeIs('lokasi*') ||
+                request()->routeIs('kondisi*');
+        @endphp
 
-    <!-- Laporan Transaksi -->
-    <a href="{{ route('laporan') }}" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-extrabold text-lg transition-all {{ request()->routeIs('laporan*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-      <i class="fas fa-file-invoice-dollar w-6 text-brand-sage"></i> Laporan Transaksi
-    </a>
-  </nav>
+        <details class="group rounded-xl transition-all duration-200" {{ $isMasterActive ? 'open' : '' }}>
+            <summary
+                class="flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold cursor-pointer list-none select-none {{ $isMasterActive ? 'bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-database w-5 text-brand-sage"></i>
+                    <span>Master Database</span>
+                </div>
+                <i class="fas fa-chevron-down text-xs transition-transform duration-200 group-open:rotate-180"></i>
+            </summary>
+
+            <!-- Sub-Menu Master Items -->
+            <div class="flex flex-col gap-1 pl-6 pr-2 pt-2 pb-1 mt-1 border-l-2 border-brand-accent ml-6">
+                <!-- 1. Kategori -->
+                <a href="{{ route('kategori.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('kategori*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-tags w-4 text-center"></i>Kategori Bunga
+                </a>
+
+                <!-- 2. Satuan -->
+                <a href="{{ route('satuan.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('satuan*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-ruler-combined w-4 text-center"></i>Satuan Ukur
+                </a>
+
+                <!-- 3. Pemasok -->
+                <a href="{{ route('pemasok.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('pemasok*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-truck-loading w-4 text-center"></i>Pemasok / Suplier
+                </a>
+
+                <!-- 4. Lokasi -->
+                <a href="{{ route('lokasi.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('lokasi*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-map-marker-alt w-4 text-center"></i>Lokasi Rak
+                </a>
+
+                <!-- 5. Kondisi -->
+                <a href="{{ route('kondisi.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('kondisi*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-clipboard-check w-4 text-center"></i>Kondisi Barang
+                </a>
+            </div>
+        </details>
+
+        <!-- ACCORDION / DROPDOWN LAPORAN -->
+        @php
+            $isLaporanActive =
+                request()->routeIs('laporan*') ||
+                request()->routeIs('laporan.arus*') ||
+                request()->routeIs('aset*') ||
+                request()->routeIs('omzet*');
+        @endphp
+
+        <details class="group rounded-xl transition-all duration-200" {{ $isLaporanActive ? 'open' : '' }}>
+            <summary
+                class="flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold cursor-pointer list-none select-none {{ $isLaporanActive ? 'bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-file-invoice-dollar w-5 text-brand-sage"></i>
+                    <span>Laporan</span>
+                </div>
+                <i class="fas fa-chevron-down text-xs transition-transform duration-200 group-open:rotate-180"></i>
+            </summary>
+
+            <!-- Sub-Menu Laporan -->
+            <div class="flex flex-col gap-1 pl-6 pr-2 pt-2 pb-1 mt-1 border-l-2 border-brand-accent ml-6">
+                <!-- 1. Laporan Stok -->
+                <a href="{{ route('laporan') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('laporan') && !request()->routeIs('laporan.arus*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-boxes w-4 text-center"></i>Laporan Stok
+                </a>
+
+                <!-- 2. Arus Barang -->
+                <a href="{{ route('laporan.arus') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('laporan.arus*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-exchange-alt w-4 text-center"></i>Arus Barang
+                </a>
+
+                <!-- 3. Laporan Aset -->
+                <a href="{{ route('aset.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('aset*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-coins w-4 text-center"></i>Laporan Aset
+                </a>
+
+                <!-- 4. Omzet -->
+                <a href="{{ route('omzet.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('omzet*') ? 'bg-brand-emerald text-white shadow-sm' : 'text-brand-slate hover:bg-brand-offwhite hover:text-brand-emerald' }}">
+                    <i class="fas fa-chart-line w-4 text-center"></i>Omzet
+                </a>
+            </div>
+        </details>
+    </nav>
 </aside>
