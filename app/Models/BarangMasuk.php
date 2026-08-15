@@ -1,28 +1,20 @@
 <?php
 
-
-
-
 namespace App\Models;
-
-
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-
-
+use Carbon\Carbon;
 
 class BarangMasuk extends Model
 {
     use HasFactory;
 
-
-
+    protected $table = 'barang_masuks';
 
     protected $fillable = [
-        'kode_barang',
+        'user_id',
+        'item_id',
         'jumlah',
         'harga_satuan',
         'total_harga',
@@ -31,77 +23,102 @@ class BarangMasuk extends Model
         'id_pemasok',
         'id_lokasi',
         'id_kondisi',
-        'qr_code',
-        'user_id',
         'catatan',
     ];
 
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    protected $casts = [
+        'tanggal_masuk' => 'datetime',
+        'tanggal_kadaluarsa' => 'date',
+        'harga_satuan' => 'decimal:2',
+        'total_harga' => 'decimal:2',
+    ];
 
 
+    /**
+     * Pemasok
+     */
+    public function pemasok()
+    {
+        return $this->belongsTo(
+            Pemasok::class,
+            'id_pemasok',
+            'id'
+        );
+    }
 
-    // Accessor Umur Tanaman (dihitung dari tanggal_masuk/created_at hingga sekarang)
+    /**
+     * Lokasi penyimpanan
+     */
+    public function lokasi()
+    {
+        return $this->belongsTo(
+            Lokasi::class,
+            'id_lokasi',
+            'id'
+        );
+    }
+
+    /**
+     * Kondisi barang
+     */
+    public function kondisi()
+    {
+        return $this->belongsTo(
+            Kondisi::class,
+            'id_kondisi',
+            'id'
+        );
+    }
+
+    /**
+     * User pemilik transaksi
+     */
+    public function user()
+    {
+        return $this->belongsTo(
+            User::class,
+            'user_id',
+            'id'
+        );
+    }
+
+    /**
+     * Umur tanaman
+     */
     public function getUmurTanamanAttribute()
     {
-        $startDate = $this->tanggal_masuk ?? $this->created_at ?? now();
-        $diffDays = (int) \Carbon\Carbon::parse($startDate)->diffInDays(now());
+        $startDate = $this->tanggal_masuk
+            ?? $this->created_at
+            ?? now();
+
+        $diffDays = (int) Carbon::parse($startDate)
+            ->diffInDays(now());
 
         if ($diffDays <= 0) {
             return 'Baru Ditanam (1 Hari)';
-        } elseif ($diffDays < 30) {
+        }
+
+        if ($diffDays < 30) {
             return $diffDays . ' Hari';
-        } elseif ($diffDays < 365) {
+        }
+
+        if ($diffDays < 365) {
             $months = floor($diffDays / 30);
             $remainingDays = $diffDays % 30;
-            return $months . ' Bulan' . ($remainingDays > 0 ? ' ' . $remainingDays . ' Hari' : '');
-        } else {
-            $years = floor($diffDays / 365);
-            return $years . ' Tahun';
+
+            return $months . ' Bulan' .
+                ($remainingDays > 0
+                    ? ' ' . $remainingDays . ' Hari'
+                    : '');
         }
-    }
 
-    // Relasi ke model Item
-    public function item()
-    {
-        return $this->belongsTo(Item::class, 'kode_barang', 'kode_barang');
-    }
+        $years = floor($diffDays / 365);
 
-
-
-
-    // Relasi ke model Pemasok
-    public function pemasok()
-    {
-        return $this->belongsTo(Pemasok::class, 'id_pemasok');
-    }
-
-    public function kategori()
-    {
-        return $this->belongsTo(\App\Models\Kategori::class, 'id_kategori'); // sesuaikan FK
-    }
-
-
-
-    // Relasi ke model Lokasi
-    public function lokasi()
-    {
-        return $this->belongsTo(Lokasi::class, 'id_lokasi');
-    }
-
-
-
-
-    // Relasi ke model Kondisi
-    public function kondisi()
-    {
-        return $this->belongsTo(Kondisi::class, 'id_kondisi');
-    }
-
-
-
-
-    // Relasi ke model User
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
+        return $years . ' Tahun';
     }
 }

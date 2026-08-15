@@ -597,7 +597,7 @@
     @include('partials.header')
     <main class="flex-grow flex flex-col lg:flex-row">
         @auth @include('partials.sidebar') @endauth
-        <div class="page-shell flex-grow w-full p-4 md:p-8">@auth @include('partials.gaptek-assistant') @endauth
+        {{-- <div class="page-shell flex-grow w-full p-4 md:p-8">@auth @include('partials.gaptek-assistant') @endauth --}}
             @yield('content')</div>
     </main>
     @include('partials.toast')

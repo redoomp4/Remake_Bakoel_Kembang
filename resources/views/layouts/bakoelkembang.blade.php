@@ -85,16 +85,31 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #0B4F35;
     }
+
+/* perbaiki zoom in halaman publik item */
+    /* Khusus halaman publik */
+    .public-page {
+        font-size: 0.9rem;
+    }
+
+    .public-page h1,
+    .public-page h2 {
+        line-height: 1.25;
+    }
+
+    .public-page .public-card {
+        padding: 1.5rem;
+    }
   </style>
   @stack('styles')
 </head>
 <body class="min-h-screen flex flex-col antialiased bg-brand-offwhite text-gray-900 selection:bg-brand-emerald selection:text-white">
 
   <!-- Header Banner Mode Lansia -->
-  <div class="bg-brand-emerald text-brand-offwhite py-3 px-6 text-center text-xs md:text-sm font-black tracking-wider flex items-center justify-center gap-2 border-b border-white/10">
+  {{-- <div class="bg-brand-emerald text-brand-offwhite py-3 px-6 text-center text-xs md:text-sm font-black tracking-wider flex items-center justify-center gap-2 border-b border-white/10">
     <span class="animate-pulse">🟢</span>
     DESAIN RAMAH LANSIA V3 ACTIVE • TEKS EKSTRA BESAR (18px+) • TOMBOL LAPANG • FORM SAT-SET BEBAS BINGUNG!
-  </div>
+  </div> --}}
 
   <!-- Main Navigation Header -->
   @include('partials.header')

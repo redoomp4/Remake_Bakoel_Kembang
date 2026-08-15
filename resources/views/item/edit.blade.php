@@ -22,7 +22,7 @@
                     </ul>
                 </div>
             @endif
-            <form action="{{ route('item.update', $item->kode_barang) }}" method="POST" enctype="multipart/form-data"
+            <form action="{{ route('item.update', $item->id) }}" method="POST" enctype="multipart/form-data"
                 style="background:#fff;border:1px solid #E4E4D9;border-radius:1.5rem;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.05);">
                 @csrf @method('PUT')<div
                     style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;">
@@ -99,11 +99,11 @@
 </script>
 @endsection
 <style>
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: #0B4F35 !important;
-    box-shadow: 0 0 0 3px rgba(11, 79, 53, .12)
-}
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #0B4F35 !important;
+        box-shadow: 0 0 0 3px rgba(11, 79, 53, .12)
+    }
 </style>

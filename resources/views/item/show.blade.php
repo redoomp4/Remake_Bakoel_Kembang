@@ -40,10 +40,10 @@
                         <dd style="margin:0;">{{ $item->deskripsi ?? '-' }}</dd>
                     </dl>
                     <p style="color:#8FA882;font-size:.8rem;margin-top:1.5rem;">Ditambahkan pada {{ $item->created_at }}</p>
-                    <a href="https://wa.me/?text={{ urlencode('Detail item: ' . $item->nama_barang . ' - ' . $item->kode_barang) }}"
+                    {{-- <a href="https://wa.me/?text={{ urlencode('Detail item: ' . $item->nama_barang . ' - ' . $item->kode_barang) }}"
                         target="_blank"
                         style="display:inline-block;background:#16a34a;color:#fff;padding:.8rem 1rem;border-radius:.75rem;text-decoration:none;font-weight:800;margin-top:.75rem;">Kirim
-                        Struk WA</a>
+                        Struk WA</a> --}}
                 </div>
             </div>
         </div>

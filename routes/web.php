@@ -28,6 +28,7 @@ use App\Http\Controllers\NotificationController;
 | Form permintaan magic link & endpoint untuk mengirim email magic link.
 | Endpoint login via magic link menggunakan signed URL + throttle.
 */
+
 Route::middleware('guest')->group(function () {
     // Form input email untuk minta magic link (opsional)
     Route::get('/magic-link', function () {
@@ -55,29 +56,41 @@ Route::get('/magic-login', [MagicLinkController::class, 'login'])
 | Public / Landing
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => view('welcome'))->name('welcome');
-Route::get('/welcome', fn () => view('home'));
+Route::get('/', fn() => view('welcome'))->name('welcome');
+Route::get('/welcome', fn() => view('home'));
 
-Route::get('/profil', fn () => view('landingpage.profil'))->name('profil');
-Route::get('/fitur/gudang', fn () => view('landingpage.gudang'))->name('gudang');
-Route::get('/fitur/superadmin', fn () => view('landingpage.superadmin'))->name('superadmin');
-Route::get('/fitur/viewer', fn () => view('landingpage.viewer'))->name('viewer');
-Route::get('/faq', fn () => view('landingpage.faq'))->name('faq');
-Route::get('/galeri', fn () => view('landingpage.galeri'))->name('galeri');
-Route::get('/kontak', fn () => view('landingpage.kontak'))->name('kontak');
+Route::get('/profil', fn() => view('landingpage.profil'))->name('profil');
+Route::get('/fitur/gudang', fn() => view('landingpage.gudang'))->name('gudang');
+Route::get('/fitur/superadmin', fn() => view('landingpage.superadmin'))->name('superadmin');
+Route::get('/fitur/viewer', fn() => view('landingpage.viewer'))->name('viewer');
+Route::get('/faq', fn() => view('landingpage.faq'))->name('faq');
+Route::get('/galeri', fn() => view('landingpage.galeri'))->name('galeri');
+Route::get('/kontak', fn() => view('landingpage.kontak'))->name('kontak');
 
-Route::get('/learn-more', fn () => view('learn-more'))->name('learn.more');
+Route::get('/learn-more', fn() => view('learn-more'))->name('learn.more');
 
-Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
-Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])
-    ->name('barang-masuk.qrshow.kode');
+
+/*
+|--------------------------------------------------------------------------
+| Public Item
+|--------------------------------------------------------------------------
+| Bisa diakses pelanggan tanpa login.
+| Identitas publik menggunakan UUID public_token,
+| bukan kode_barang.
+*/
+
+Route::get('/p/{public_token}', [ItemController::class, 'publicShow'])->name('item.public');
+
+
+// Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
+// Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])->name('barang-masuk.qrshow.kode');
 
 /*
 |--------------------------------------------------------------------------
 | Dashboard (global)
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', fn () => redirect(App\Providers\RouteServiceProvider::redirectByRole()))
+Route::get('/dashboard', fn() => redirect(App\Providers\RouteServiceProvider::redirectByRole()))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -91,7 +104,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     // Dashboard per role
     Route::get('/dashboard/superadmin', [UserController::class, 'dashboardSuperadmin'])->name('dashboard.superadmin');
     Route::get('/dashboard/gudang', [DashboardGudangController::class, 'index'])->name('dashboard.gudang');
-    Route::get('/dashboard/viewer', fn () => view('dashboard.viewer'))->name('dashboard.viewer');
+    Route::get('/dashboard/viewer', fn() => view('dashboard.viewer'))->name('dashboard.viewer');
 
     // Notifikasi (contoh: untuk gudang)
     Route::middleware(['role:gudang'])->group(function () {
@@ -161,14 +174,22 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::resource('barang-masuk', BarangMasukController::class);
         Route::resource('barang-keluar', BarangKeluarController::class);
 
-        // Cetak / detail khusus
-        Route::get('/barang-masuk/{id}/qr-card', [BarangMasukController::class, 'qrCard'])->name('barang-masuk.qr-card');
-        Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
-        Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
-        Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
-        Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
+        // item
+        Route::delete('/item/{id}', [ItemController::class, 'destroy'])->name('item.destroy');
+        Route::get('/item/{id}/cetak-pdf', [ItemController::class, 'cetakPDF'])->name('item.cetak.pdf');
 
+        // barang masuk
         Route::get('/barang-keluar/{id}/detail', [BarangKeluarController::class, 'show'])->name('barang-keluar.detail');
+        Route::get('/barang-masuk/{id}/detail', [BarangMasukController::class, 'detail'])->name('barang-masuk.detail');
+        Route::get('/barang-masuk/{id}/edit', [BarangMasukController::class, 'edit'])->name('barang-masuk.edit');
+        Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
+        Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
+        Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy'); 
+
+        // Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
+        // Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
+        // Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
+        
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
         Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');
     });
@@ -190,8 +211,6 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile/{user}', [ProfileController::class, 'update'])->name('profile.update');
-
-
 });
 
 /*
