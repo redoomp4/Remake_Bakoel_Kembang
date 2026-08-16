@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->restrictOnDelete();
- 
+
             $table->foreignId('item_id')
                 ->constrained('items')
                 ->restrictOnDelete();
@@ -25,6 +25,8 @@ return new class extends Migration
             // DATA TRANSAKSI BARANG KELUAR
             $table->dateTime('tanggal_keluar');
 
+            $table->string('jenis_transaksi', 50);
+            
             $table->unsignedInteger('jumlah_keluar');
 
             $table->decimal('harga_jual', 15, 2)

@@ -325,26 +325,37 @@
                         </div>
                     @endif
                     {{-- ACTION --}}
-                    <div
-                        style="
-                        display:flex;
-                        gap:.6rem;
-                        flex-wrap:wrap;
-                        margin-top:1.25rem;
-                    ">
+                    <div class="flex flex-col sm:flex-row gap-2">
                         {{-- BERITA ACARA --}}
-                        <a href="{{ route('barang-masuk.cetak-berita-acara', $barangMasuk->id) }}" target="_blank"
-                            style="
-                            background:#0B4F35;
-                            color:#fff;
-                            padding:.7rem .9rem;
-                            border-radius:.7rem;
-                            text-decoration:none;
-                            font-weight:700;
-                        ">
-                            Berita Acara
+                        <a href="{{ route('barang-masuk.cetak-detail', $barangMasuk->id) }}" target="_blank"
+                            class="inline-flex items-center justify-center gap-2
+                            px-5 py-3 rounded-xl
+                            bg-white border-2 border-blue-500
+                            text-sm font-extrabold text-blue-600
+                            shadow-md
+                            hover:bg-blue-50 hover:shadow-lg
+                            transition">
+                            <i class="fas fa-file-pdf"></i>
+                            Cetak PDF
                         </a>
+
+                        <a href="{{ route('barang-masuk.cetak-berita-acara', $barangMasuk->id) }}" target="_blank"
+                            class="inline-flex items-center justify-center gap-2
+                            px-5 py-3 rounded-xl
+                            bg-white border-2 border-[#0B4F35]
+                            text-sm font-extrabold text-[#0B4F35]
+                            shadow-md
+                            hover:bg-[#F0F7F3]
+                            hover:border-[#083d29]
+                            hover:text-[#083d29]
+                            hover:shadow-lg
+                            transition">
+                            <i class="fas fa-file-signature"></i>
+                            Cetak Berita Acara
+                        </a>
+
                     </div>
+
                 </div>
             </div>
         </div>

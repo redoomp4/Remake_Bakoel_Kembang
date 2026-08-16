@@ -23,6 +23,7 @@ class BarangKeluar extends Model
         'penerima',
         'lokasi_tujuan',
         'catatan',
+        'jenis_transaksi',
     ];
 
     /*

@@ -184,14 +184,18 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/barang-masuk/{id}/edit', [BarangMasukController::class, 'edit'])->name('barang-masuk.edit');
         Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
         Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
-        Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy'); 
+        Route::get('/barang-masuk/{id}/cetak-detail', [BarangMasukController::class, 'cetakDetail'])->name('barang-masuk.cetak-detail');
+        Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy');
 
         // Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
         // Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
         // Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
-        
+
+        // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
-        Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');
+        Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');        
+        Route::delete('/barang-keluar/{id}', [BarangKeluarController::class, 'destroy'])->name('barang-keluar.destroy');
+
     });
 
     // SUPERADMIN ONLY

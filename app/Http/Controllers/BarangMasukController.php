@@ -10,9 +10,9 @@ use App\Models\Lokasi;
 use App\Models\Kondisi;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+// use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Validation\Rule;
+// use Illuminate\Validation\Rule;
 
 class BarangMasukController extends Controller
 {
@@ -86,7 +86,6 @@ class BarangMasukController extends Controller
         );
     }
 
-
     /**
      * CREATE
      */
@@ -112,7 +111,6 @@ class BarangMasukController extends Controller
                 ->get(),
         ]);
     }
-
 
     /**
      * STORE
@@ -262,7 +260,6 @@ class BarangMasukController extends Controller
         }
     }
 
-
     /**
      * SHOW
      */
@@ -283,11 +280,8 @@ class BarangMasukController extends Controller
         );
     }
 
-
     /**
-     * DETAIL
-     *
-     * QR nantinya menjadi milik ITEM.
+     * DETAIL 
      * Halaman ini hanya menampilkan detail transaksi barang masuk.
      */
     public function detail($id)
@@ -503,7 +497,6 @@ class BarangMasukController extends Controller
         }
     }
 
-
     /**
      * DELETE
      */
@@ -535,8 +528,6 @@ class BarangMasukController extends Controller
         }
     }
 
-
-
     /**
      * CETAK BERITA ACARA
      */
@@ -555,6 +546,39 @@ class BarangMasukController extends Controller
             ->findOrFail($id);
 
         $pdf = Pdf::loadView('barangmasuk.berita_acara_pdf', [
+            'barangMasuk'     => $barangMasuk,
+            'tanggal_lengkap' => $barangMasuk->tanggal_masuk->translatedFormat('d F Y'),
+            'hari'            => $barangMasuk->tanggal_masuk->translatedFormat('l'),
+            'bulan'           => $barangMasuk->tanggal_masuk->format('m'),
+            'tahun'           => $barangMasuk->tanggal_masuk->format('Y'),
+            'nomor'           => str_pad($barangMasuk->id, 3, '0', STR_PAD_LEFT),
+            'lokasi'          => $barangMasuk->lokasi->nama_lokasi ?? '-',
+        ])->setPaper('A4', 'portrait');
+
+        return $pdf->stream(
+            'berita_acara_barang_masuk_' . $barangMasuk->id . '.pdf',
+            ['Attachment' => false]
+        );
+    }
+
+        /**
+     * CETAK BERITA ACARA
+     */
+    public function cetakDetail($id)
+    {
+        \Carbon\Carbon::setLocale('id');
+
+        $barangMasuk = BarangMasuk::with([
+            'item.satuan',
+            'lokasi',
+            'kondisi',
+            'pemasok',
+            'user',
+        ])
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        $pdf = Pdf::loadView('barangmasuk.berita_acara_cetak_warna', [
             'barangMasuk'     => $barangMasuk,
             'tanggal_lengkap' => $barangMasuk->tanggal_masuk->translatedFormat('d F Y'),
             'hari'            => $barangMasuk->tanggal_masuk->translatedFormat('l'),
