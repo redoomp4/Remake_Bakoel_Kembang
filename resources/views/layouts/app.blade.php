@@ -36,6 +36,7 @@
         }
     </script>
     <style>
+        @stack('styles')
         :root {
             --emerald: #0B4F35;
             --sage: #8FA882;

@@ -20,7 +20,7 @@ use App\Http\Controllers\OmzetController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\DashboardGudangController;
 use App\Http\Controllers\NotificationController;
-
+use App\Http\Controllers\FormController;
 /*
 |--------------------------------------------------------------------------
 | Magic Link (Guest)
@@ -162,7 +162,12 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     // GUDANG ONLY
     Route::middleware(['role:gudang'])->group(function () {
         // Master data
-        Route::view('/master', 'master.index')->name('master.index');
+        Route::get('/form', [FormController::class, 'index'])->name('form.index');
+        Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
+        Route::get('/api/form/item-detail/{kode}', [FormController::class, 'getItemDetail'])->name('form.item-detail');
+        Route::post('/form/item/store', [FormController::class, 'store'])->name('form.item.store');
+
+
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);
         Route::resource('satuan', SatuanController::class);
@@ -193,9 +198,8 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
         // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
-        Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');        
+        Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');
         Route::delete('/barang-keluar/{id}', [BarangKeluarController::class, 'destroy'])->name('barang-keluar.destroy');
-
     });
 
     // SUPERADMIN ONLY
