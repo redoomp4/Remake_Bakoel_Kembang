@@ -1,198 +1,480 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
-
-use Illuminate\Http\Request;
+use App\Models\Item;
+use App\Models\BarangMasuk;
+use App\Models\BarangKeluar;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 
 class DashboardGudangController extends Controller
 {
     public function index()
     {
         $userId = Auth::id();
+
         $today = Carbon::today();
+        $awalBulan = $today->copy()->startOfMonth();
+        $akhirBulan = $today->copy()->endOfMonth();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 1. OMZET & TRANSAKSI HARI INI
+        |--------------------------------------------------------------------------
+        */
 
-        // 1. Jumlah stok hampir habis
-        $stokMinimum = DB::table('items as i')
-            ->leftJoinSub(
-                DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('SUM(jumlah) AS total_masuk'))
-                    ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'm',
-                'm.kode_barang',
-                '=',
-                'i.kode_barang'
-            )
-            ->leftJoinSub(
-                DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('SUM(jumlah_keluar) AS total_keluar'))
-                    ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'k',
-                'k.kode_barang',
-                '=',
-                'i.kode_barang'
-            )
-            ->select(
-                'i.nama_barang',
-                'i.stok_minimum',
-                DB::raw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) AS stok_akhir')
-            )
-            // PAKAI WHERE, BUKAN HAVING
-            ->whereRaw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) <= i.stok_minimum')
-            ->orderBy('stok_akhir', 'asc')
-            ->orderBy('i.nama_barang')
-            ->get();
+        $barangKeluarHariIni = BarangKeluar::where('user_id', $userId)
+            ->whereDate('tanggal_keluar', $today);
 
+        $omzetHariIni = (float) $barangKeluarHariIni
+            ->sum('total_harga_jual');
 
-        // 2. Barang kadaluarsa dalam 30 hari
-        $kadaluarsa = DB::table('barang_masuks')
-            ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
-            ->where('barang_masuks.user_id', $userId)
-            ->whereBetween('barang_masuks.tanggal_kadaluarsa', [$today, $today->copy()->addDays(30)])
-            ->select('items.nama_barang', 'barang_masuks.tanggal_kadaluarsa')
-            ->get();
-
-
-        // 3. Transaksi Hari Ini
-        $masukHariIni = DB::table('barang_masuks')
-            ->where('user_id', $userId)
-            ->whereDate('created_at', $today)
+        $transaksiKeluarHariIni = (int) $barangKeluarHariIni
             ->count();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 2. HPP HARI INI
+        |--------------------------------------------------------------------------
+        |
+        | SEMENTARA:
+        | HPP = jumlah keluar × harga_dasar item
+        |
+        | Nanti bisa diganti menjadi Moving Average.
+        |
+        */
 
-        $keluarHariIni = DB::table('barang_keluars')
+        $hppHariIni = (float) BarangKeluar::query()
+            ->where('barang_keluars.user_id', $userId)
+            ->whereDate('barang_keluars.tanggal_keluar', $today)
+            ->join(
+                'items',
+                'barang_keluars.item_id',
+                '=',
+                'items.id'
+            )
+            ->selectRaw(
+                'COALESCE(SUM(
+                    barang_keluars.jumlah_keluar * items.harga_dasar
+                ), 0) AS total_hpp'
+            )
+            ->value('total_hpp');
+
+        $labaKotorHariIni = $omzetHariIni - $hppHariIni;
+
+        $marginHariIni = $omzetHariIni > 0
+            ? ($labaKotorHariIni / $omzetHariIni) * 100
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. NILAI PERSEDIAAN
+        |--------------------------------------------------------------------------
+        |
+        | Stok = total masuk - total keluar
+        |
+        | Nilai sementara:
+        | stok × harga_dasar
+        |
+        */
+
+        $nilaiPersediaan = (float) Item::query()
+            ->where('items.user_id', $userId)
+            ->leftJoinSub(
+                BarangMasuk::query()
+                    ->select(
+                        'item_id',
+                        DB::raw('SUM(jumlah) AS total_masuk')
+                    )
+                    ->where('user_id', $userId)
+                    ->groupBy('item_id'),
+                'masuk',
+                'masuk.item_id',
+                '=',
+                'items.id'
+            )
+            ->leftJoinSub(
+                BarangKeluar::query()
+                    ->select(
+                        'item_id',
+                        DB::raw('SUM(jumlah_keluar) AS total_keluar')
+                    )
+                    ->where('user_id', $userId)
+                    ->groupBy('item_id'),
+                'keluar',
+                'keluar.item_id',
+                '=',
+                'items.id'
+            )
+            ->selectRaw(
+                'COALESCE(SUM(
+                    GREATEST(
+                        COALESCE(masuk.total_masuk, 0)
+                        -
+                        COALESCE(keluar.total_keluar, 0),
+                        0
+                    ) * COALESCE(items.harga_dasar, 0)
+                ), 0) AS nilai_persediaan'
+            )
+            ->value('nilai_persediaan');
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. DATA BULAN INI
+        |--------------------------------------------------------------------------
+        */
+
+        $barangKeluarBulanIni = BarangKeluar::query()
             ->where('user_id', $userId)
-            ->whereDate('created_at', $today)
+            ->whereBetween(
+                'tanggal_keluar',
+                [$awalBulan, $akhirBulan]
+            );
+
+        $omzetBulanIni = (float) $barangKeluarBulanIni
+            ->sum('total_harga_jual');
+
+        /*
+        |--------------------------------------------------------------------------
+        | HPP BULAN INI
+        |--------------------------------------------------------------------------
+        */
+
+        $hppBulanIni = (float) BarangKeluar::query()
+            ->where('barang_keluars.user_id', $userId)
+            ->whereBetween(
+                'barang_keluars.tanggal_keluar',
+                [$awalBulan, $akhirBulan]
+            )
+            ->join(
+                'items',
+                'barang_keluars.item_id',
+                '=',
+                'items.id'
+            )
+            ->selectRaw(
+                'COALESCE(SUM(
+                    barang_keluars.jumlah_keluar * items.harga_dasar
+                ), 0) AS total_hpp'
+            )
+            ->value('total_hpp');
+
+        $labaBulanIni = $omzetBulanIni - $hppBulanIni;
+
+        $marginBulanIni = $omzetBulanIni > 0
+            ? ($labaBulanIni / $omzetBulanIni) * 100
+            : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. JUMLAH TRANSAKSI BARANG MASUK / KELUAR HARI INI
+        |--------------------------------------------------------------------------
+        */
+
+        $masukHariIni = BarangMasuk::where('user_id', $userId)
+            ->whereDate('tanggal_masuk', $today)
             ->count();
 
+        $keluarHariIni = BarangKeluar::where('user_id', $userId)
+            ->whereDate('tanggal_keluar', $today)
+            ->count();
 
-        // 4. 5 Barang Stok Terendah
-        // 5 stok terendah, dihitung dari total_masuk - total_keluar
-        $stokTerendah = DB::table('items as i')
+        /*
+        |--------------------------------------------------------------------------
+        | 6. STOK TERKINI SEMUA ITEM
+        |--------------------------------------------------------------------------
+        */
+
+        $stokQuery = Item::query()
+            ->where('items.user_id', $userId)
+
             ->leftJoinSub(
-                DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('SUM(jumlah) as total_masuk'))
+                BarangMasuk::query()
+                    ->select(
+                        'item_id',
+                        DB::raw('SUM(jumlah) AS total_masuk')
+                    )
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'm',
-                'm.kode_barang',
+                    ->groupBy('item_id'),
+                'masuk',
+                'masuk.item_id',
                 '=',
-                'i.kode_barang'
+                'items.id'
             )
+
             ->leftJoinSub(
-                DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('SUM(jumlah_keluar) as total_keluar'))
+                BarangKeluar::query()
+                    ->select(
+                        'item_id',
+                        DB::raw('SUM(jumlah_keluar) AS total_keluar')
+                    )
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'k',
-                'k.kode_barang',
+                    ->groupBy('item_id'),
+                'keluar',
+                'keluar.item_id',
                 '=',
-                'i.kode_barang'
+                'items.id'
             )
+
             ->select(
-                'i.kode_barang',
-                'i.nama_barang',
-                DB::raw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) as stok_akhir')
+                'items.id',
+                'items.nama_barang',
+                'items.stok_minimum',
+                'items.harga_dasar'
             )
-            // Kalau mau sembunyikan barang yang belum pernah ada pergerakan, buka komentar di bawah:
-            // ->havingRaw('(COALESCE(m.total_masuk,0) + COALESCE(k.total_keluar,0)) > 0')
+
+            ->selectRaw(
+                'GREATEST(
+                    COALESCE(masuk.total_masuk, 0)
+                    -
+                    COALESCE(keluar.total_keluar, 0),
+                    0
+                ) AS stok_akhir'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | 7. STOK TERENDAH
+        |--------------------------------------------------------------------------
+        */
+
+        $stokTerendah = (clone $stokQuery)
             ->orderBy('stok_akhir', 'asc')
-            ->orderBy('i.nama_barang')
+            ->orderBy('items.nama_barang')
             ->limit(5)
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 8. STOK MINIMUM
+        |--------------------------------------------------------------------------
+        */
 
-        // 5) Idle Stock: barang yang tidak bergerak > 30 hari
-        $idleStock = DB::table('items as i')
-            // last_in per barang
-            ->leftJoinSub(
-                DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('MAX(tanggal_masuk) AS last_in'))
-                    ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'm',
-                'm.kode_barang',
-                '=',
-                'i.kode_barang'
+        $stokMinimum = (clone $stokQuery)
+            ->whereRaw(
+                'GREATEST(
+                    COALESCE(masuk.total_masuk, 0)
+                    -
+                    COALESCE(keluar.total_keluar, 0),
+                    0
+                ) <= items.stok_minimum'
             )
-            // last_out per barang
-            ->leftJoinSub(
-                DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('MAX(tanggal_keluar) AS last_out'))
-                    ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
-                'k',
-                'k.kode_barang',
-                '=',
-                'i.kode_barang'
+            ->orderBy('stok_akhir', 'asc')
+            ->orderBy('items.nama_barang')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 9. BARANG KADALUARSA DALAM 30 HARI
+        |--------------------------------------------------------------------------
+        */
+
+        $kadaluarsa = BarangMasuk::query()
+            ->where('barang_masuks.user_id', $userId)
+            ->whereNotNull('tanggal_kadaluarsa')
+            ->whereBetween(
+                'tanggal_kadaluarsa',
+                [
+                    $today,
+                    $today->copy()->addDays(30)
+                ]
             )
-            // ambil lokasi dari transaksi masuk TERAKHIR
-            ->leftJoin('barang_masuks as bm_latest', function ($join) use ($userId) {
-                $join->on('bm_latest.kode_barang', '=', 'i.kode_barang')
-                    ->where('bm_latest.user_id', '=', $userId);
-            })
-            // join tabel lokasi untuk nama lokasi (dari bm_latest)
-            ->leftJoin('lokasis as l', 'l.id', '=', 'bm_latest.id_lokasi')
+            ->join(
+                'items',
+                'barang_masuks.item_id',
+                '=',
+                'items.id'
+            )
             ->select(
-                'i.nama_barang',
-                DB::raw('COALESCE(l.nama_lokasi, "-") AS nama_lokasi'),
-                // opsional: berapa hari mengendap
-                DB::raw("DATEDIFF(NOW(), GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01'))) AS hari_idle"),
-                // tanggal pergerakan terakhir (buat referensi/tampilan)
-                DB::raw("GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01')) AS last_move")
+                'items.nama_barang',
+                'barang_masuks.tanggal_kadaluarsa',
+                'barang_masuks.jumlah'
             )
-            // pastikan bm_latest adalah baris last_in agar lokasinya sesuai
-            ->whereColumn('bm_latest.tanggal_masuk', '=', DB::raw('m.last_in'))
-            // filter idle > 30 hari
-            ->whereRaw("DATEDIFF(NOW(), GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01'))) > 30")
-            // urutkan yang paling lama mengendap di atas
+            ->orderBy('tanggal_kadaluarsa')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 10. IDLE STOCK > 30 HARI
+        |--------------------------------------------------------------------------
+        |
+        | Kita cari transaksi terakhir masing-masing item.
+        |
+        */
+
+        $lastMasuk = BarangMasuk::query()
+            ->select(
+                'item_id',
+                DB::raw('MAX(tanggal_masuk) AS last_in')
+            )
+            ->where('user_id', $userId)
+            ->groupBy('item_id');
+
+        $lastKeluar = BarangKeluar::query()
+            ->select(
+                'item_id',
+                DB::raw('MAX(tanggal_keluar) AS last_out')
+            )
+            ->where('user_id', $userId)
+            ->groupBy('item_id');
+
+        $idleStock = Item::query()
+            ->where('items.user_id', $userId)
+
+            ->leftJoinSub(
+                $lastMasuk,
+                'lm',
+                'lm.item_id',
+                '=',
+                'items.id'
+            )
+
+            ->leftJoinSub(
+                $lastKeluar,
+                'lk',
+                'lk.item_id',
+                '=',
+                'items.id'
+            )
+
+            ->select(
+                'items.nama_barang'
+            )
+
+            ->selectRaw(
+                'GREATEST(
+                    COALESCE(lm.last_in, "1970-01-01"),
+                    COALESCE(lk.last_out, "1970-01-01")
+                ) AS last_move'
+            )
+
+            ->selectRaw(
+                'DATEDIFF(
+                    NOW(),
+                    GREATEST(
+                        COALESCE(lm.last_in, "1970-01-01"),
+                        COALESCE(lk.last_out, "1970-01-01")
+                    )
+                ) AS hari_idle'
+            )
+
+            ->whereRaw(
+                'DATEDIFF(
+                    NOW(),
+                    GREATEST(
+                        COALESCE(lm.last_in, "1970-01-01"),
+                        COALESCE(lk.last_out, "1970-01-01")
+                    )
+                ) > 30'
+            )
+
             ->orderByDesc('hari_idle')
             ->limit(5)
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 11. 5 BARANG PALING BANYAK MASUK
+        |--------------------------------------------------------------------------
+        */
 
-
-        // 6. 5 Barang paling banyak masuk
-        $topMasuk = DB::table('barang_masuks')
-            ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
+        $topMasuk = BarangMasuk::query()
             ->where('barang_masuks.user_id', $userId)
-            ->select(
-                'items.nama_barang',
-                DB::raw('SUM(jumlah) as total'),
-                DB::raw('COUNT(barang_masuks.id) as frekuensi')
+            ->join(
+                'items',
+                'barang_masuks.item_id',
+                '=',
+                'items.id'
             )
-            ->groupBy('barang_masuks.kode_barang', 'items.nama_barang')
+            ->select(
+                'items.nama_barang'
+            )
+            ->selectRaw(
+                'SUM(barang_masuks.jumlah) AS total'
+            )
+            ->selectRaw(
+                'COUNT(barang_masuks.id) AS frekuensi'
+            )
+            ->groupBy(
+                'barang_masuks.item_id',
+                'items.nama_barang'
+            )
             ->orderByDesc('total')
             ->limit(5)
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 12. 5 BARANG PALING BANYAK KELUAR
+        |--------------------------------------------------------------------------
+        */
 
-        // 7. 5 Barang paling banyak keluar
-        $topKeluar = DB::table('barang_keluars')
-            ->join('items', 'barang_keluars.kode_barang', '=', 'items.kode_barang')
+        $topKeluar = BarangKeluar::query()
             ->where('barang_keluars.user_id', $userId)
-            ->select(
-                'items.nama_barang',
-                DB::raw('SUM(jumlah_keluar) as total'),
-                DB::raw('COUNT(barang_keluars.id) as frekuensi')
+            ->join(
+                'items',
+                'barang_keluars.item_id',
+                '=',
+                'items.id'
             )
-            ->groupBy('barang_keluars.kode_barang', 'items.nama_barang')
+            ->select(
+                'items.nama_barang'
+            )
+            ->selectRaw(
+                'SUM(barang_keluars.jumlah_keluar) AS total'
+            )
+            ->selectRaw(
+                'COUNT(barang_keluars.id) AS frekuensi'
+            )
+            ->groupBy(
+                'barang_keluars.item_id',
+                'items.nama_barang'
+            )
             ->orderByDesc('total')
             ->limit(5)
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 13. TOTAL ITEM TERDAFTAR
+        |--------------------------------------------------------------------------
+        */
+
+        $totalItem = Item::where('user_id', $userId)->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 14. KIRIM KE VIEW
+        |--------------------------------------------------------------------------
+        */
 
         return view('dashboard.gudang', compact(
-            'stokMinimum', 'kadaluarsa', 'masukHariIni', 'keluarHariIni',
-            'stokTerendah', 'idleStock', 'topMasuk', 'topKeluar'
+            'omzetHariIni',
+            'transaksiKeluarHariIni',
+            'hppHariIni',
+            'labaKotorHariIni',
+            'marginHariIni',
+            'nilaiPersediaan',
+
+            'omzetBulanIni',
+            'hppBulanIni',
+            'labaBulanIni',
+            'marginBulanIni',
+
+            'masukHariIni',
+            'keluarHariIni',
+
+            'stokMinimum',
+            'kadaluarsa',
+            'stokTerendah',
+            'idleStock',
+            'topMasuk',
+            'topKeluar',
+
+            'totalItem',
+            'awalBulan'
         ));
     }
 }

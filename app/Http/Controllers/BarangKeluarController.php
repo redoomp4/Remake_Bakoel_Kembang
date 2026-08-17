@@ -13,10 +13,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class BarangKeluarController extends Controller
 {
-    /**
-     * INDEX
-     */
-
     public function index(Request $request)
     {
         $userId = Auth::id();
@@ -27,7 +23,8 @@ class BarangKeluarController extends Controller
             'user'
         ])
             ->where('user_id', $userId);    // Search
-        if ($request->filled('search')) {
+        if ($request->filled('search')) 
+        {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->whereHas('item', function ($q2) use ($search) {
@@ -43,9 +40,11 @@ class BarangKeluarController extends Controller
                     ->orWhere('jenis_transaksi', 'like', "%{$search}%");
             });
         }    // Filter lokasi
-        if ($request->filled('lokasi')) {
+        if ($request->filled('lokasi')) 
+        {
             $query->where('id_lokasi', $request->lokasi);
         }
+
         $barangKeluars = $query
             ->orderByDesc('tanggal_keluar')
             ->paginate(10)
@@ -58,6 +57,7 @@ class BarangKeluarController extends Controller
             ->whereIn('id', $lokasiIds)
             ->orderBy('nama_lokasi')
             ->get();
+            
         return view('barangkeluar.index', compact(
             'barangKeluars',
             'lokasis'

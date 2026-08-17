@@ -8,11 +8,8 @@ use App\Models\Item;
 use App\Models\Pemasok;
 use App\Models\Lokasi;
 use App\Models\Kondisi;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-// use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
-// use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf; 
 
 class BarangMasukController extends Controller
 {
@@ -22,10 +19,8 @@ class BarangMasukController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-
         $search   = $request->input('search');
         $lokasiId = $request->input('lokasi');
-
         $barangMasuks = BarangMasuk::with([
             'item',
             'pemasok',
@@ -33,80 +28,62 @@ class BarangMasukController extends Controller
             'kondisi',
         ])
             ->where('user_id', $user->id)
-
             // Pencarian
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-
-                    $q->whereHas('item', function ($qi) use ($search) {
+                                    $q->whereHas('item', function ($qi) use ($search) {
                         $qi->where('nama_barang', 'like', "%{$search}%")
                             ->orWhere('kode_barang', 'like', "%{$search}%");
                     })
-
-                        ->orWhereHas('lokasi', function ($ql) use ($search) {
+                    ->orWhereHas('lokasi', function ($ql) use ($search) {
                             $ql->where('nama_lokasi', 'like', "%{$search}%");
                         })
-
                         ->orWhereHas('kondisi', function ($qk) use ($search) {
                             $qk->where('nama_kondisi', 'like', "%{$search}%");
                         })
-
                         ->orWhereHas('pemasok', function ($qp) use ($search) {
                             $qp->where('nama_pemasok', 'like', "%{$search}%");
                         });
                 });
             })
-
             // Filter lokasi
             ->when($lokasiId, function ($query) use ($lokasiId) {
                 $query->where('id_lokasi', $lokasiId);
             })
-
             ->latest('tanggal_masuk')
             ->paginate(10)
             ->withQueryString();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hanya tampilkan lokasi yang digunakan oleh user yang login
-        |--------------------------------------------------------------------------
-        */
+            /*        | Hanya tampilkan lokasi yang digunakan oleh user yang login        */
         $lokasiIds = BarangMasuk::where('user_id', $user->id)
             ->distinct()
             ->pluck('id_lokasi');
-
-        $lokasis = Lokasi::whereIn('id', $lokasiIds)
+            $lokasis = Lokasi::whereIn('id', $lokasiIds)
             ->where('user_id', $user->id)
             ->orderBy('nama_lokasi')
             ->get();
-
-        return view(
+            return view(
             'barangmasuk.index',
             compact('barangMasuks', 'lokasis')
         );
     }
-
+    
     /**
      * CREATE
      */
     public function create()
     {
         $userId = Auth::id();
-
         return view('barangmasuk.create', [
             'items' => Item::where('user_id', $userId)
                 ->orderBy('nama_barang')
                 ->get(),
-
-            'pemasoks' => Pemasok::where('user_id', $userId)
+                'pemasoks' => Pemasok::where('user_id', $userId)
                 ->orderBy('nama_pemasok')
                 ->get(),
-
-            'lokasis' => Lokasi::where('user_id', $userId)
+                'lokasis' => Lokasi::where('user_id', $userId)
                 ->orderBy('nama_lokasi')
                 ->get(),
-
-            'kondisis' => Kondisi::where('user_id', $userId)
+                'kondisis' => Kondisi::where('user_id', $userId)
                 ->orderBy('nama_kondisi')
                 ->get(),
         ]);
@@ -123,110 +100,82 @@ class BarangMasukController extends Controller
                 'integer',
                 'exists:items,id',
             ],
-
             'jumlah' => [
                 'required',
                 'integer',
                 'min:1',
             ],
-
             'harga_satuan' => [
                 'required',
                 'numeric',
                 'min:0',
             ],
-
             'tanggal_masuk' => [
                 'required',
                 'date',
             ],
-
             'tanggal_kadaluarsa' => [
                 'nullable',
                 'date',
                 'after_or_equal:tanggal_masuk',
             ],
-
             'id_pemasok' => [
                 'required',
                 'exists:pemasoks,id',
             ],
-
             'id_lokasi' => [
                 'required',
                 'exists:lokasis,id',
             ],
-
             'id_kondisi' => [
                 'required',
                 'exists:kondisis,id',
             ],
-
             'catatan' => [
                 'nullable',
                 'string',
                 'max:1000',
             ],
         ]);
-
         try {
-
-            $userId = Auth::id();
-
+                    $userId = Auth::id();
             /*
-            |--------------------------------------------------------------------------
             | Pastikan ITEM milik user yang sedang login
-            |--------------------------------------------------------------------------
             */
             $item = Item::where('id', $validated['item_id'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-            |--------------------------------------------------------------------------
+                /*
             | Pastikan pemasok milik user
-            |--------------------------------------------------------------------------
             */
             $pemasok = Pemasok::where('id', $validated['id_pemasok'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-            |--------------------------------------------------------------------------
+                /*
             | Pastikan lokasi milik user
-            |--------------------------------------------------------------------------
             */
             $lokasi = Lokasi::where('id', $validated['id_lokasi'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-            |--------------------------------------------------------------------------
+                /*
             | Pastikan kondisi milik user
-            |--------------------------------------------------------------------------
             */
             $kondisi = Kondisi::where('id', $validated['id_kondisi'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-            |--------------------------------------------------------------------------
+                /*
             | Hitung total harga
-            |--------------------------------------------------------------------------
             */
             $totalHarga =
                 $validated['jumlah'] *
                 $validated['harga_satuan'];
 
-
-            /*
-            |--------------------------------------------------------------------------
+                /*
             | Simpan transaksi barang masuk
-            |--------------------------------------------------------------------------
             */
             BarangMasuk::create([
                 'user_id' => $userId,
@@ -242,7 +191,6 @@ class BarangMasukController extends Controller
                 'id_kondisi' => $kondisi->id,
                 'catatan' => $validated['catatan'] ?? null,
             ]);
-
             return redirect()
                 ->route('barang-masuk.index')
                 ->with(
@@ -250,8 +198,7 @@ class BarangMasukController extends Controller
                     'Barang masuk berhasil ditambahkan.'
                 );
         } catch (\Throwable $e) {
-
-            return back()
+                    return back()
                 ->withInput()
                 ->with(
                     'error',
@@ -273,8 +220,7 @@ class BarangMasukController extends Controller
         ])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
-
-        return view(
+            return view(
             'barangmasuk.show',
             compact('barangMasuk')
         );
@@ -294,13 +240,11 @@ class BarangMasukController extends Controller
         ])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
-
-        return view(
+            return view(
             'barangmasuk.detailbarang',
             compact('barangMasuk')
         );
     }
-
 
     /**
      * EDIT
@@ -308,7 +252,6 @@ class BarangMasukController extends Controller
     public function edit($id)
     {
         $userId = Auth::id();
-
         $barangMasuk = BarangMasuk::with([
             'item',
             'pemasok',
@@ -317,23 +260,18 @@ class BarangMasukController extends Controller
         ])
             ->where('user_id', $userId)
             ->findOrFail($id);
-
-        return view('barangmasuk.edit', [
+            return view('barangmasuk.edit', [
             'barangMasuk' => $barangMasuk,
-
             'items' => Item::where('user_id', $userId)
                 ->orderBy('nama_barang')
                 ->get(),
-
-            'pemasoks' => Pemasok::where('user_id', $userId)
+                'pemasoks' => Pemasok::where('user_id', $userId)
                 ->orderBy('nama_pemasok')
                 ->get(),
-
-            'lokasis' => Lokasi::where('user_id', $userId)
+                'lokasis' => Lokasi::where('user_id', $userId)
                 ->orderBy('nama_lokasi')
                 ->get(),
-
-            'kondisis' => Kondisi::where('user_id', $userId)
+                'kondisis' => Kondisi::where('user_id', $userId)
                 ->orderBy('nama_kondisi')
                 ->get(),
         ]);
@@ -350,121 +288,76 @@ class BarangMasukController extends Controller
                 'integer',
                 'exists:items,id',
             ],
-
             'jumlah' => [
                 'required',
                 'integer',
                 'min:1',
             ],
-
             'harga_satuan' => [
                 'required',
                 'numeric',
                 'min:0',
             ],
-
             'tanggal_masuk' => [
                 'required',
                 'date',
             ],
-
             'tanggal_kadaluarsa' => [
                 'nullable',
                 'date',
                 'after_or_equal:tanggal_masuk',
             ],
-
             'id_pemasok' => [
                 'required',
                 'exists:pemasoks,id',
             ],
-
             'id_lokasi' => [
                 'required',
                 'exists:lokasis,id',
             ],
-
             'id_kondisi' => [
                 'required',
                 'exists:kondisis,id',
             ],
-
             'catatan' => [
                 'nullable',
                 'string',
                 'max:1000',
             ],
         ]);
-
         try {
-
-            $userId = Auth::id();
-
-            /*
-        |--------------------------------------------------------------------------
-        | Ambil Barang Masuk milik user yang sedang login
-        |--------------------------------------------------------------------------
-        */
+                    $userId = Auth::id();
+            /*        | Ambil Barang Masuk milik user yang sedang login        */
             $barangMasuk = BarangMasuk::where('id', $id)
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Pastikan ITEM milik user
-        |--------------------------------------------------------------------------
-        */
+                /*        | Pastikan ITEM milik user        */
             $item = Item::where('id', $validated['item_id'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Pastikan PEMASOK milik user
-        |--------------------------------------------------------------------------
-        */
+                /*        | Pastikan PEMASOK milik user        */
             $pemasok = Pemasok::where('id', $validated['id_pemasok'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Pastikan LOKASI milik user
-        |--------------------------------------------------------------------------
-        */
+                /*        | Pastikan LOKASI milik user        */
             $lokasi = Lokasi::where('id', $validated['id_lokasi'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Pastikan KONDISI milik user
-        |--------------------------------------------------------------------------
-        */
+                /*        | Pastikan KONDISI milik user        */
             $kondisi = Kondisi::where('id', $validated['id_kondisi'])
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Hitung ulang total harga
-        |--------------------------------------------------------------------------
-        */
+                /*        | Hitung ulang total harga        */
             $totalHarga =
                 $validated['jumlah'] *
                 $validated['harga_satuan'];
 
-
-            /*
-        |--------------------------------------------------------------------------
-        | Update data Barang Masuk
-        |--------------------------------------------------------------------------
-        */
+                /*        | Update data Barang Masuk        */
             $barangMasuk->update([
                 'item_id' => $item->id,
                 'jumlah' => $validated['jumlah'],
@@ -479,7 +372,6 @@ class BarangMasukController extends Controller
                 'catatan' => $validated['catatan'] ?? null,
             ]);
 
-
             return redirect()
                 ->route('barang-masuk.index')
                 ->with(
@@ -487,8 +379,7 @@ class BarangMasukController extends Controller
                     'Data barang masuk berhasil diperbarui.'
                 );
         } catch (\Throwable $e) {
-
-            return back()
+                    return back()
                 ->withInput()
                 ->with(
                     'error',
@@ -503,15 +394,11 @@ class BarangMasukController extends Controller
     public function destroy($id)
     {
         try {
-
-            $userId = Auth::id();
-
+                    $userId = Auth::id();
             $barangMasuk = BarangMasuk::where('id', $id)
                 ->where('user_id', $userId)
                 ->firstOrFail();
-
-            $barangMasuk->delete();
-
+                $barangMasuk->delete();
             return redirect()
                 ->route('barang-masuk.index')
                 ->with(
@@ -519,8 +406,7 @@ class BarangMasukController extends Controller
                     'Data barang masuk berhasil dihapus.'
                 );
         } catch (\Throwable $e) {
-
-            return back()
+                    return back()
                 ->with(
                     'error',
                     'Gagal menghapus data barang masuk.'
@@ -534,7 +420,6 @@ class BarangMasukController extends Controller
     public function cetakBeritaAcara($id)
     {
         \Carbon\Carbon::setLocale('id');
-
         $barangMasuk = BarangMasuk::with([
             'item.satuan',
             'lokasi',
@@ -544,8 +429,7 @@ class BarangMasukController extends Controller
         ])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
-
-        $pdf = Pdf::loadView('barangmasuk.berita_acara_pdf', [
+            $pdf = Pdf::loadView('barangmasuk.berita_acara_pdf', [
             'barangMasuk'     => $barangMasuk,
             'tanggal_lengkap' => $barangMasuk->tanggal_masuk->translatedFormat('d F Y'),
             'hari'            => $barangMasuk->tanggal_masuk->translatedFormat('l'),
@@ -554,20 +438,18 @@ class BarangMasukController extends Controller
             'nomor'           => str_pad($barangMasuk->id, 3, '0', STR_PAD_LEFT),
             'lokasi'          => $barangMasuk->lokasi->nama_lokasi ?? '-',
         ])->setPaper('A4', 'portrait');
-
         return $pdf->stream(
             'berita_acara_barang_masuk_' . $barangMasuk->id . '.pdf',
             ['Attachment' => false]
         );
     }
 
-        /**
+    /**
      * CETAK BERITA ACARA
      */
     public function cetakDetail($id)
     {
         \Carbon\Carbon::setLocale('id');
-
         $barangMasuk = BarangMasuk::with([
             'item.satuan',
             'lokasi',
@@ -577,8 +459,7 @@ class BarangMasukController extends Controller
         ])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
-
-        $pdf = Pdf::loadView('barangmasuk.berita_acara_cetak_warna', [
+            $pdf = Pdf::loadView('barangmasuk.berita_acara_cetak_warna', [
             'barangMasuk'     => $barangMasuk,
             'tanggal_lengkap' => $barangMasuk->tanggal_masuk->translatedFormat('d F Y'),
             'hari'            => $barangMasuk->tanggal_masuk->translatedFormat('l'),
@@ -587,7 +468,6 @@ class BarangMasukController extends Controller
             'nomor'           => str_pad($barangMasuk->id, 3, '0', STR_PAD_LEFT),
             'lokasi'          => $barangMasuk->lokasi->nama_lokasi ?? '-',
         ])->setPaper('A4', 'portrait');
-
         return $pdf->stream(
             'berita_acara_barang_masuk_' . $barangMasuk->id . '.pdf',
             ['Attachment' => false]

@@ -9,9 +9,7 @@ use Carbon\Carbon;
 class BarangMasuk extends Model
 {
     use HasFactory;
-
     protected $table = 'barang_masuks';
-
     protected $fillable = [
         'user_id',
         'item_id',
@@ -25,19 +23,16 @@ class BarangMasuk extends Model
         'id_kondisi',
         'catatan',
     ];
-
     public function item()
     {
         return $this->belongsTo(Item::class, 'item_id');
     }
-
     protected $casts = [
         'tanggal_masuk' => 'datetime',
         'tanggal_kadaluarsa' => 'date',
         'harga_satuan' => 'decimal:2',
         'total_harga' => 'decimal:2',
     ];
-
 
     /**
      * Pemasok
@@ -50,7 +45,6 @@ class BarangMasuk extends Model
             'id'
         );
     }
-
     /**
      * Lokasi penyimpanan
      */
@@ -62,7 +56,6 @@ class BarangMasuk extends Model
             'id'
         );
     }
-
     /**
      * Kondisi barang
      */
@@ -74,7 +67,6 @@ class BarangMasuk extends Model
             'id'
         );
     }
-
     /**
      * User pemilik transaksi
      */
@@ -86,7 +78,6 @@ class BarangMasuk extends Model
             'id'
         );
     }
-
     /**
      * Umur tanaman
      */
@@ -95,30 +86,23 @@ class BarangMasuk extends Model
         $startDate = $this->tanggal_masuk
             ?? $this->created_at
             ?? now();
-
         $diffDays = (int) Carbon::parse($startDate)
             ->diffInDays(now());
-
         if ($diffDays <= 0) {
             return 'Baru Ditanam (1 Hari)';
         }
-
         if ($diffDays < 30) {
             return $diffDays . ' Hari';
         }
-
         if ($diffDays < 365) {
             $months = floor($diffDays / 30);
             $remainingDays = $diffDays % 30;
-
             return $months . ' Bulan' .
                 ($remainingDays > 0
                     ? ' ' . $remainingDays . ' Hari'
                     : '');
         }
-
         $years = floor($diffDays / 365);
-
         return $years . ' Tahun';
     }
 }
