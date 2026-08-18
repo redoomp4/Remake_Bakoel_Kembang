@@ -19,11 +19,11 @@ class RouteServiceProvider extends ServiceProvider
     {
         $role = auth()->user()->role ?? null;
 
-        return match ($role) {
-            'superadmin' => route('dashboard.superadmin'),
-            'gudang'     => route('dashboard.gudang'),
-            'viewer'     => route('laporan.stok.viewer'), // langsung ke laporan
-            default      => route('dashboard'),
+        return match (strtolower($role ?? '')) {
+            'superadmin'        => route('dashboard.superadmin'),
+            'gudang', 'penjual' => route('dashboard.gudang'),
+            'viewer'            => route('dashboard.viewer'),
+            default             => route('dashboard.gudang'),
         };
     }
 
