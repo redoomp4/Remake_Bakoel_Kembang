@@ -98,9 +98,16 @@
             </div>
 
             {{-- Alerts --}}
+            @if (session('success'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+                    <i class="fas fa-check-circle text-md text-emerald-600"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
             @if (session('status'))
                 <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
-                    <i class="fas fa-check-circle text-md"></i>
+                    <i class="fas fa-check-circle text-md text-emerald-600"></i>
                     <span>{{ session('status') }}</span>
                 </div>
             @endif
@@ -164,7 +171,7 @@
 
             <div class="pt-4 border-t border-brand-accent/60 flex flex-col items-center gap-2 text-xs font-bold text-brand-slate">
                 <a href="{{ route('magic.form') }}" class="text-brand-emerald hover:underline flex items-center gap-1">
-                    <i class="fas fa-magic text-brand-sage"></i> Login Tanpa Password (Magic Link)
+                    <i class="fas fa-envelope text-brand-sage text-sm"></i> Login Tanpa Password (Email)
                 </a>
                 <div>
                     Belum punya akun? <a href="{{ route('register') }}" class="text-brand-emerald hover:underline font-black">Daftar Akun Baru</a>
