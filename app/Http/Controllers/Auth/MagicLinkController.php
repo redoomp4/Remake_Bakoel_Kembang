@@ -25,34 +25,31 @@ class MagicLinkController extends Controller
     }
 
     /**
-     * Kirim magic link ke email user (tanpa password).
+     * Kirim link login tanpa password ke email user secara aman.
      * Route: POST /magic-link/request  (guest + throttle)
      */
     public function requestLink(Request $request)
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'Masukkan alamat email Anda.',
+            'email.email'    => 'Format alamat email tidak valid.',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $email = strtolower(trim($data['email']));
+        $user = User::where('email', $email)->first();
 
-        // Pilih salah satu:
-        // A) Lebih aman (hindari user enumeration): SELALU tampilkan status sukses meski user tidak ada.
-        // if (! $user) {
-        //     return back()->with('status', 'Jika email terdaftar, tautan login telah dikirim.');
-        // }
-
-        // B) Versi eksplisit (seperti contohmu sebelumnya):
         if (! $user) {
-            return back()->withErrors(['email' => 'Email tidak terdaftar.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'Alamat email ini tidak terdaftar dalam sistem.'])->withInput();
         }
 
-        // Buat token sekali pakai, simpan di cache 15 menit
+        // Buat token sekali pakai (TTL 15 menit)
         $token = Str::random(40);
         Cache::put("magic:$token", $user->id, now()->addMinutes(15));
 
-        // Buat signed URL dengan TTL 15 menit
-        $url = URL::temporarySignedRoute(
+        // Buat signed URL aman dengan TTL 15 menit
+        $signedUrl = URL::temporarySignedRoute(
             'magic.login',
             now()->addMinutes(15),
             [
@@ -61,10 +58,15 @@ class MagicLinkController extends Controller
             ]
         );
 
-        // Kirim email
-        Mail::to($user->email)->send(new MagicLinkMail($url));
+        // Kirim link login ke email pemilik akun
+        try {
+            Mail::to($user->email)->send(new MagicLinkMail($signedUrl));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email login tanpa password: ' . $e->getMessage());
+        }
 
-        return back()->with('status', 'Magic link sudah dikirim ke email Anda.');
+        return back()
+            ->with('status', 'Tautan login tanpa password telah dikirim ke alamat email Anda. Silakan periksa kotak masuk atau folder Spam.');
     }
 
     /**
