@@ -50,6 +50,16 @@ Route::get('/magic-login', [MagicLinkController::class, 'login'])
     ->middleware(['signed', 'throttle:6,1']) // validasi signature + limit
     ->name('magic.login');
 
+// Short URL redirect untuk link WA yang pendek & clickable
+Route::get('/l/{code}', function (string $code) {
+    $fullUrl = \Illuminate\Support\Facades\Cache::pull("short:{$code}");
+    if (! $fullUrl) {
+        return redirect()->route('magic.form')
+            ->withErrors(['login_input' => 'Link sudah tidak berlaku atau sudah digunakan.']);
+    }
+    return redirect($fullUrl);
+})->middleware('throttle:10,1')->name('short.redirect');
+
 /*
 |--------------------------------------------------------------------------
 | Public / Landing
@@ -93,8 +103,8 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     Route::get('/dashboard/gudang', [DashboardGudangController::class, 'index'])->name('dashboard.gudang');
     Route::get('/dashboard/viewer', fn () => view('dashboard.viewer'))->name('dashboard.viewer');
 
-    // Notifikasi (contoh: untuk gudang)
-    Route::middleware(['role:gudang'])->group(function () {
+    // Notifikasi (gudang & penjual)
+    Route::middleware(['role:gudang,penjual'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markSingleRead'])->name('notifications.markSingleRead');
@@ -102,10 +112,10 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | AJAX / Helper untuk Barang Keluar (gudang only)
+    | AJAX / Helper untuk Barang Keluar (gudang & penjual)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:gudang'])->group(function () {
+    Route::middleware(['role:gudang,penjual'])->group(function () {
         Route::get('/stok-terpakai', [BarangKeluarController::class, 'cekStok'])->name('barang-keluar.cekStok');
         Route::get('/barang-keluar/detail-barang', [BarangKeluarController::class, 'getDetailBarang'])->name('barang-keluar.detail-barang');
         Route::get('/barang-keluar/barang-bersisa', [BarangKeluarController::class, 'getBarangBersisa'])->name('barang-keluar.barang-bersisa');
@@ -142,12 +152,11 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Resource per Role
+    | Resource per Role (GUDANG & PENJUAL)
     |--------------------------------------------------------------------------
     */
 
-    // GUDANG ONLY
-    Route::middleware(['role:gudang'])->group(function () {
+    Route::middleware(['role:gudang,penjual'])->group(function () {
         // Master data 
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);
