@@ -166,7 +166,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
         Route::get('/api/form/item-detail/{kode}', [FormController::class, 'getItemDetail'])->name('form.item-detail');
         Route::post('/form/item/store', [FormController::class, 'store'])->name('form.item.store');
-
+        Route::post('/form/parse-voice', [FormController::class, 'parseVoice'])->name('form.parse-voice');
 
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);

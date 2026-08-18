@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Http;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class FormController extends Controller
@@ -149,7 +150,6 @@ class FormController extends Controller
             return redirect()
                 ->route('item.index')
                 ->with('success', 'Item berhasil ditambahkan beserta QR Code.');
-
         } catch (QueryException $e) {
             $sqlState = $e->errorInfo[0] ?? null;
             $mysqlErr = $e->errorInfo[1] ?? null;
@@ -164,7 +164,6 @@ class FormController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'DB Error: ' . $e->getMessage());
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -172,6 +171,54 @@ class FormController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'System Error: ' . $e->getMessage());
+        }
+    }
+
+    public function parseVoice(Request $request)
+    {
+        $request->validate(['text' => 'required|string']);
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            return response()->json(['success' => false, 'message' => 'API Key tidak ditemukan'], 500);
+        }
+
+        $userSpeech = $request->input('text');
+        $prompt = "..."; // sama seperti sebelumnya
+
+        try {
+            $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
+                'contents' => [
+                    ['parts' => [['text' => $prompt]]]
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.2,
+                    'maxOutputTokens' => 200,
+                ]
+            ]);
+
+            if (!$response->successful()) {
+                \Log::error('Gemini error: ' . $response->body());
+                return response()->json(['success' => false, 'message' => 'Gagal terhubung ke AI'], 500);
+            }
+
+            $rawText = $response->json('candidates.0.content.parts.0.text');
+            // Bersihkan kemungkinan markdown
+            $cleanJson = preg_replace('/```json|```/', '', $rawText);
+            $parsedData = json_decode($cleanJson, true);
+
+            if (!is_array($parsedData)) {
+                \Log::error('Gagal parse JSON dari Gemini: ' . $rawText);
+                return response()->json(['success' => false, 'message' => 'Respons AI tidak valid'], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $parsedData
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Voice parse error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
