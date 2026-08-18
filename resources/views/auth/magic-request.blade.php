@@ -108,6 +108,43 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Widget Panduan Membuka Folder Spam -->
+                <div class="bg-amber-50/90 border-2 border-amber-200/80 rounded-2xl p-4 text-left space-y-3 shadow-xs">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-amber-900 font-extrabold text-xs">
+                            <i class="fas fa-shield-virus text-amber-600 text-base"></i>
+                            <span>CARA CEK FOLDER SPAM</span>
+                        </div>
+                        <a href="https://mail.google.com/mail/u/0/#spam" target="_blank" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs">
+                            <i class="fab fa-google"></i> Buka Spam Gmail
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-amber-950 font-medium pt-1">
+                        <div class="bg-white/80 p-2.5 rounded-xl border border-amber-200/60 space-y-1">
+                            <strong class="font-extrabold text-amber-900 flex items-center gap-1">
+                                <i class="fas fa-mobile-alt text-amber-600"></i> Di HP:
+                            </strong>
+                            <ol class="list-decimal list-inside space-y-0.5 text-gray-700 leading-snug">
+                                <li>Buka Gmail -> Menu (<strong>≡</strong>)</li>
+                                <li>Pilih folder <strong>"Spam"</strong></li>
+                                <li>Klik <strong>"Bukan Spam"</strong></li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-white/80 p-2.5 rounded-xl border border-amber-200/60 space-y-1">
+                            <strong class="font-extrabold text-amber-900 flex items-center gap-1">
+                                <i class="fas fa-laptop text-amber-600"></i> Di Laptop/PC:
+                            </strong>
+                            <ol class="list-decimal list-inside space-y-0.5 text-gray-700 leading-snug">
+                                <li>Di Gmail klik <strong>"More"</strong></li>
+                                <li>Klik folder <strong>"Spam"</strong></li>
+                                <li>Buka email login Bakoel Kembang</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
             @endif
 
             @if ($errors->any())
