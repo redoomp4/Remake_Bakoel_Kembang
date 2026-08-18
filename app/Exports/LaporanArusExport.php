@@ -41,22 +41,24 @@ class LaporanArusExport implements FromCollection, WithHeadings
             ->when($start && $end, fn($q) => $q->whereBetween('tanggal_masuk', [$start, $end]))
             ->get()
             ->filter(function ($masuk) use ($kategori, $lokasi, $search) {
-                return (!$kategori || $masuk->item->id_kategori == $kategori)
+                $pihak = is_object($masuk->pemasok) ? ($masuk->pemasok->nama_pemasok ?? '') : (string)($masuk->pemasok ?? '');
+                return (!$kategori || ($masuk->item && $masuk->item->id_kategori == $kategori))
                     && (!$lokasi || $masuk->id_lokasi == $lokasi)
-                    && (!$search || str_contains(strtolower($masuk->item->nama_barang), strtolower($search))
-                        || str_contains(strtolower($masuk->item->kode_barang), strtolower($search))
-                        || str_contains(strtolower($masuk->pemasok?->nama_pemasok ?? ''), strtolower($search)));
+                    && (!$search || str_contains(strtolower($masuk->item->nama_barang ?? ''), strtolower($search))
+                        || str_contains(strtolower($masuk->item->kode_barang ?? ''), strtolower($search))
+                        || str_contains(strtolower($pihak), strtolower($search)));
             })
             ->map(function ($masuk) {
+                $pihak = is_object($masuk->pemasok) ? ($masuk->pemasok->nama_pemasok ?? '-') : (string)($masuk->pemasok ?? '-');
                 return [
-                    'tanggal' => Carbon::parse($masuk->tanggal_masuk)->format('d/m/Y H:i:s'),
+                    'tanggal' => $masuk->tanggal_masuk ? Carbon::parse($masuk->tanggal_masuk)->format('d/m/Y H:i:s') : '-',
                     'jenis' => 'Masuk',
                     'kode_barang' => $masuk->item->kode_barang ?? '-',
                     'nama_barang' => $masuk->item->nama_barang ?? '-',
                     'harga_dasar' => $masuk->item->harga_dasar ?? 0,
                     'jumlah' => $masuk->jumlah,
                     'lokasi' => $masuk->lokasi->nama_lokasi ?? '-',
-                    'pihak' => $masuk->pemasok->nama_pemasok ?? '-',
+                    'pihak' => $pihak ?: '-',
                 ];
             });
 
