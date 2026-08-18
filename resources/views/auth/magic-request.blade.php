@@ -1,133 +1,178 @@
-@php($title = 'Login Tanpa Password')
+@php($title = 'Login Tanpa Password - Bakoel Kembang')
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ $title }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title }}</title>
 
-  {{-- Bootstrap Icons --}}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    :root{
-      --bg:#f3f4f6; --card:#f9f9f9; --text:#333; --muted:#666;
-      --brand1:#6c63ff; --brand2:#8a63ff;
-      --accent1:#ff416c; --accent2:#ff4b2b;
-      --success-bg:#e7f8ef; --success:#0b7a43;
-      --error-bg:#ffebee; --error:#c62828;
-      --border:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg);
-    }
-    .auth-wrapper{
-      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
-    }
-    .auth-card{
-      width:100%; max-width:520px; background:var(--card); border-radius:16px;
-      padding:2rem; box-shadow:0 12px 32px rgba(0,0,0,.08); border:1px solid var(--border);
-    }
-    h1{ margin:0 0 .5rem; color:var(--text); font-weight:800; letter-spacing:.2px;}
-    .subtitle{color:var(--muted); line-height:1.6; margin-bottom:1rem}
-    label{display:block; margin:.75rem 0 .5rem; color:var(--text); font-weight:600;}
-    input[type="email"]{
-      width:100%; height:44px; padding:.5rem .75rem; border:1px solid #ccc; border-radius:10px;
-      font-size:1rem; outline:none; transition:border .15s, box-shadow .15s; background:#fff;
-    }
-    input[type="email"]:focus{
-      border-color:#7DB98F; box-shadow:0 0 0 3px rgba(124,140,255,.15);
-    }
-    .btn-submit{
-      width:100%; height:46px; border:none; border-radius:10px; color:#fff; font-weight:700;
-      cursor:pointer; margin-top:1rem; display:inline-flex; align-items:center; justify-content:center;
-      background:#396446;
-      box-shadow:0 10px 22px rgba(125,185,143,.35);
-    }
-    .btn-submit:hover{ box-shadow:0 10px 22px rgba(108,99,255,.3) }
-    .btn-submit:active{ transform:translateY(1px) }
-    .btn-submit:disabled{ opacity:.65; cursor:not-allowed }
-    .btn-icon{ font-size:1.1rem; margin-right:.5rem }
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    .small-link{ font-size:.92rem; color:#7DB98F; text-decoration:none; font-weight:700}
-    .small-link:hover{ text-decoration:underline }
+    <!-- FontAwesome & Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-    .alert{
-      border-radius:10px; padding:.75rem .9rem; font-size:.95rem; margin:.9rem 0;
-      border:1px solid transparent; display:flex; gap:.5rem; align-items:flex-start;
-    }
-    .alert-success{ background:var(--success-bg); color:var(--success); border-color:#bfead2 }
-    .alert-error{ background:var(--error-bg); color:var(--error); border-color:#ffc6cc }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            emerald: '#0B4F35',
+                            sage: '#8FA882',
+                            slate: '#475569',
+                            offwhite: '#FAF9F6',
+                            accent: '#E4E4D9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    .footer-note{ text-align:center; font-size:.8rem; color:#6b7280; margin-top:.75rem}
-  </style>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(228, 228, 217, 0.8);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #0B4F35 0%, #073A27 100%);
+            transition: all 0.25s ease;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(11, 79, 53, 0.4);
+        }
+    </style>
 </head>
-<body>
-  <div class="auth-wrapper">
-    <div class="auth-card">
-      <h1>Login Tanpa Password</h1>
-      <p class="subtitle">
-        Masukkan email Anda, kami akan mengirim tautan <em>magic link</em> untuk login instan (berlaku 15 menit).
-      </p>
+<body class="min-h-screen bg-[#041E14] flex items-center justify-center p-4 relative overflow-x-hidden selection:bg-brand-emerald selection:text-white">
 
-      {{-- Status sukses --}}
-      @if (session('status'))
-        <div class="alert alert-success">
-          <i class="bi bi-check-circle-fill"></i>
-          <div>{{ session('status') }}</div>
-        </div>
-      @endif
-
-      {{-- Error validasi --}}
-      @if ($errors->any())
-        <div class="alert alert-error">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          <div>
-            <ul style="margin:0 0 0 1rem">
-              @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-              @endforeach
-            </ul>
-          </div>
-        </div>
-      @endif 
-
-      <form method="POST" action="{{ route('magic.request') }}" onsubmit="disableSubmit(this)">
-        @csrf
-
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" value="{{ old('email') }}" placeholder="nama@contoh.com" required autofocus>
-        {{--@error('email')
-          <div class="alert alert-error" style="margin-top:.5rem">
-            <i class="bi bi-x-circle-fill"></i><div>{{ $message }}</div>
-          </div>
-        @enderror --}}
-
-        <button type="submit" class="btn-submit" id="submitBtn">
-          <i class="bi bi-lightning-charge-fill btn-icon"></i>
-          <span id="btnText">Kirim Magic Link</span>
-        </button>
-      </form>
-
-      <p style="margin-top:14px; color:#555;">
-        Sudah punya password?
-        <a class="small-link" href="{{ route('login') }}">Login biasa</a>.
-      </p>
-
-      <p class="footer-note">
-        Tautan hanya berlaku 15 menit dan dapat digunakan satu kali.
-      </p>
+    <!-- Background Botanical Aesthetics -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-emerald/40 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-brand-sage/30 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#0A452E]/30 rounded-full blur-3xl"></div>
     </div>
-  </div>
 
-  <script>
-    function disableSubmit(form){
-      const btn = document.getElementById('submitBtn');
-      const txt = document.getElementById('btnText');
-      btn.disabled = true;
-      txt.textContent = 'Mengirim…';
-    }
-  </script>
+    <!-- Main Auth Card Container -->
+    <div class="relative z-10 w-full max-w-md my-8">
+        
+        <!-- Header Brand Badge -->
+        <div class="text-center mb-6">
+            <a href="{{ route('welcome') }}" class="inline-flex items-center gap-3 group">
+                <div class="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 flex items-center justify-center text-brand-sage shadow-xl group-hover:scale-105 transition-transform duration-300">
+                    <i class="fas fa-seedling text-3xl"></i>
+                </div>
+                <div class="text-left">
+                    <h1 class="text-2xl font-black tracking-tight text-white leading-none">
+                        BAKOEL<span class="text-brand-sage font-semibold">KEMBANG</span>
+                    </h1>
+                    <p class="text-[10px] font-extrabold text-brand-sage uppercase tracking-widest mt-1">
+                        Login Tanpa Password (Email)
+                    </p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Glassmorphism Card -->
+        <div class="glass-card rounded-[32px] p-6 sm:p-8 shadow-2xl space-y-6">
+            
+            <div class="text-center space-y-1">
+                <div class="w-16 h-16 bg-emerald-50 text-brand-emerald rounded-full flex items-center justify-center text-2xl mx-auto mb-2 border border-emerald-200">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h2 class="text-2xl font-black text-brand-emerald tracking-tight">Login Tanpa Password</h2>
+                <p class="text-xs font-semibold text-brand-slate">Masukkan email akun Anda. Kami akan mengirimkan tautan login instan langsung ke kotak masuk email Anda.</p>
+            </div>
+
+            {{-- Alerts --}}
+            @if (session('status'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold space-y-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle text-base text-emerald-600 shrink-0"></i>
+                        <span>{{ session('status') }}</span>
+                    </div>
+                    <div class="pt-2 border-t border-emerald-200/60 flex justify-center">
+                        <a href="https://mail.google.com" target="_blank" class="w-full py-2.5 bg-brand-emerald hover:bg-[#073A27] text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow flex items-center justify-center gap-2">
+                            <i class="fab fa-google text-rose-400"></i>
+                            <span>Buka Gmail Saya</span>
+                        </a>
+                    </div>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold space-y-1">
+                    <div class="font-extrabold flex items-center gap-1.5 mb-1">
+                        <i class="fas fa-exclamation-circle"></i> Periksa kembali email Anda:
+                    </div>
+                    <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('magic.request') }}" class="space-y-4" onsubmit="disableSubmit(this)">
+                @csrf
+
+                {{-- Input Email --}}
+                <div class="space-y-1.5">
+                    <label for="email" class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Alamat Email Terdaftar</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-base"></i>
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
+                               placeholder="nama@bakoelkembang.com"
+                               class="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all">
+                    </div>
+                </div>
+
+                {{-- Submit Button --}}
+                <button type="submit" id="submitBtn" class="btn-gradient w-full py-4 rounded-2xl text-white font-black text-sm tracking-wider uppercase shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane text-md" id="submitIcon"></i>
+                    <span id="btnText">KIRIM LINK LOGIN KE EMAIL</span>
+                </button>
+            </form>
+
+            <div class="pt-4 border-t border-brand-accent/60 flex flex-col items-center gap-2 text-xs font-bold text-brand-slate">
+                <div>
+                    Punya kata sandi? <a href="{{ route('login') }}" class="text-brand-emerald hover:underline font-black">Login Biasa</a>
+                </div>
+                <div>
+                    Belum punya akun? <a href="{{ route('register') }}" class="text-brand-emerald hover:underline font-black">Daftar Akun Baru</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="text-center mt-6">
+            <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold backdrop-blur-md border border-white/10 transition-all">
+                <i class="fas fa-arrow-left"></i> Kembali ke Katalog Publik
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        function disableSubmit(form) {
+            const btn = document.getElementById('submitBtn');
+            const txt = document.getElementById('btnText');
+            const icon = document.getElementById('submitIcon');
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            txt.textContent = 'Mengirim Link…';
+            icon.className = 'fas fa-spinner fa-spin';
+        }
+    </script>
 </body>
 </html>
