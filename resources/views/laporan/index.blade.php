@@ -39,9 +39,9 @@
 
 <div class="container">
     <div class="header">
-        <h4>Laporan Stok Barang</h4>
-        @if ($role === 'gudang')
-            <a href="{{ route('laporan.arus') }}" class="back-button">← Lihat Laporan Arus Barang</a>
+        <h4>Laporan Transaksi & Stok Barang</h4>
+        @if (in_array($role, ['gudang', 'penjual', 'superadmin']))
+            <a href="{{ route('laporan.arus') }}" class="back-button">← Lihat Laporan Arus Barang (Detail Transaksi)</a>
         @endif
     </div>
 
@@ -91,7 +91,7 @@
         </div>
     </form>
 
-    @if ($role === 'gudang')
+    @if (in_array($role, ['gudang', 'penjual', 'superadmin']))
         <div class="export-buttons">
             {{-- request()->query() sudah otomatis membawa start_date & end_date --}}
             <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank">📄 Cetak PDF</a>
