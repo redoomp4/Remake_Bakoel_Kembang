@@ -44,10 +44,16 @@
                         <i class="fas fa-filter"></i> Filter </button> {{-- RESET --}} <a
                         href="{{ route('barang-keluar.index') }}"
                         style="background:#E4E4D9;color:#475569;  border-radius:.75rem;padding:.8rem 1.25rem;  text-decoration:none;font-weight:800;">
-                        Reset </a> </form> {{-- TABLE --}} <div
-                    style="  background:#fff;  border:1px solid #E4E4D9;  border-radius:1.5rem;  overflow-x:auto;  box-shadow:0 1px 4px rgba(0,0,0,.05);      ">
-                    <table
-                        style="      width:100%;      border-collapse:collapse;      table-layout:auto;      font-size:.85rem;  ">
+                        Reset </a> </form>
+                {{-- TABLE --}}
+                {{-- TABLE --}}
+                <div
+                    style="background:#fff;border:1px solid #E4E4D9;
+           border-radius:1.5rem;overflow:hidden;
+           box-shadow:0 1px 4px rgba(0,0,0,.05);
+           overflow-x:auto;">
+
+                    <table style="width:100%;border-collapse:collapse;min-width:1000px;">
                         {{-- TABLE HEADER --}} <thead
                             style="          background:#f0ebe3;          color:#475569;          font-size:.68rem;          text-transform:uppercase;          letter-spacing:.04em;      ">
                             <tr>
@@ -118,7 +124,7 @@
                                         <i class="fas fa-box-open"
                                             style="                          font-size:1.5rem;                          margin-bottom:.5rem;                      ">
                                         </i>
-                                        <div> Tidak ada data barang keluar. </div>
+                                        <div>Tidak ada data Barang Keluar</div>
                                     </td>
                                 </tr>
                             @endforelse
