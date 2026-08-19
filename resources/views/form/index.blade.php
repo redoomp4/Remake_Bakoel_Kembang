@@ -25,8 +25,8 @@
             <header class="mb-8 flex flex-col gap-4 border-b border-brand-accent/60 pb-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p class="mb-2 text-xs font-black uppercase tracking-[0.2em] text-brand-slate">Operasional Gudang</p>
-                    <h1 class="text-3xl font-black tracking-tight text-brand-emerald">Form Oneshot Master & Transaksi</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-brand-slate">Input master data, item baru, dan transaksi tanpa berpindah halaman.</p>
+                    <h1 class="text-3xl font-black tracking-tight text-brand-emerald">Form Transaksi</h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-brand-slate">Input item baru, dan transaksi tanpa berpindah halaman.</p>
                 </div>
                 <a href="{{ url()->previous() }}" class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-accent bg-white px-4 py-3 text-sm font-bold text-brand-slate shadow-sm transition hover:border-brand-emerald hover:text-brand-emerald">
                     <i class="fas fa-arrow-left" aria-hidden="true"></i><span>Kembali</span>
@@ -36,9 +36,9 @@
             {{-- Tab Navigation --}}
             <div class="mb-6 overflow-x-auto rounded-2xl border border-brand-accent bg-white p-2 shadow-sm" role="tablist">
                 <div class="flex min-w-max gap-2">
-                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-emerald-600 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700" data-tab="master" role="tab" aria-selected="true">
+                    {{-- <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-emerald-600 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700" data-tab="master" role="tab" aria-selected="true">
                         <i class="fas fa-bolt mr-2" aria-hidden="true"></i>Master Quick Add
-                    </button>
+                    </button> --}}
                     <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-brand-slate hover:bg-brand-offwhite" data-tab="item" role="tab" aria-selected="false">
                         <i class="fas fa-box mr-2" aria-hidden="true"></i>Tambah Item Baru
                     </button>
@@ -52,7 +52,6 @@
             </div>
 
             {{-- Tab Contents (masing-masing bawa script sendiri) --}}
-            @include('form.partials.tab-master')
             @include('form.partials.tab-item')
             @include('form.partials.tab-masuk')
             @include('form.partials.tab-keluar')
