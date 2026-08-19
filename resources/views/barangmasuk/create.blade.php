@@ -139,22 +139,6 @@
 
                             </select>
 
-                            <button type="button"
-                                onclick="alert('Fitur scan nota dapat dikembangkan menggunakan kamera perangkat.')"
-                                class="px-4 rounded-xl
-                   bg-emerald-50
-                   border border-emerald-200
-                   text-emerald-700
-                   font-extrabold text-sm
-                   hover:bg-emerald-100 transition">
-
-                                <i class="fas fa-camera mr-1"></i>
-
-                                <span class="hidden sm:inline">
-                                    Scan
-                                </span>
-
-                            </button>
 
                         </div>
 
