@@ -4,7 +4,7 @@
         <!-- Dashboard -->
         <a href="{{ route('dashboard.gudang') }}"
             class="flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('dashboard.gudang') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-            <i class="fas fa-wallet w-5"></i>Dashboard Keuangan
+            <i class="fas fa-wallet w-5"></i>Dashboard
         </a>
 
         <!-- Barang Keluar -->
