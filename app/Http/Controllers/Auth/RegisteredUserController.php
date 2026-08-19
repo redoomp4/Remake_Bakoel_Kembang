@@ -4,13 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
-use App\Rules\NotDisposableEmail;               // ⬅️ tambahkan rule kustom
+use App\Rules\NotDisposableEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -28,18 +27,28 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // ✅ Validasi (format email RFC + DNS MX, unique, blok disposable)
-        //   Perbaikan: 'email' harus berupa array rules (bukan string terpisah)
+        // Validasi input
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'email'    => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email', new NotDisposableEmail],
-            'phone'    => ['required', 'string'],
-            'role'     => ['required', 'string'],
-            // 'position' & 'status' opsional di form (set default di bawah)
+            'username' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:users,username'],
+            'email'    => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
+            'phone'    => ['required', 'string', 'max:30'],
+            'role'     => ['nullable', 'string', 'in:penjual,viewer,gudang,superadmin'],
             'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            'note'     => ['nullable', 'string'],
+            'note'     => ['nullable', 'string', 'max:500'],
             'password' => ['required', 'string', 'confirmed', 'min:8'],
+        ], [
+            'name.required'        => 'Nama lengkap wajib diisi.',
+            'username.required'    => 'Username wajib diisi.',
+            'username.alpha_dash'  => 'Username hanya boleh berisi huruf, angka, tanda hubung (-), dan garis bawah (_).',
+            'username.unique'      => 'Username ini sudah terdaftar, silakan pilih username lain.',
+            'email.required'       => 'Alamat email wajib diisi.',
+            'email.email'          => 'Format alamat email tidak valid.',
+            'email.unique'         => 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.',
+            'phone.required'       => 'Nomor telepon/WA wajib diisi.',
+            'password.required'    => 'Kata sandi wajib diisi.',
+            'password.confirmed'   => 'Konfirmasi kata sandi tidak cocok.',
+            'password.min'         => 'Kata sandi minimal harus 8 karakter.',
         ]);
 
         // Simpan foto jika ada
@@ -47,47 +56,35 @@ class RegisteredUserController extends Controller
             ? $request->file('photo')->store('photos', 'public')
             : null;
 
-        // ===== Default otomatis =====
-        // Position: default = role (fallback 'viewer' sudah ditangani oleh value role)
-        $role     = strtolower($validated['role']);
+        // Tentukan default role & status
+        $role     = strtolower($validated['role'] ?? 'penjual');
         $position = strtolower($request->input('position', $role));
+        $status   = 'Active';
 
-        // Status: default 'active' (ubah ke 'pending' jika kebijakan kamu butuh approval)
-        $status   = strtolower($request->input('status', 'active'));
-
-        // Buat user
+        // Simpan user baru ke database
         $user = User::create([
-            'name'     => $validated['name'],
-            'username' => $validated['username'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'],
-            'role'     => $role,
-            'position' => $position,   // tidak akan NULL
-            'status'   => $status,     // tidak akan NULL
-            'photo'    => $photoPath,
-            'note'     => $validated['note'] ?? null,
-            'password' => Hash::make($validated['password']),
+            'name'      => $validated['name'],
+            'username'  => $validated['username'],
+            'email'     => strtolower($validated['email']),
+            'phone'     => $validated['phone'],
+            'role'      => $role,
+            'position'  => $position,
+            'status'    => $status,
+            'is_active' => true,
+            'photo'     => $photoPath,
+            'note'      => $validated['note'] ?? null,
+            'password'  => Hash::make($validated['password']),
         ]);
 
-        // Kirim email verifikasi (bawaan Laravel)
-        event(new Registered($user));
+        // Kirim event verifikasi email secara aman (try-catch agar kendala mail server tidak menggagalkan registrasi)
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::warning('Email verification notice could not be sent: ' . $e->getMessage());
+        }
 
-        // Opsi A (disarankan): jangan login dulu, arahkan ke halaman verifikasi
-        // -> memastikan kepemilikan email sebelum akses masuk
-        // return redirect()->route('verification.notice')
-        //     ->with('status', 'Kami telah mengirim tautan verifikasi ke email Anda.');
-
-        // Opsi B: login dulu tapi tetap arahkan ke halaman verifikasi.
-        // (Semua route penting WAJIB pakai middleware "verified")
-        Auth::login($user);
-
-        // Arahkan ke halaman verifikasi agar user segera cek email
-        return redirect()->route('verification.notice')
-            ->with('status', 'Kami telah mengirim tautan verifikasi ke email Anda.');
-        //
-        // Catatan:
-        // Jika kamu tetap ingin langsung arahkan by role:
-        //   return redirect(RouteServiceProvider::redirectByRole());
-        // pastikan route tujuan diproteksi middleware ['auth','verified'].
+        // Arahkan ke halaman login dengan pesan sukses berhasil
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Akun Anda telah berhasil disimpan di database. Silakan masuk.');
     }
 }
+

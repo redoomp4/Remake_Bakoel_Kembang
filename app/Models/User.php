@@ -50,9 +50,10 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Kirim notifikasi verifikasi email khusus dengan template HTML ramah anti-spam.
      */
-    
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\CustomVerifyEmailNotification());
+    }
 }
