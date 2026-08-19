@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
 
             /** 1) Barang Kadaluarsa (H-30) — per USER */
             $expiredSoonItems = DB::table('barang_masuks')
-                ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
+                // ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
                 ->join('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                 ->join('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
                 ->where('barang_masuks.user_id', $userId) // <— penting
