@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;  // TAMBAHKAN INI!
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,6 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // TAMBAHKAN INI UNTUK NGROK!
+        $middleware->trustProxies(at: '*');
+
+        // Kalau masih redirect, tambahkan ini juga:
+        // $middleware->trustProxies(
+        //     headers: Request::HEADER_X_FORWARDED_ALL
+        // );
+
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'auto.logout' => \App\Http\Middleware\AutoLogoutInactiveUser::class,

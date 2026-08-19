@@ -1,15 +1,10 @@
 <aside class="w-full lg:w-72 bg-white border-r border-brand-accent p-4 md:p-6 shrink-0" aria-label="Navigasi admin">
-    <div class="mb-4 px-2 pb-4 border-b border-brand-accent/60">
-        <p class="text-[11px] font-black text-brand-slate uppercase tracking-[.14em]">Akses Admin Kebun</p>
-        <p class="text-xs text-brand-emerald font-bold mt-1"><i class="fas fa-shield-alt mr-1 text-brand-sage"></i>Panel
-            Laci Kas V3</p>
-    </div>
 
     <nav class="flex flex-col gap-2">
         <!-- Dashboard -->
         <a href="{{ route('dashboard.gudang') }}"
             class="flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('dashboard.gudang') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
-            <i class="fas fa-wallet w-5"></i>Dashboard Keuangan
+            <i class="fas fa-wallet w-5"></i>Dashboard
         </a>
 
         <!-- Barang Keluar -->

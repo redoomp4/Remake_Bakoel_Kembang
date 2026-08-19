@@ -216,7 +216,7 @@
 
 
     <section class="widget-grid" aria-label="Ringkasan aset">
-        <article class="widget"><div class="widget-icon">▣</div><div class="widget-kicker">Total Nilai Investasi Aset</div><div class="widget-value">Rp {{ number_format($totalAset ?? 0, 0, ',', '.') }}</div><div class="widget-sub">Total akumulasi aset kebun dan toko</div></article>
+        <article class="widget"><div class="widget-icon">▣</div><div class="widget-kicker">Total Nilai Aset</div><div class="widget-value">Rp {{ number_format($totalAset ?? 0, 0, ',', '.') }}</div><div class="widget-sub">Total akumulasi aset kebun dan toko</div></article>
         <article class="widget"><div class="widget-icon">▤</div><div class="widget-kicker">Total Unit & Variasi Aset</div><div class="widget-value">{{ $grouped->total() ?? $grouped->count() }}</div><div class="widget-sub">Barang terdaftar dalam inventaris</div></article>
         <article class="widget"><div class="widget-icon">✓</div><div class="widget-kicker">Status Kesehatan Aset</div><div class="widget-value">Layak Dipakai</div><div class="widget-sub">Ringkasan kondisi aset terdata</div><div class="meter"><div class="meter-good"></div><div class="meter-bad"></div></div><div class="meter-labels"><span style="color:#047857">Layak / Bagus</span><span style="color:#e11d48">Perlu Perbaikan</span></div></article>
     </section>

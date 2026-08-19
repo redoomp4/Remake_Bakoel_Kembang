@@ -33,9 +33,7 @@
                             *</label>
                         <div style="display:flex; gap:.5rem;"><input type="text" id="nama_barang" name="nama_barang"
                                 value="{{ old('nama_barang') }}" required
-                                style="flex:1; padding:.85rem 1rem; border:1px solid #E4E4D9; border-radius:.75rem; font-size:1rem;"><button
-                                type="button" onclick="speakField('nama_barang')" title="Baca bantuan suara"
-                                style="border:0; background:#ecfdf5; color:#047857; border-radius:.75rem; padding:0 1rem; font-size:1.3rem;">🎙</button>
+                                style="flex:1; padding:.85rem 1rem; border:1px solid #E4E4D9; border-radius:.75rem; font-size:1rem;">
                         </div>
                         @error('nama_barang')
                             <p style="color:#ef4444; font-size:.75rem; font-weight:600;">{{ $message }}</p>
@@ -82,10 +80,7 @@
                             style="display:block; font-weight:800; color:#475569; margin-bottom:.5rem;">Foto Barang</label>
                         <div style="display:flex; gap:.75rem; align-items:center;"><input type="file" id="foto"
                                 name="foto"
-                                style="flex:1; padding:.75rem; border:1px solid #E4E4D9; border-radius:.75rem;"> <button
-                                type="button" onclick="document.getElementById('foto').click()"
-                                style="border:0; background:#ecfdf5; color:#047857; border-radius:.75rem; padding:.85rem 1rem; font-weight:700;">📷
-                                Scan Foto</button></div>
+                                style="flex:1; padding:.75rem; border:1px solid #E4E4D9; border-radius:.75rem;"></div>
                         @error('foto')
                             <p style="color:#ef4444; font-size:.75rem; font-weight:600;">{{ $message }}</p>
                         @enderror
@@ -97,15 +92,6 @@
             </form>
         </div>
     </div>
-    <script>
-        function speakField(id) {
-            if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                speechSynthesis.speak(new SpeechSynthesisUtterance('Isi ' + document.getElementById(id)
-                    .previousElementSibling.textContent));
-            }
-        }
-    </script>
 @endsection
 
 <style>
