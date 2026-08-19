@@ -1,7 +1,8 @@
 @extends('layouts.app')
 @section('content')
     <div style="background:#FAF9F6;min-height:100vh;padding:2rem 1.25rem;overflow-x:hidden;">
-        <div style="max-width:1250px;margin:auto;width:100%;"> {{-- HEADER --}} <div
+        <div style="max-width:1250px;margin:auto;width:100%;">
+            {{-- HEADER --}} <div
                 style="display:flex;justify-content:space-between;align-items:center;      gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
                 <div>
                     <p
