@@ -22,6 +22,11 @@
                             Pantau stok, pergerakan barang, transaksi, dan kondisi persediaan kebun.
                         </p>
                     </div>
+                      <a href="{{ route('form.index') }}"
+           class="bg-brand-emerald text-white px-5 py-3 rounded-2xl font-black text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2">
+            <i class="fas fa-plus-circle text-lg"></i>
+            <span>TAMBAH DATA</span>
+        </a>
                     <div
                         class="bg-white/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-brand-accent font-bold text-md shadow-sm flex items-center gap-2">
                         <i class="far fa-calendar-alt text-brand-emerald"></i>
@@ -29,6 +34,7 @@
                         <span
                             class="font-extrabold text-brand-emerald">{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</span>
                     </div>
+
                 </div>
 
                 <!-- A. HERO FINANCIAL CARDS      DONE -->
