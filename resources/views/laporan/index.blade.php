@@ -43,14 +43,14 @@ body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.c
 <div class="container">
     <div class="header">
         <h4>Laporan Transaksi & Stok Barang</h4>
-        @if (in_array($role, ['gudang', 'penjual', 'superadmin']))
-            <a href="{{ route('laporan.arus') }}" class="back-button">← Lihat Laporan Arus Barang (Detail Transaksi)</a>
+        @if (in_array($role, ['admin', 'kios', 'gudang', 'penjual', 'superadmin']))
+            <a href="{{ route('laporan.arus') }}" class="back-button">â† Lihat Laporan Arus Barang (Detail Transaksi)</a>
         @endif
     </div>
 
     {{-- Filter Form --}}
     <form method="GET" class="filter-form">
-        {{-- ✨ Tambahan filter tanggal --}}
+        {{-- âœ¨ Tambahan filter tanggal --}}
         <div class="form-group">
             <label>Tanggal Mulai:</label>
             <input type="date" name="start_date" value="{{ request('start_date') }}">
@@ -94,12 +94,12 @@ body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.c
         </div>
     </form>
 
-    @if (in_array($role, ['gudang', 'penjual', 'superadmin']))
+    @if (in_array($role, ['admin', 'kios', 'gudang', 'penjual', 'superadmin']))
         <div class="export-buttons">
             {{-- request()->query() sudah otomatis membawa start_date & end_date --}}
-            <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank">📄 Cetak PDF</a>
-            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}">📊 Export Excel (.xlsx)</a>
-            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'csv'])) }}" style="background-color: #059669;">📄 Export CSV (.csv)</a>
+            <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank">ðŸ“„ Cetak PDF</a>
+            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}">ðŸ“Š Export Excel (.xlsx)</a>
+            <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'csv'])) }}" style="background-color: #059669;">ðŸ“„ Export CSV (.csv)</a>
         </div>
     @endif
 
@@ -126,9 +126,9 @@ body{background:#f7f8f5;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.c
                             <a href="{{ route('laporan', array_merge(request()->all(), ['sort_by' => $key, 'sort_dir' => ($sortBy === $key && request('sort_dir') === 'asc') ? 'desc' : 'asc'])) }}">
                                 {{ $label }}
                                 @if($sortBy === $key)
-                                    {{ request('sort_dir') === 'asc' ? '↑' : '↓' }}
+                                    {{ request('sort_dir') === 'asc' ? 'â†‘' : 'â†“' }}
                                 @else
-                                    ▲▼
+                                    â–²â–¼
                                 @endif
                             </a>
                         </th>

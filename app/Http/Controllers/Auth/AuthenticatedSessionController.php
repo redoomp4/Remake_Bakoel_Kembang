@@ -39,16 +39,16 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
 
 
-        if ($user->role === 'gudang') {
+        if (in_array($user->role, ['admin', 'kios', 'gudang', 'penjual', 'superadmin'])) {
             $userId = auth()->id();
 
 
-            /** 1) Barang Kadaluarsa (H-30) — per USER */
+            /** 1) Barang Kadaluarsa (H-30) â€” per USER */
             $expiredSoonItems = DB::table('barang_masuks')
                 // ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
                 ->join('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                 ->join('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
-                ->where('barang_masuks.user_id', $userId) // <— penting
+                ->where('barang_masuks.user_id', $userId) // <â€” penting
                 ->whereDate('barang_masuks.tanggal_kadaluarsa', '<=', now()->addDays(30))
                 ->whereDate('barang_masuks.tanggal_kadaluarsa', '>=', now())
                 ->select(
@@ -72,7 +72,7 @@ class AuthenticatedSessionController extends Controller
             }
 
 
-            /** 2) Stok Minimum — per USER */
+            /** 2) Stok Minimum â€” per USER */
             $lowStockItems = DB::table('items')
                 ->select(
                     'items.kode_barang',
@@ -101,7 +101,7 @@ class AuthenticatedSessionController extends Controller
                         ->join('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                         ->join('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
                         ->where('barang_masuks.kode_barang', $item->kode_barang)
-                        ->where('barang_masuks.user_id', $userId) // <— penting
+                        ->where('barang_masuks.user_id', $userId) // <â€” penting
                         ->latest('barang_masuks.tanggal_masuk')
                         ->select('lokasis.nama_lokasi', 'kondisis.nama_kondisi')
                         ->first();
@@ -123,7 +123,7 @@ class AuthenticatedSessionController extends Controller
             }
 
 
-            /** 3) Slow Moving (> 60 hari tanpa pergerakan) — per USER */
+            /** 3) Slow Moving (> 60 hari tanpa pergerakan) â€” per USER */
             $slowMovingItems = DB::table('items')
                 ->select(
                     'items.kode_barang',
@@ -160,7 +160,7 @@ class AuthenticatedSessionController extends Controller
                         ->join('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                         ->join('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
                         ->where('barang_masuks.kode_barang', $item->kode_barang)
-                        ->where('barang_masuks.user_id', $userId) // <— penting
+                        ->where('barang_masuks.user_id', $userId) // <â€” penting
                         ->latest('barang_masuks.tanggal_masuk')
                         ->select('lokasis.nama_lokasi', 'kondisis.nama_kondisi')
                         ->first();

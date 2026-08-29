@@ -64,7 +64,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:superadmin,gudang,penjual,viewer',
+            'role' => 'required|in:admin,kios,superadmin,gudang,penjual,viewer',
             'position' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'status' => 'required|string|max:255',
@@ -107,7 +107,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:superadmin,gudang,penjual,viewer',
+            'role' => 'required|in:admin,kios,superadmin,gudang,penjual,viewer',
             'position' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'status' => 'nullable|string|max:255',
@@ -147,7 +147,7 @@ class UserController extends Controller
 
         // Jika user diaktifkan kembali, update juga last_login supaya tidak auto logout
         if ($user->is_active) {
-            $user->last_login = now(); // ✅ "reset umur akun"
+            $user->last_login = now(); // âœ… "reset umur akun"
         }
 
 

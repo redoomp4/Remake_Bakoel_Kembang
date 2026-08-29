@@ -185,13 +185,13 @@
                 </div>
 
                 {{-- Role (Otomatis Penjual) --}}
-                <input type="hidden" name="role" value="penjual">
+                <input type="hidden" name="role" value="kios">
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Role Pengguna</label>
                     <div class="relative">
                         <i class="fas fa-shield-alt absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
                         <div class="w-full pl-11 pr-4 py-3 bg-emerald-50 border-2 border-emerald-200 rounded-2xl text-sm font-bold text-brand-emerald">
-                            Penjual (Akses Penuh Transaksi & Inventory)
+                            Kios (Akses Penuh Transaksi & Inventory)
                         </div>
                     </div>
                 </div>
@@ -204,7 +204,7 @@
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
                             <input id="password" name="password" type="password" required
-                                   placeholder="••••••••"
+                                   placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                    class="w-full pl-11 pr-10 py-3 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all">
                             <button type="button" onclick="togglePassword('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-slate hover:text-brand-emerald text-sm transition-colors focus:outline-none">
                                 <i class="bi bi-eye-slash"></i>
@@ -218,7 +218,7 @@
                         <div class="relative">
                             <i class="fas fa-lock-open absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
                             <input id="password_confirmation" name="password_confirmation" type="password" required
-                                   placeholder="••••••••"
+                                   placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                    class="w-full pl-11 pr-10 py-3 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all">
                             <button type="button" onclick="togglePassword('password_confirmation', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-slate hover:text-brand-emerald text-sm transition-colors focus:outline-none">
                                 <i class="bi bi-eye-slash"></i>

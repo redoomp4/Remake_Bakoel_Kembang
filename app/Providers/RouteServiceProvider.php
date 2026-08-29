@@ -17,13 +17,13 @@ class RouteServiceProvider extends ServiceProvider
      */
     public static function redirectByRole(): string
     {
-        $role = auth()->user()->role ?? null;
+        $role = strtolower(auth()->user()->role ?? '');
 
-        return match (strtolower($role ?? '')) {
-            'superadmin'        => route('dashboard.superadmin'),
-            'gudang', 'penjual' => route('dashboard.gudang'),
-            'viewer'            => route('dashboard.viewer'),
-            default             => route('dashboard.gudang'),
+        return match ($role) {
+            'admin', 'superadmin' => route('dashboard.gudang'),
+            'kios', 'penjual', 'gudang' => route('dashboard.gudang'),
+            'viewer' => route('dashboard.viewer'),
+            default => route('dashboard.gudang'),
         };
     }
 
