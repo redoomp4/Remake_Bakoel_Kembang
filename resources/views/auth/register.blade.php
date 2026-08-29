@@ -203,8 +203,7 @@
                         <label for="password" class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Kata Sandi</label>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
-                            <input id="password" name="password" type="password" required
-                                   placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            <input id="password" name="password" type="password" value="{{ old('password') }}" required placeholder="Minimal 8 karakter"
                                    class="w-full pl-11 pr-10 py-3 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all">
                             <button type="button" onclick="togglePassword('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-slate hover:text-brand-emerald text-sm transition-colors focus:outline-none">
                                 <i class="bi bi-eye-slash"></i>
@@ -217,8 +216,7 @@
                         <label for="password_confirmation" class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Konfirmasi</label>
                         <div class="relative">
                             <i class="fas fa-lock-open absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
-                            <input id="password_confirmation" name="password_confirmation" type="password" required
-                                   placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            <input id="password_confirmation" name="password_confirmation" type="password" value="{{ old('password_confirmation') }}" required placeholder="Ulangi kata sandi"
                                    class="w-full pl-11 pr-10 py-3 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all">
                             <button type="button" onclick="togglePassword('password_confirmation', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-slate hover:text-brand-emerald text-sm transition-colors focus:outline-none">
                                 <i class="bi bi-eye-slash"></i>
