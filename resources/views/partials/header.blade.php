@@ -50,7 +50,7 @@
                             : 'text-brand-slate hover:text-brand-emerald' }}">
 
                         <i class="fas fa-chart-line mr-1.5 text-brand-sage"></i>
-                        Admin
+                        Dashboard
                     </a>
                 @endauth
 
@@ -68,7 +68,7 @@
                                  bg-emerald-50 border border-emerald-200
                                  px-2 py-1.5 rounded-lg">
 
-                        {{ Auth::user()->name }}
+                        {{ Auth::user()->username ?? Auth::user()->name }}
 
                         <span class="text-brand-sage ml-1">
                             ({{ strtoupper(Auth::user()->role) }})
