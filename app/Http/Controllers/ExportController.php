@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Http\Response; 
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\BarangMasuk;
@@ -44,11 +45,16 @@ class ExportController extends Controller
         $value = trim($value);
 
         if (str_contains($value, '/')) {
-            try { return Carbon::createFromFormat('d/m/Y', $value)->toDateString(); }
-            catch (\Throwable $e) { /* fallback */ }
+            try {
+                return Carbon::createFromFormat('d/m/Y', $value)->toDateString();
+            } catch (\Throwable $e) { /* fallback */
+            }
         }
-        try { return Carbon::parse($value)->toDateString(); }
-        catch (\Throwable $e) { return null; }
+        try {
+            return Carbon::parse($value)->toDateString();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     private function resolvePeriod(?string $start, ?string $end, \Closure $fallback, string $tz = 'Asia/Makassar'): array
@@ -70,7 +76,7 @@ class ExportController extends Controller
 
     public function laporan(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         // Filter teks & lokasi
         $nama     = $request->filled('nama_barang') ? (string)$request->nama_barang : null;
@@ -85,12 +91,12 @@ class ExportController extends Controller
         $barangMasuk = BarangMasuk::query()
             ->with(['item', 'lokasi', 'user'])
             ->where('user_id', $user->id)
-            ->when($lokasiId, fn ($q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
+            ->when($lokasiId, fn($q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
             ->whereHas('item', function ($q) use ($nama, $kode) {
-                $q->when($nama, fn ($qq) => $qq->where('nama_barang', 'like', '%'.$nama.'%'))
-                ->when($kode, fn ($qq) => $qq->where('kode_barang', 'like', '%'.$kode.'%'));
+                $q->when($nama, fn($qq) => $qq->where('nama_barang', 'like', '%' . $nama . '%'))
+                    ->when($kode, fn($qq) => $qq->where('kode_barang', 'like', '%' . $kode . '%'));
             })
             ->get()
             ->map(function ($bm) {
@@ -110,12 +116,12 @@ class ExportController extends Controller
         $barangKeluar = BarangKeluar::query()
             ->with(['item', 'lokasi', 'user'])
             ->where('user_id', $user->id)
-            ->when($lokasiId, fn ($q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
+            ->when($lokasiId, fn($q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
             ->whereHas('item', function ($q) use ($nama, $kode) {
-                $q->when($nama, fn ($qq) => $qq->where('nama_barang', 'like', '%'.$nama.'%'))
-                ->when($kode, fn ($qq) => $qq->where('kode_barang', 'like', '%'.$kode.'%'));
+                $q->when($nama, fn($qq) => $qq->where('nama_barang', 'like', '%' . $nama . '%'))
+                    ->when($kode, fn($qq) => $qq->where('kode_barang', 'like', '%' . $kode . '%'));
             })
             ->get()
             ->map(function ($bk) {
@@ -135,8 +141,7 @@ class ExportController extends Controller
         $merged = $barangMasuk->merge($barangKeluar);
 
         $grouped = $merged->groupBy(
-            fn (array $row) =>
-                ($row['kode_barang'] ?? '-') . '|' .
+            fn(array $row) => ($row['kode_barang'] ?? '-') . '|' .
                 ($row['lokasi'] ?? '-') . '|' .
                 ($row['kondisi'] ?? '-') . '|' .
                 ($row['username'] ?? '-')
@@ -170,39 +175,40 @@ class ExportController extends Controller
         $current = LengthAwarePaginator::resolveCurrentPage();
         $items   = $collection->slice(($current - 1) * $perPage, $perPage)->values();
         $data    = new LengthAwarePaginator(
-            $items, $collection->count(), $perPage, $current,
+            $items,
+            $collection->count(),
+            $perPage,
+            $current,
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
         // Dropdown lokasi
-        $lokasis = Lokasi::orderBy('nama_lokasi')->get(['id','nama_lokasi'])->toArray();
+        $lokasis = Lokasi::orderBy('nama_lokasi')->get(['id', 'nama_lokasi'])->toArray();
 
         return view('laporan.index', compact('data', 'lokasis'));
     }
-
-
 
     // =========================
     // === Helper yang dipakai ==
     // =========================
 
     /**
- * Satukan transaksi Masuk & Keluar (dipakai export), filter di DB dengan whereDate (partial range OK).
- *
- * @return \Illuminate\Support\Collection<int, array{
- *  kode_barang:string, nama_barang:string, harga_dasar:float|int,
- *  lokasi:string, kondisi:?string, username:?string,
- *  jenis:"Masuk"|"Keluar", jumlah:float|int, tanggal:?Carbon
- * }>
- */
-private function fetchUnifiedTransactions(
-    int $userId,
-    ?string $nama,
-    ?string $kode,
-    ?int $lokasiId,
-    ?string $start,
-    ?string $end,
-    bool $includeDates = false
+     * Satukan transaksi Masuk & Keluar (dipakai export), filter di DB dengan whereDate (partial range OK).
+     *
+     * @return \Illuminate\Support\Collection<int, array{
+     *  kode_barang:string, nama_barang:string, harga_dasar:float|int,
+     *  lokasi:string, kondisi:?string, username:?string,
+     *  jenis:"Masuk"|"Keluar", jumlah:float|int, tanggal:?Carbon
+     * }>
+     */
+    private function fetchUnifiedTransactions(
+        int $userId,
+        ?string $nama,
+        ?string $kode,
+        ?int $lokasiId,
+        ?string $start,
+        ?string $end,
+        bool $includeDates = false
     ): Collection {
         $startDate = $this->normalizeDate($start);
         $endDate   = $this->normalizeDate($end);
@@ -210,12 +216,12 @@ private function fetchUnifiedTransactions(
         $masuk = BarangMasuk::query()
             ->with(['item', 'lokasi', 'user'])
             ->where('user_id', $userId)
-            ->when($lokasiId, fn ($q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
+            ->when($lokasiId, fn($q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
             ->whereHas('item', function ($q) use ($nama, $kode) {
-                $q->when($nama, fn ($qq) => $qq->where('nama_barang', 'like', '%'.$nama.'%'))
-                ->when($kode, fn ($qq) => $qq->where('kode_barang', 'like', '%'.$kode.'%'));
+                $q->when($nama, fn($qq) => $qq->where('nama_barang', 'like', '%' . $nama . '%'))
+                    ->when($kode, fn($qq) => $qq->where('kode_barang', 'like', '%' . $kode . '%'));
             })
             ->get()
             ->map(function ($bm) use ($includeDates) {
@@ -229,20 +235,20 @@ private function fetchUnifiedTransactions(
                     'jenis'       => 'Masuk',
                     'jumlah'      => (float) $bm->jumlah,
                     'tanggal'     => $includeDates && $bm->tanggal_masuk
-                                    ? Carbon::parse($bm->tanggal_masuk)
-                                    : null,
+                        ? Carbon::parse($bm->tanggal_masuk)
+                        : null,
                 ];
             });
 
         $keluar = BarangKeluar::query()
             ->with(['item', 'lokasi', 'user'])
             ->where('user_id', $userId)
-            ->when($lokasiId, fn ($q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
+            ->when($lokasiId, fn($q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
             ->whereHas('item', function ($q) use ($nama, $kode) {
-                $q->when($nama, fn ($qq) => $qq->where('nama_barang', 'like', '%'.$nama.'%'))
-                ->when($kode, fn ($qq) => $qq->where('kode_barang', 'like', '%'.$kode.'%'));
+                $q->when($nama, fn($qq) => $qq->where('nama_barang', 'like', '%' . $nama . '%'))
+                    ->when($kode, fn($qq) => $qq->where('kode_barang', 'like', '%' . $kode . '%'));
             })
             ->get()
             ->map(function ($bk) use ($includeDates) {
@@ -256,8 +262,8 @@ private function fetchUnifiedTransactions(
                     'jenis'       => 'Keluar',
                     'jumlah'      => (float) $bk->jumlah_keluar,
                     'tanggal'     => $includeDates && $bk->tanggal_keluar
-                                    ? Carbon::parse($bk->tanggal_keluar)
-                                    : null,
+                        ? Carbon::parse($bk->tanggal_keluar)
+                        : null,
                 ];
             });
 
@@ -275,14 +281,14 @@ private function fetchUnifiedTransactions(
      *   lokasi:string, kondisi:?string, username:?string
      * }>
      */
-    
+
     // =========================
     // ====== LAPORAN STOK =====
     // =========================
 
     public function exportPdf(Request $request): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $nama     = $request->filled('nama_barang') ? (string)$request->nama_barang : null;
         $kode     = $request->filled('kode_barang') ? (string)$request->kode_barang : null;
@@ -303,7 +309,7 @@ private function fetchUnifiedTransactions(
 
         // Ringkas per kode|lokasi|kondisi|username
         $data = $this->summarizeStock($merged)
-            ->filter(fn (array $row) => $row['stok_akhir'] > 0)
+            ->filter(fn(array $row) => $row['stok_akhir'] > 0)
             ->values();
 
         // Periode
@@ -336,7 +342,7 @@ private function fetchUnifiedTransactions(
 
     public function exportExcel(Request $request): BinaryFileResponse
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $merged = $this->fetchUnifiedTransactions(
             userId: $user->id,
@@ -364,7 +370,7 @@ private function fetchUnifiedTransactions(
 
     public function exportArusPdf(Request $request): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $start     = $request->filled('start_date') ? (string)$request->start_date : null;
         $end       = $request->filled('end_date')   ? (string)$request->end_date   : null;
@@ -383,19 +389,21 @@ private function fetchUnifiedTransactions(
                 'lokasi:id,nama_lokasi'
             ])
             ->where('user_id', $user->id)
-            ->when($lokasiId, fn (Builder $q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate && $endDate, fn (Builder $q) => $q->whereBetween('tanggal_masuk', [$startDate, $endDate]))
+            ->when($lokasiId, fn(Builder $q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate && $endDate, fn(Builder $q) => $q->whereBetween('tanggal_masuk', [$startDate, $endDate]))
             ->whereHas('item', function (Builder $q) use ($kategori, $search) {
-                $q->when($kategori, fn (Builder $qq) => $qq->where('id_kategori', $kategori))
-                ->when($search, function (Builder $qq) use ($search) {
-                    $qq->where(function (Builder $qqq) use ($search) {
-                        $qqq->where('nama_barang', 'like', '%'.$search.'%')
-                            ->orWhere('kode_barang', 'like', '%'.$search.'%');
+                $q->when($kategori, fn(Builder $qq) => $qq->where('id_kategori', $kategori))
+                    ->when($search, function (Builder $qq) use ($search) {
+                        $qq->where(function (Builder $qqq) use ($search) {
+                            $qqq->where('nama_barang', 'like', '%' . $search . '%')
+                                ->orWhere('kode_barang', 'like', '%' . $search . '%');
+                        });
                     });
-                });
             })
-            ->when($search, fn (Builder $q) =>
-                $q->orWhere('pemasok', 'like', '%'.$search.'%')
+            ->when(
+                $search,
+                fn(Builder $q) =>
+                $q->orWhere('pemasok', 'like', '%' . $search . '%')
             )
             ->get()
             ->map(function ($bm) {
@@ -419,19 +427,21 @@ private function fetchUnifiedTransactions(
                 'lokasi:id,nama_lokasi'
             ])
             ->where('user_id', $user->id)
-            ->when($lokasiId, fn (Builder $q) => $q->where('id_lokasi', $lokasiId))
-            ->when($startDate && $endDate, fn (Builder $q) => $q->whereBetween('tanggal_keluar', [$startDate, $endDate]))
+            ->when($lokasiId, fn(Builder $q) => $q->where('id_lokasi', $lokasiId))
+            ->when($startDate && $endDate, fn(Builder $q) => $q->whereBetween('tanggal_keluar', [$startDate, $endDate]))
             ->whereHas('item', function (Builder $q) use ($kategori, $search) {
-                $q->when($kategori, fn (Builder $qq) => $qq->where('id_kategori', $kategori))
-                ->when($search, function (Builder $qq) use ($search) {
-                    $qq->where(function (Builder $qqq) use ($search) {
-                        $qqq->where('nama_barang', 'like', '%'.$search.'%')
-                            ->orWhere('kode_barang', 'like', '%'.$search.'%');
+                $q->when($kategori, fn(Builder $qq) => $qq->where('id_kategori', $kategori))
+                    ->when($search, function (Builder $qq) use ($search) {
+                        $qq->where(function (Builder $qqq) use ($search) {
+                            $qqq->where('nama_barang', 'like', '%' . $search . '%')
+                                ->orWhere('kode_barang', 'like', '%' . $search . '%');
+                        });
                     });
-                });
             })
-            ->when($search, fn (Builder $q) =>
-                $q->orWhere('penerima', 'like', '%'.$search.'%')
+            ->when(
+                $search,
+                fn(Builder $q) =>
+                $q->orWhere('penerima', 'like', '%' . $search . '%')
             )
             ->get()
             ->map(function ($bk) {
@@ -450,7 +460,7 @@ private function fetchUnifiedTransactions(
 
         // Gabungkan, urutkan, dan hitung running stock per kode
         $combined = $arusMasuk->merge($arusKeluar)
-            ->sortBy(fn (array $r) => $r['tanggal'] instanceof Carbon ? $r['tanggal']->timestamp : 0)
+            ->sortBy(fn(array $r) => $r['tanggal'] instanceof Carbon ? $r['tanggal']->timestamp : 0)
             ->values();
 
         $running = [];
@@ -512,88 +522,90 @@ private function fetchUnifiedTransactions(
     // =========================
 
     public function exportOmzetPdf(Request $request): Response
-{
-    $user = auth()->user();
+    {
+        $user = $request->user();
 
-    // Normalisasi tanggal agar aman untuk whereDate (partial range OK)
-    $startDate = $request->filled('start_date')
-        ? Carbon::parse($request->start_date)->toDateString()
-        : null;
-    $endDate = $request->filled('end_date')
-        ? Carbon::parse($request->end_date)->toDateString()
-        : null;
+        // Normalisasi tanggal agar aman untuk whereDate (partial range OK)
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)->toDateString()
+            : null;
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)->toDateString()
+            : null;
 
-    $q = BarangKeluar::query()
-        ->with([
-            // HAPUS "id" dari eager-load item (tabel items tidak punya kolom id)
-            'item:kode_barang,nama_barang',
-            'lokasi:id,nama_lokasi',
-            'kondisi:id,nama_kondisi',
-        ])
-        ->where('user_id', $user->id)
-        ->when($request->filled('lokasi'),  fn (Builder $qq) => $qq->where('id_lokasi',  (int)$request->lokasi))
-        ->when($request->filled('kondisi'), fn (Builder $qq) => $qq->where('id_kondisi', (int)$request->kondisi))
-        ->when($request->filled('search'), function (Builder $qq) use ($request) {
-            $search = (string)$request->search;
-            $qq->whereHas('item', fn (Builder $qi) =>
-                $qi->where('nama_barang', 'like', "%{$search}%")
-                   ->orWhere('kode_barang', 'like', "%{$search}%")
-            );
-        })
-        // Partial date range: start saja / end saja juga tetap difilter
-        ->when($startDate, fn ($qq) => $qq->whereDate('tanggal_keluar', '>=', $startDate))
-        ->when($endDate,   fn ($qq) => $qq->whereDate('tanggal_keluar', '<=', $endDate));
+        $q = BarangKeluar::query()
+            ->with([
+                // HAPUS "id" dari eager-load item (tabel items tidak punya kolom id)
+                'item:kode_barang,nama_barang',
+                'lokasi:id,nama_lokasi',
+                'kondisi:id,nama_kondisi',
+            ])
+            ->where('user_id', $user->id)
+            ->when($request->filled('lokasi'),  fn(Builder $qq) => $qq->where('id_lokasi',  (int)$request->lokasi))
+            ->when($request->filled('kondisi'), fn(Builder $qq) => $qq->where('id_kondisi', (int)$request->kondisi))
+            ->when($request->filled('search'), function (Builder $qq) use ($request) {
+                $search = (string)$request->search;
+                $qq->whereHas(
+                    'item',
+                    fn(Builder $qi) =>
+                    $qi->where('nama_barang', 'like', "%{$search}%")
+                        ->orWhere('kode_barang', 'like', "%{$search}%")
+                );
+            })
+            // Partial date range: start saja / end saja juga tetap difilter
+            ->when($startDate, fn($qq) => $qq->whereDate('tanggal_keluar', '>=', $startDate))
+            ->when($endDate,   fn($qq) => $qq->whereDate('tanggal_keluar', '<=', $endDate));
 
-    $data = $q->get()->map(function ($row) {
-        $omzet = (float)$row->jumlah_keluar * (float)$row->harga_jual;
-        return [
-            'tanggal'       => $row->tanggal_keluar,
-            'nama_barang'   => optional($row->item)->nama_barang ?? '-',
-            'lokasi'        => optional($row->lokasi)->nama_lokasi ?? '-',
-            'kondisi'       => optional($row->kondisi)->nama_kondisi ?? '-',
-            'jumlah_keluar' => $row->jumlah_keluar,
-            'harga_jual'    => $row->harga_jual,
-            'omzet_item'    => $omzet,
+        $data = $q->get()->map(function ($row) {
+            $omzet = (float)$row->jumlah_keluar * (float)$row->harga_jual;
+            return [
+                'tanggal'       => $row->tanggal_keluar,
+                'nama_barang'   => optional($row->item)->nama_barang ?? '-',
+                'lokasi'        => optional($row->lokasi)->nama_lokasi ?? '-',
+                'kondisi'       => optional($row->kondisi)->nama_kondisi ?? '-',
+                'jumlah_keluar' => $row->jumlah_keluar,
+                'harga_jual'    => $row->harga_jual,
+                'omzet_item'    => $omzet,
+            ];
+        });
+
+        $total_omzet = $data->sum('omzet_item');
+
+        // Tentukan periode untuk header laporan (pakai filter; jika kosong, fallback ke min/max hasil query)
+        [$periodeStart, $periodeEnd] = $this->resolvePeriod(
+            $request->start_date,
+            $request->end_date,
+            function () use ($q) {
+                $qq = clone $q;
+                $min = $qq->min('tanggal_keluar');
+                $max = (clone $q)->max('tanggal_keluar');
+                return [$min, $max];
+            }
+        );
+
+        $filters = [
+            'Tanggal Mulai'   => $periodeStart->format('d/m/Y'),
+            'Tanggal Selesai' => $periodeEnd->format('d/m/Y'),
+            'Cari Barang'     => $request->search,
+            'Lokasi'          => $request->filled('lokasi')
+                ? optional(Lokasi::find((int)$request->lokasi))->nama_lokasi
+                : null,
+            'Kondisi'         => $request->filled('kondisi')
+                ? optional(Kondisi::find((int)$request->kondisi))->nama_kondisi
+                : null,
         ];
-    });
 
-    $total_omzet = $data->sum('omzet_item');
-
-    // Tentukan periode untuk header laporan (pakai filter; jika kosong, fallback ke min/max hasil query)
-    [$periodeStart, $periodeEnd] = $this->resolvePeriod(
-        $request->start_date,
-        $request->end_date,
-        function () use ($q) {
-            $qq = clone $q;
-            $min = $qq->min('tanggal_keluar');
-            $max = (clone $q)->max('tanggal_keluar');
-            return [$min, $max];
-        }
-    );
-
-    $filters = [
-        'Tanggal Mulai'   => $periodeStart->format('d/m/Y'),
-        'Tanggal Selesai' => $periodeEnd->format('d/m/Y'),
-        'Cari Barang'     => $request->search,
-        'Lokasi'          => $request->filled('lokasi')
-                                ? optional(Lokasi::find((int)$request->lokasi))->nama_lokasi
-                                : null,
-        'Kondisi'         => $request->filled('kondisi')
-                                ? optional(Kondisi::find((int)$request->kondisi))->nama_kondisi
-                                : null,
-    ];
-
-    return Pdf::loadView('omzet.print', [
-        'data'         => $data,
-        'total_omzet'  => $total_omzet,
-        'username'     => $user->username,
-        'nama'         => $user->name,
-        'tanggalCetak' => now('Asia/Makassar')->format('d/m/Y H:i:s'),
-        'tanggalAwal'  => $filters['Tanggal Mulai'],
-        'tanggalAkhir' => $filters['Tanggal Selesai'],
-        'filters'      => $filters,
-    ])->stream('laporan_omzet.pdf');
-}
+        return Pdf::loadView('omzet.print', [
+            'data'         => $data,
+            'total_omzet'  => $total_omzet,
+            'username'     => $user->username,
+            'nama'         => $user->name,
+            'tanggalCetak' => now('Asia/Makassar')->format('d/m/Y H:i:s'),
+            'tanggalAwal'  => $filters['Tanggal Mulai'],
+            'tanggalAkhir' => $filters['Tanggal Selesai'],
+            'filters'      => $filters,
+        ])->stream('laporan_omzet.pdf');
+    }
 
 
     public function exportOmzetExcel(Request $request): BinaryFileResponse
@@ -632,8 +644,8 @@ private function fetchUnifiedTransactions(
 
                 if ($request->filled('nama_barang')) {
                     $keyword = strtolower($request->nama_barang);
-                    $bm->whereHas('item', fn (Builder $q) => $q->whereRaw('LOWER(nama_barang) LIKE ?', ["%{$keyword}%"]));
-                    $bk->whereHas('item', fn (Builder $q) => $q->whereRaw('LOWER(nama_barang) LIKE ?', ["%{$keyword}%"]));
+                    $bm->whereHas('item', fn(Builder $q) => $q->whereRaw('LOWER(nama_barang) LIKE ?', ["%{$keyword}%"]));
+                    $bk->whereHas('item', fn(Builder $q) => $q->whereRaw('LOWER(nama_barang) LIKE ?', ["%{$keyword}%"]));
                 }
                 if ($request->filled('lokasi')) {
                     $bm->where('id_lokasi', (int)$request->lokasi);
@@ -688,11 +700,11 @@ private function fetchUnifiedTransactions(
      *   jenis:"Masuk"|"Keluar", jumlah:float|int, tanggal:?Carbon
      * }>
      */
-    
+
     private function summarizeStock(Collection $merged): Collection
     {
         $grouped = $merged->groupBy(
-            fn (array $row) => $row['kode_barang'].'|'.$row['lokasi'].'|'.($row['kondisi'] ?? '-').'|'.($row['username'] ?? '-')
+            fn(array $row) => $row['kode_barang'] . '|' . $row['lokasi'] . '|' . ($row['kondisi'] ?? '-') . '|' . ($row['username'] ?? '-')
         );
 
         return $grouped->map(function (Collection $rows) {
@@ -720,7 +732,7 @@ private function fetchUnifiedTransactions(
      */
     public function exportKeuanganExcel(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $startDate = $this->normalizeDate($request->input('start_date'));
         $endDate   = $this->normalizeDate($request->input('end_date'));
@@ -728,8 +740,8 @@ private function fetchUnifiedTransactions(
         // Barang Masuk (Modal/Pembelian)
         $barangMasukQuery = BarangMasuk::with(['item', 'pemasok'])
             ->where('user_id', $user->id)
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_masuk', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_masuk', '<=', $endDate))
             ->get();
 
         $barangMasukData = $barangMasukQuery->map(function ($bm) {
@@ -747,8 +759,8 @@ private function fetchUnifiedTransactions(
         // Barang Keluar (Penjualan/Omzet)
         $barangKeluarQuery = BarangKeluar::with(['item'])
             ->where('user_id', $user->id)
-            ->when($startDate, fn ($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
-            ->when($endDate,   fn ($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
+            ->when($startDate, fn($q) => $q->whereDate('tanggal_keluar', '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate('tanggal_keluar', '<=', $endDate))
             ->get();
 
         $barangKeluarData = $barangKeluarQuery->map(function ($bk) {
