@@ -82,9 +82,7 @@
             <div class="col-md-6">
                 <label class="form-label">Role:</label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror" required>
-                    <option value="superadmin" {{ $user->role == 'superadmin' ? 'selected' : '' }}>Superadmin</option>
-                    <option value="gudang" {{ $user->role == 'gudang' ? 'selected' : '' }}>Gudang</option>
-                    <option value="viewer" {{ $user->role == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                    <option value="admin" {{ in_array($user->role, ['admin', 'superadmin']) ? 'selected' : '' }}>Admin</option>`n                    <option value="kios" {{ in_array($user->role, ['kios', 'penjual', 'gudang']) ? 'selected' : '' }}>Kios</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>

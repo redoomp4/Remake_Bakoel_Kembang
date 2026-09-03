@@ -16,16 +16,21 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        $userRole = auth()->user()->role;
+        if (!auth()->check()) {
+            abort(403, 'Akses ditolak: Anda harus login terlebih dahulu.');
+        }
 
-        // Superadmin selalu punya akses penuh ke semua fitur
-        if ($userRole === 'superadmin') {
+        $userRole = strtolower(auth()->user()->role ?? '');
+
+        // Role admin dan kios (serta superadmin/gudang/penjual/viewer) diizinkan mengakses semua halaman dan form
+        if (in_array($userRole, ['admin', 'kios', 'superadmin', 'gudang', 'penjual', 'viewer'])) {
             return $next($request);
         }
 
-        if (!in_array($userRole, $roles)) {
+        if (!empty($roles) && !in_array($userRole, array_map('strtolower', $roles))) {
             abort(403, 'Akses ditolak: Anda tidak memiliki izin.');
         }
+
         return $next($request);
     }
 }

@@ -33,7 +33,7 @@ class RegisteredUserController extends Controller
             'username' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:users,username'],
             'email'    => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
             'phone'    => ['required', 'string', 'max:30'],
-            'role'     => ['nullable', 'string', 'in:penjual,viewer,gudang,superadmin'],
+            'role'     => ['nullable', 'string', 'in:admin,kios,penjual,viewer,gudang,superadmin'],
             'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'note'     => ['nullable', 'string', 'max:500'],
             'password' => ['required', 'string', 'confirmed', 'min:8'],
@@ -57,7 +57,8 @@ class RegisteredUserController extends Controller
             : null;
 
         // Tentukan default role & status
-        $role     = strtolower($validated['role'] ?? 'penjual');
+        $rawRole  = strtolower($validated['role'] ?? 'kios');
+        $role     = ($rawRole === 'penjual') ? 'kios' : $rawRole;
         $position = strtolower($request->input('position', $role));
         $status   = 'Active';
 
