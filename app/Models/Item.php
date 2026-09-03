@@ -2,182 +2,116 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-
 use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
 use App\Models\Kategori;
+use App\Models\Lokasi;
+use App\Models\Pemasok;
 use App\Models\Satuan;
 use App\Models\User;
+use App\Models\Kondisi;
 
 class Item extends Model
 {
     use HasFactory;
-    protected $table = 'items';
-    /*
-    | PRIMARY KEY
-    */
-    protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'int';
 
-    /*
-    | MASS ASSIGNMENT
-    */
+    protected $table = 'items';
+
+    protected $primaryKey = 'kode_barang'; // Jika kode_barang adalah PRIMARY
+    public $incrementing = false; // Jika kode_barang berupa string/non-auto increment
+
     protected $fillable = [
-        'user_id',
         'kode_barang',
-        'public_token',
         'nama_barang',
         'deskripsi',
         'foto',
         'id_kategori',
         'id_satuan',
         'stok_minimum',
-        'harga_dasar',
-        'qr_code',
+         'harga_dasar',
+         'user_id',
     ];
+    protected $keyType = 'string';
 
-    /*
-    | BOOT MODEL
-    |
-    | public_token dibuat otomatis ketika Item dibuat.
-    |
-    */
-    protected static function booted()
-    {
-        static::creating(function ($item) {
-            if (empty($item->public_token)) {
-                $item->public_token = (string) \Illuminate\Support\Str::uuid();
-            }
-        });
-    }
 
-    /*
-    | BARANG MASUK
-    */
-    public function barangMasuk()
+
+    // Accessor Umur Tanaman & Total Stok
+    public function getUmurTanamanAttribute()
     {
-        return $this->hasMany(
-            BarangMasuk::class,
-            'item_id',
-            'id'
-        );
+        $firstEntry = $this->barangMasuk()->oldest('tanggal_masuk')->first();
+        $startDate = $firstEntry->tanggal_masuk ?? $this->created_at ?? now();
+        $diffDays = (int) \Carbon\Carbon::parse($startDate)->diffInDays(now());
+
+        if ($diffDays <= 0) {
+            return 'Baru Ditanam (1 Hari)';
+        } elseif ($diffDays < 30) {
+            return $diffDays . ' Hari';
+        } elseif ($diffDays < 365) {
+            $months = floor($diffDays / 30);
+            $remainingDays = $diffDays % 30;
+            return $months . ' Bulan' . ($remainingDays > 0 ? ' ' . $remainingDays . ' Hari' : '');
+        } else {
+            $years = floor($diffDays / 365);
+            return $years . ' Tahun';
+        }
     }
 
-    /*
-    | BARANG KELUAR
-    */
-    public function barangKeluar()
-    {
-        return $this->hasMany(
-            BarangKeluar::class,
-            'item_id',
-            'id'
-        );
-    }
-
-    /*
-    | KATEGORI
-    */
-    public function kategori()
-    {
-        return $this->belongsTo(
-            Kategori::class,
-            'id_kategori',
-            'id'
-        );
-    }
-    public function satuan()
-    {
-        return $this->belongsTo(
-            Satuan::class,
-            'id_satuan',
-            'id'
-        );
-    }
-    public function user()
-    {
-        return $this->belongsTo(
-            User::class,
-            'user_id',
-            'id'
-        );
-    }
     public function getTotalStokAttribute()
     {
         $totalIn = (int) $this->barangMasuk()->sum('jumlah');
         $totalOut = (int) $this->barangKeluar()->sum('jumlah_keluar');
         return max(0, $totalIn - $totalOut);
     }
-    public function getUmurTanamanAttribute()
+
+    // ✅ Barang Masuk berdasarkan kode_barang
+    public function barangMasuk()
     {
-        $firstEntry = $this->barangMasuk()
-            ->oldest('tanggal_masuk')
-            ->first();
-        $startDate = $firstEntry->tanggal_masuk
-            ?? $this->created_at
-            ?? now();
-        $diffDays = (int) \Carbon\Carbon::parse($startDate)
-            ->diffInDays(now());
-        if ($diffDays <= 0) {
-            return 'Baru Ditanam (1 Hari)';
-        }
-        if ($diffDays < 30) {
-            return $diffDays . ' Hari';
-        }
-        if ($diffDays < 365) {
-            $months = floor($diffDays / 30);
-            $remainingDays = $diffDays % 30;
-            return $months . ' Bulan' .
-                ($remainingDays > 0
-                    ? ' ' . $remainingDays . ' Hari'
-                    : '');
-        }
-        return floor($diffDays / 365) . ' Tahun';
-    }
-    public static function generateKodeBarang()
-    {
-        $userId = auth()->id();
-        $latest = self::where('user_id', $userId)
-            ->orderByDesc('id')
-            ->first();
-        if (!$latest) {
-            return 'BRG-001';
-        }
-        $number = (int) str_replace(
-            'BRG-',
-            '',
-            $latest->kode_barang
-        );
-        return 'BRG-' .
-            str_pad(
-                $number + 1,
-                3,
-                '0',
-                STR_PAD_LEFT
-            );
+        return $this->hasMany(BarangMasuk::class, 'kode_barang', 'kode_barang');
     }
 
+    // ✅ Barang Keluar berdasarkan kode_barang
+    public function barangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'kode_barang', 'kode_barang');
+    }
+
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class, 'id_kategori', 'id');
+    }
+
+   
+
+    public function satuan()
+    {
+        return $this->belongsTo(Satuan::class, 'id_satuan');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
+    
+
+    // ✅ Static helper untuk dropdown kategori
     public static function getKategoriOptions()
     {
         return DB::table('items')
-            ->join(
-                'kategoris',
-                'items.id_kategori',
-                '=',
-                'kategoris.id'
-            )
-            ->where(
-                'items.user_id',
-                auth()->id()
-            )
+            ->join('kategoris', 'items.id_kategori', '=', 'kategoris.id')
             ->select('kategoris.kategori')
             ->distinct()
             ->orderBy('kategoris.kategori')
             ->pluck('kategoris.kategori')
             ->toArray();
     }
+
+    public static function generateKodeBarang()
+    {
+        $latest = self::orderBy('kode_barang', 'desc')->first();
+        return $latest ? $latest->kode_barang + 1 : 1001; // mulai dari 1001
+    }
+
+    
 }

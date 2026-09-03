@@ -92,8 +92,8 @@ Route::get('/learn-more', fn() => view('learn-more'))->name('learn.more');
 Route::get('/p/{public_token}', [ItemController::class, 'publicShow'])->name('item.public');
 
 
-// Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
-// Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])->name('barang-masuk.qrshow.kode');
+Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
+Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])->name('barang-masuk.qrshow.kode');
 
 /*
 |--------------------------------------------------------------------------
@@ -201,6 +201,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
         // barang masuk
         Route::get('/barang-keluar/{id}/detail', [BarangKeluarController::class, 'show'])->name('barang-keluar.detail');
+        Route::get('/barang-masuk/{id}/qr-card', [BarangMasukController::class, 'qrCard'])->name('barang-masuk.qr-card');
         Route::get('/barang-masuk/{id}/detail', [BarangMasukController::class, 'detail'])->name('barang-masuk.detail');
         Route::get('/barang-masuk/{id}/edit', [BarangMasukController::class, 'edit'])->name('barang-masuk.edit');
         Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
@@ -208,9 +209,9 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/barang-masuk/{id}/cetak-detail', [BarangMasukController::class, 'cetakDetail'])->name('barang-masuk.cetak-detail');
         Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy');
 
-        // Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
-        // Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
-        // Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
+        Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
+        Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
+        Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
 
         // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
