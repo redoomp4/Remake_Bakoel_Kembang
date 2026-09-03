@@ -22,15 +22,21 @@ class RoleMiddleware
 
         $userRole = strtolower(auth()->user()->role ?? '');
 
-        // Role admin dan kios (serta superadmin/gudang/penjual/viewer) diizinkan mengakses semua halaman dan form
-        if (in_array($userRole, ['admin', 'kios', 'superadmin', 'gudang', 'penjual', 'viewer'])) {
+        // HANYA admin dan kios (serta superadmin) yang diizinkan mengakses semua halaman dan form
+        if (in_array($userRole, ['admin', 'kios', 'superadmin'])) {
             return $next($request);
         }
 
-        if (!empty($roles) && !in_array($userRole, array_map('strtolower', $roles))) {
-            abort(403, 'Akses ditolak: Anda tidak memiliki izin.');
+        // Role viewer secara tegas DITOLAK dari akses pengelolaan/form/CRUD
+        if ($userRole === 'viewer') {
+            abort(403, 'Akses ditolak: Akun Viewer tidak memiliki izin untuk mengelola atau mengakses halaman ini.');
         }
 
-        return $next($request);
+        // Cek jika rute mengizinkan role tertentu
+        if (!empty($roles) && in_array($userRole, array_map('strtolower', $roles))) {
+            return $next($request);
+        }
+
+        abort(403, 'Akses ditolak: Anda tidak memiliki izin.');
     }
 }

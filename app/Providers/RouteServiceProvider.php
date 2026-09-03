@@ -17,6 +17,18 @@ class RouteServiceProvider extends ServiceProvider
      */
     public static function redirectByRole(): string
     {
+        $role = strtolower(auth()->user()->role ?? '');
+
+        // Admin dan Kios diarahkan ke Dashboard utama
+        if (in_array($role, ['admin', 'kios', 'superadmin', 'gudang', 'penjual'])) {
+            return route('dashboard.gudang');
+        }
+
+        // Viewer hanya diarahkan ke Dashboard Viewer
+        if ($role === 'viewer') {
+            return route('dashboard.viewer');
+        }
+
         return route('dashboard.gudang');
     }
 
