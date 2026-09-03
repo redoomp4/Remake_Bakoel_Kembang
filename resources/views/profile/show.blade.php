@@ -31,7 +31,7 @@
                             <small class="text-muted">{{ ucfirst($user->role) }}</small>
                         </div>
                     </div>
-                    @if(Auth::user()->role === 'gudang')
+                    @if(in_array(Auth::user()->role, ['admin', 'kios', 'gudang', 'superadmin', 'penjual']))
                         <a href="{{ route('notifications.index') }}" class="btn btn-outline-secondary">
                             <i class="fa-solid fa-bell"></i>
                         </a>

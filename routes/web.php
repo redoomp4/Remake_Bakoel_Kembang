@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Auth\MagicLinkController; // ⬅️ pastikan namespace sesuai file kamu
+use App\Http\Controllers\Auth\MagicLinkController; // â¬…ï¸ pastikan namespace sesuai file kamu
 use App\Http\Controllers\Auth\PublicVerifyEmailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BarangMasukController;
@@ -117,7 +117,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     Route::get('/dashboard/viewer', fn() => view('dashboard.viewer'))->name('dashboard.viewer');
 
     // Notifikasi (gudang & penjual)
-    Route::middleware(['role:gudang,penjual'])->group(function () {
+    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markSingleRead'])->name('notifications.markSingleRead');
@@ -128,7 +128,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     | AJAX / Helper untuk Barang Keluar (gudang & penjual)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:gudang,penjual'])->group(function () {
+    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
         Route::get('/stok-terpakai', [BarangKeluarController::class, 'cekStok'])->name('barang-keluar.cekStok');
         Route::get('/barang-keluar/detail-barang', [BarangKeluarController::class, 'getDetailBarang'])->name('barang-keluar.detail-barang');
         Route::get('/barang-keluar/barang-bersisa', [BarangKeluarController::class, 'getBarangBersisa'])->name('barang-keluar.barang-bersisa');
@@ -170,7 +170,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     */
 
     // GUDANG ONLY
-    Route::middleware(['role:gudang'])->group(function () {
+    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
         // Master data
         Route::get('/form', [FormController::class, 'index'])->name('form.index');
         Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
@@ -219,7 +219,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     });
 
     // SUPERADMIN ONLY
-    Route::middleware(['role:superadmin'])->group(function () {
+    Route::middleware(['role:admin,superadmin,kios'])->group(function () {
         Route::get('/kelola-user', [UserController::class, 'index'])->name('user.index');
         Route::get('/kelola-user/create', [UserController::class, 'create'])->name('user.create');
         Route::post('/kelola-user', [UserController::class, 'store'])->name('user.store');
@@ -240,7 +240,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 /*
 |--------------------------------------------------------------------------
 | Auth scaffolding (login, register, verifikasi email, dll.)
-| (Semua route verifikasi email ada di sini → hindari duplikasi di web.php)
+| (Semua route verifikasi email ada di sini â†’ hindari duplikasi di web.php)
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/auth.php';
