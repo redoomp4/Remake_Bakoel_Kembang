@@ -1,550 +1,590 @@
 @extends('layouts.app')
 
 @section('content')
+    <style>
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        main>.container {
+            width: 100%;
+            max-width: 1280px !important;
+            min-width: 0;
+            padding: 2rem 1.25rem 3rem;
+            margin: 0 auto;
+        }
 
-    <div class="min-h-screen bg-[#FAF9F6] px-4 py-6 md:px-6 md:py-8">
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .page-header {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        }
 
-        <div class="max-w-4xl mx-auto">
+        .page-header .eyebrow {
+            color: #059669;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
 
-            {{-- HEADER --}}
-            <div class="mb-6">
+        .page-header h1 {
+            margin: .2rem 0 .25rem;
+            color: #0f172a;
+            font-size: 1.75rem;
+            font-weight: 900;
+        }
 
-                <p class="text-xs font-extrabold uppercase tracking-widest text-[#8FA882]">
-                    Inventori · Barang Masuk
-                </p>
+        .page-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: .9rem;
+        }
 
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .7rem 1.25rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: .75rem;
+            color: #475569;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-back:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
 
+        /* ============================================================
+           ALERT
+           ============================================================ */
+        .alert-box {
+            padding: .9rem 1rem;
+            border-radius: .9rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .alert-danger-box {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }
+
+        /* ============================================================
+           FORM CARD
+           ============================================================ */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        }
+
+        .form-header {
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+
+        .form-header .icon-box {
+            width: 40px;
+            height: 40px;
+            background: #0B4F35;
+            color: #fff;
+            border-radius: .75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-header h2 {
+            color: #0B4F35;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .form-header p {
+            color: #475569;
+            font-size: .75rem;
+            margin: 0;
+        }
+
+        .form-body {
+            padding: 1.5rem;
+        }
+
+        .form-footer {
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: .75rem;
+        }
+
+        @media (min-width: 640px) {
+            .form-footer {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ============================================================
+           FORM ELEMENTS
+           ============================================================ */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            color: #475569;
+            font-size: .8rem;
+            font-weight: 800;
+            margin-bottom: .5rem;
+        }
+
+        .form-label .optional {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: .7rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: .75rem;
+            font-size: .9rem;
+            font-weight: 600;
+            transition: .2s;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: 0;
+            border-color: #0B4F35;
+            box-shadow: 0 0 0 4px rgba(11, 79, 53, .12);
+        }
+
+        select.form-control {
+            appearance: auto;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+            font-weight: 400;
+        }
+
+        .form-error {
+            color: #dc2626;
+            font-size: .75rem;
+            font-weight: 700;
+            margin-top: .25rem;
+        }
+
+        /* ============================================================
+           GRID
+           ============================================================ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        /* ============================================================
+           TOTAL BOX
+           ============================================================ */
+        .total-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .total-box .label {
+            color: #059669;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .total-box .sub-label {
+            color: #475569;
+            font-size: .7rem;
+            margin-top: .25rem;
+        }
+
+        .total-box .total-amount {
+            color: #0B4F35;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        @media (min-width: 768px) {
+            .total-box .total-amount {
+                font-size: 2rem;
+            }
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .75rem 1.5rem;
+            background: #0B4F35;
+            color: #fff;
+            border: 0;
+            border-radius: .75rem;
+            font-size: .85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .btn-submit:hover {
+            background: #065f46;
+            transform: translateY(-1px);
+        }
+
+        .btn-cancel {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .75rem 1.25rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: .75rem;
+            color: #475569;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-cancel:hover {
+            background: #f8fafc;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            main>.container {
+                padding: 1rem .75rem 2rem;
+            }
+            .page-header {
+                padding: 1rem;
+                border-radius: 1rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .page-header h1 {
+                font-size: 1.35rem;
+            }
+            .btn-back {
+                width: 100%;
+                justify-content: center;
+            }
+            .form-header {
+                padding: 1rem;
+                flex-wrap: wrap;
+            }
+            .form-body {
+                padding: 1rem;
+            }
+            .form-footer {
+                padding: 1rem;
+                flex-direction: column;
+            }
+            .btn-submit, .btn-cancel {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main>.container {
+                padding-left: .6rem;
+                padding-right: .6rem;
+            }
+            .page-header h1 {
+                font-size: 1.2rem;
+            }
+            .form-body {
+                padding: .75rem;
+            }
+            .total-box {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <div class="container">
+
+        {{-- HEADER --}}
+        <div class="page-header">
+            <div>
+                <div class="eyebrow">Inventori · Barang Masuk</div>
+                <h1>Edit Barang Masuk</h1>
+                <p>Perbarui informasi barang yang masuk ke dalam inventori.</p>
+            </div>
+            <a href="{{ route('barang-masuk.index') }}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+        </div>
+
+        {{-- ALERT ERROR --}}
+        @if ($errors->any())
+            <div class="alert-box alert-danger-box">
+                <div style="display:flex;align-items:flex-start;gap:.75rem;">
+                    <i class="fas fa-circle-exclamation" style="margin-top:.15rem;"></i>
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-black text-[#0B4F35]">
-                            Edit Barang Masuk
-                        </h1>
+                        <p style="font-weight:800;margin:0 0 .25rem;">Terdapat kesalahan pada form</p>
+                        <ul style="margin:0;padding-left:1.25rem;font-weight:500;list-style:disc;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
 
-                        <p class="text-sm text-[#475569] mt-1">
-                            Perbarui informasi barang yang masuk ke dalam inventori.
-                        </p>
+        @if (session('error'))
+            <div class="alert-box alert-danger-box">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span style="font-weight:700;">{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
+
+        {{-- FORM --}}
+        <form method="POST" action="{{ route('barang-masuk.update', $barangMasuk->id) }}" onsubmit="return confirmUpdate();" class="form-card">
+            @csrf
+            @method('PUT')
+
+            {{-- FORM HEADER --}}
+            <div class="form-header">
+                <div class="icon-box">
+                    <i class="fas fa-pen"></i>
+                </div>
+                <div>
+                    <h2>Informasi Barang</h2>
+                    <p>Ubah detail barang masuk sesuai kebutuhan.</p>
+                </div>
+            </div>
+
+            {{-- FORM BODY --}}
+            <div class="form-body">
+
+                {{-- ITEM --}}
+                <div class="form-group">
+                    <label for="item_id" class="form-label">Pilih Item</label>
+                    <select name="item_id" id="item_id" required class="form-control">
+                        @foreach ($items as $item)
+                            <option value="{{ $item->id }}" {{ old('item_id', $barangMasuk->item_id) == $item->id ? 'selected' : '' }}>
+                                {{ $item->kode_barang }} — {{ $item->nama_barang }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('item_id')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- JUMLAH + HARGA --}}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="jumlah" class="form-label">Jumlah</label>
+                        <input type="number" id="jumlah" name="jumlah" min="1"
+                               value="{{ old('jumlah', $barangMasuk->jumlah) }}" required placeholder="Contoh: 10" class="form-control">
+                        @error('jumlah')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <a href="{{ route('barang-masuk.index') }}"
-                        class="inline-flex items-center justify-center gap-2
-                    px-4 py-2.5 rounded-xl
-                    bg-white border border-[#E4E4D9]
-                    text-sm font-bold text-[#475569]
-                    hover:bg-[#FAF9F6] transition">
+                    <div class="form-group">
+                        <label for="harga_satuan" class="form-label">Harga Beli / Satuan</label>
+                        <input type="number" id="harga_satuan" name="harga_satuan" min="0" step="0.01"
+                               value="{{ old('harga_satuan', $barangMasuk->harga_satuan) }}" required placeholder="0" class="form-control">
+                        @error('harga_satuan')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
 
-                        <i class="fas fa-arrow-left"></i>
-                        Kembali
+                {{-- TOTAL --}}
+                <div class="form-group">
+                    <div class="total-box">
+                        <div>
+                            <p class="label">Total Nilai Barang</p>
+                            <p class="sub-label">Jumlah × Harga Beli</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="color:#059669;font-size:.7rem;font-weight:800;margin:0;">TOTAL</p>
+                            <p id="total_harga_display" class="total-amount">Rp 0</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="total_harga" name="total_harga" value="{{ old('total_harga', $barangMasuk->total_harga) }}">
+                </div>
 
-                    </a>
+                {{-- TANGGAL --}}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="tanggal_masuk" class="form-label">Tanggal Masuk</label>
+                        <input type="datetime-local" id="tanggal_masuk" name="tanggal_masuk"
+                               value="{{ old('tanggal_masuk', \Carbon\Carbon::parse($barangMasuk->tanggal_masuk)->format('Y-m-d\TH:i')) }}" required class="form-control">
+                        @error('tanggal_masuk')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
 
+                    <div class="form-group">
+                        <label for="tanggal_kadaluarsa" class="form-label">
+                            Tanggal Kadaluarsa <span class="optional">(Opsional)</span>
+                        </label>
+                        <input type="datetime-local" id="tanggal_kadaluarsa" name="tanggal_kadaluarsa"
+                               value="{{ old('tanggal_kadaluarsa', $barangMasuk->tanggal_kadaluarsa ? \Carbon\Carbon::parse($barangMasuk->tanggal_kadaluarsa)->format('Y-m-d\TH:i') : '') }}" class="form-control">
+                        @error('tanggal_kadaluarsa')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- PEMASOK / LOKASI / KONDISI --}}
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="id_pemasok" class="form-label">Pemasok</label>
+                        <select name="id_pemasok" id="id_pemasok" required class="form-control">
+                            @foreach ($pemasoks as $pemasok)
+                                <option value="{{ $pemasok->id }}" {{ old('id_pemasok', $barangMasuk->id_pemasok) == $pemasok->id ? 'selected' : '' }}>
+                                    {{ $pemasok->nama_pemasok }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_lokasi" class="form-label">Lokasi</label>
+                        <select name="id_lokasi" id="id_lokasi" required class="form-control">
+                            @foreach ($lokasis as $lokasi)
+                                <option value="{{ $lokasi->id }}" {{ old('id_lokasi', $barangMasuk->id_lokasi) == $lokasi->id ? 'selected' : '' }}>
+                                    {{ $lokasi->nama_lokasi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_kondisi" class="form-label">Kondisi</label>
+                        <select name="id_kondisi" id="id_kondisi" required class="form-control">
+                            @foreach ($kondisis as $kondisi)
+                                <option value="{{ $kondisi->id }}" {{ old('id_kondisi', $barangMasuk->id_kondisi) == $kondisi->id ? 'selected' : '' }}>
+                                    {{ $kondisi->nama_kondisi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- CATATAN --}}
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="catatan" class="form-label">Catatan</label>
+                    <textarea name="catatan" id="catatan" rows="3" maxlength="1000"
+                              placeholder="Tambahkan catatan jika diperlukan..." class="form-control">{{ old('catatan', $barangMasuk->catatan) }}</textarea>
+                    @error('catatan')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
                 </div>
 
             </div>
 
-
-            {{-- ALERT ERROR --}}
-            @if ($errors->any())
-                <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-
-                    <div class="flex items-start gap-3">
-
-                        <i class="fas fa-circle-exclamation mt-0.5"></i>
-
-                        <div>
-
-                            <p class="font-extrabold text-sm mb-1">
-                                Terdapat kesalahan pada form
-                            </p>
-
-                            <ul class="list-disc ml-5 text-sm space-y-1">
-
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-
-                            </ul>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            @endif
-
-
-            {{-- SESSION ERROR --}}
-            @if (session('error'))
-                <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-
-                    <div class="flex items-center gap-3">
-
-                        <i class="fas fa-circle-exclamation"></i>
-
-                        <span class="font-bold text-sm">
-                            {{ session('error') }}
-                        </span>
-
-                    </div>
-
-                </div>
-            @endif
-
-
-            {{-- FORM --}}
-            <form method="POST" action="{{ route('barang-masuk.update', $barangMasuk->id) }}"
-                onsubmit="return confirmUpdate();"
-                class="bg-white rounded-3xl border border-[#E4E4D9]
-            shadow-sm overflow-hidden">
-
-                @csrf
-                @method('PUT')
-
-
-                {{-- FORM HEADER --}}
-                <div class="px-5 py-5 md:px-7 border-b border-[#E4E4D9] bg-[#FAF9F6]">
-
-                    <div class="flex items-center gap-3">
-
-                        <div
-                            class="w-10 h-10 rounded-xl bg-[#0B4F35]
-                        text-white flex items-center justify-center">
-
-                            <i class="fas fa-pen"></i>
-
-                        </div>
-
-                        <div>
-
-                            <h2 class="font-black text-[#0B4F35]">
-                                Informasi Barang
-                            </h2>
-
-                            <p class="text-xs text-[#475569]">
-                                Ubah detail barang masuk sesuai kebutuhan.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {{-- FORM BODY --}}
-                <div class="p-5 md:p-7 space-y-6">
-
-
-                    {{-- ITEM --}}
-                    <div>
-
-                        <label for="item_id" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                            Pilih Item
-
-                        </label>
-
-                        <select name="item_id" id="item_id" required
-                            class="w-full px-4 py-3 rounded-xl
-                        border-2 border-[#E4E4D9]
-                        bg-white text-sm font-semibold
-                        focus:outline-none
-                        focus:border-[#0B4F35]
-                        focus:ring-4 focus:ring-[#0B4F35]/10">
-
-                            @foreach ($items as $item)
-                                <option value="{{ $item->id }}"
-                                    {{ old('item_id', $barangMasuk->item_id) == $item->id ? 'selected' : '' }}>
-
-                                    {{ $item->kode_barang }}
-                                    — {{ $item->nama_barang }}
-
-                                </option>
-                            @endforeach
-
-                        </select>
-
-                        @error('item_id')
-                            <p class="text-xs font-bold text-red-500 mt-1">
-                                {{ $message }}
-                            </p>
-                        @enderror
-
-                    </div>
-
-
-                    {{-- JUMLAH + HARGA --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-
-                        {{-- JUMLAH --}}
-                        <div>
-
-                            <label for="jumlah" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Jumlah
-
-                            </label>
-
-                            <input type="number" id="jumlah" name="jumlah" min="1"
-                                value="{{ old('jumlah', $barangMasuk->jumlah) }}" required placeholder="Contoh: 10"
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]
-                            focus:ring-4 focus:ring-[#0B4F35]/10">
-
-                            @error('jumlah')
-                                <p class="text-xs font-bold text-red-500 mt-1">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-
-                        </div>
-
-
-                        {{-- HARGA --}}
-                        <div>
-
-                            <label for="harga_satuan" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Harga Beli / Satuan
-
-                            </label>
-
-                            <input type="number" id="harga_satuan" name="harga_satuan" min="0" step="0.01"
-                                value="{{ old('harga_satuan', $barangMasuk->harga_satuan) }}" required placeholder="0"
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]
-                            focus:ring-4 focus:ring-[#0B4F35]/10">
-
-                            @error('harga_satuan')
-                                <p class="text-xs font-bold text-red-500 mt-1">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- TOTAL --}}
-                    <div class="rounded-2xl bg-emerald-50
-                    border border-emerald-100 p-4">
-
-                        <div class="flex items-center justify-between gap-4">
-
-                            <div>
-
-                                <p class="text-xs font-black uppercase tracking-widest text-emerald-600">
-                                    Total Nilai Barang
-                                </p>
-
-                                <p class="text-xs text-[#475569] mt-1">
-                                    Jumlah × Harga Beli
-                                </p>
-
-                            </div>
-
-                            <div class="text-right">
-
-                                <p class="text-xs font-bold text-emerald-600">
-                                    TOTAL
-                                </p>
-
-                                <p id="total_harga_display" class="text-xl md:text-2xl font-black text-[#0B4F35]">
-
-                                    Rp 0
-
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <input type="hidden" id="total_harga" name="total_harga"
-                            value="{{ old('total_harga', $barangMasuk->total_harga) }}">
-
-                    </div>
-
-
-                    {{-- TANGGAL --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-
-                        {{-- TANGGAL MASUK --}}
-                        <div>
-
-                            <label for="tanggal_masuk" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Tanggal Masuk
-
-                            </label>
-
-                            <input type="datetime-local" id="tanggal_masuk" name="tanggal_masuk"
-                                value="{{ old('tanggal_masuk', \Carbon\Carbon::parse($barangMasuk->tanggal_masuk)->format('Y-m-d\TH:i')) }}"
-                                required
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]">
-
-                            @error('tanggal_masuk')
-                                <p class="text-xs font-bold text-red-500 mt-1">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-
-                        </div>
-
-
-                        {{-- KADALUARSA --}}
-                        <div>
-
-                            <label for="tanggal_kadaluarsa" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Tanggal Kadaluarsa
-
-                                <span class="text-xs font-medium text-gray-400">
-                                    (Opsional)
-                                </span>
-
-                            </label>
-
-                            <input type="datetime-local" id="tanggal_kadaluarsa" name="tanggal_kadaluarsa"
-                                value="{{ old(
-                                    'tanggal_kadaluarsa',
-                                    $barangMasuk->tanggal_kadaluarsa
-                                        ? \Carbon\Carbon::parse($barangMasuk->tanggal_kadaluarsa)->format('Y-m-d\TH:i')
-                                        : '',
-                                ) }}"
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]">
-
-                            @error('tanggal_kadaluarsa')
-                                <p class="text-xs font-bold text-red-500 mt-1">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- PEMASOK / LOKASI / KONDISI --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-
-                        {{-- PEMASOK --}}
-                        <div>
-
-                            <label for="id_pemasok" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Pemasok
-
-                            </label>
-
-                            <select name="id_pemasok" id="id_pemasok" required
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]">
-
-                                @foreach ($pemasoks as $pemasok)
-                                    <option value="{{ $pemasok->id }}"
-                                        {{ old('id_pemasok', $barangMasuk->id_pemasok) == $pemasok->id ? 'selected' : '' }}>
-
-                                        {{ $pemasok->nama_pemasok }}
-
-                                    </option>
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-
-                        {{-- LOKASI --}}
-                        <div>
-
-                            <label for="id_lokasi" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Lokasi
-
-                            </label>
-
-                            <select name="id_lokasi" id="id_lokasi" required
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]">
-
-                                @foreach ($lokasis as $lokasi)
-                                    <option value="{{ $lokasi->id }}"
-                                        {{ old('id_lokasi', $barangMasuk->id_lokasi) == $lokasi->id ? 'selected' : '' }}>
-
-                                        {{ $lokasi->nama_lokasi }}
-
-                                    </option>
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-
-                        {{-- KONDISI --}}
-                        <div>
-
-                            <label for="id_kondisi" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                                Kondisi
-
-                            </label>
-
-                            <select name="id_kondisi" id="id_kondisi" required
-                                class="w-full px-4 py-3 rounded-xl
-                            border-2 border-[#E4E4D9]
-                            text-sm font-semibold
-                            focus:outline-none
-                            focus:border-[#0B4F35]">
-
-                                @foreach ($kondisis as $kondisi)
-                                    <option value="{{ $kondisi->id }}"
-                                        {{ old('id_kondisi', $barangMasuk->id_kondisi) == $kondisi->id ? 'selected' : '' }}>
-
-                                        {{ $kondisi->nama_kondisi }}
-
-                                    </option>
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- CATATAN --}}
-                    <div>
-
-                        <label for="catatan" class="block text-sm font-extrabold text-[#475569] mb-2">
-
-                            Catatan
-
-                        </label>
-
-                        <textarea name="catatan" id="catatan" rows="3" maxlength="1000"
-                            placeholder="Tambahkan catatan jika diperlukan..."
-                            class="w-full px-4 py-3 rounded-xl
-                        border-2 border-[#E4E4D9]
-                        text-sm
-                        focus:outline-none
-                        focus:border-[#0B4F35]
-                        focus:ring-4 focus:ring-[#0B4F35]/10">{{ old('catatan', $barangMasuk->catatan) }}</textarea>
-
-                        @error('catatan')
-                            <p class="text-xs font-bold text-red-500 mt-1">
-                                {{ $message }}
-                            </p>
-                        @enderror
-
-                    </div>
-
-                </div>
-
-
-                {{-- FOOTER --}}
-                <div
-                    class="px-5 py-5 md:px-7
-                bg-[#FAF9F6]
-                border-t border-[#E4E4D9]
-                flex flex-col-reverse sm:flex-row
-                sm:justify-end gap-3">
-
-                    <a href="{{ route('barang-masuk.index') }}"
-                        class="inline-flex items-center justify-center gap-2
-                    px-5 py-3 rounded-xl
-                    bg-white border border-[#E4E4D9]
-                    text-sm font-extrabold text-[#475569]
-                    hover:bg-gray-50 transition">
-
-                        <i class="fas fa-xmark"></i>
-                        Batal
-
-                    </a>
-
-                    <button type="submit"
-                        class="inline-flex items-center justify-center gap-2
-                    px-6 py-3 rounded-xl
-                    bg-[#0B4F35] text-white
-                    text-sm font-extrabold
-                    shadow-sm hover:bg-[#083d29]
-                    transition">
-
-                        <i class="fas fa-save"></i>
-                        Simpan Perubahan
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
+            {{-- FORM FOOTER --}}
+            <div class="form-footer">
+                <a href="{{ route('barang-masuk.index') }}" class="btn-cancel">
+                    <i class="fas fa-xmark"></i> Batal
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Simpan Perubahan
+                </button>
+            </div>
+
+        </form>
 
     </div>
 
-
     <script>
         function updateTotalHarga() {
-
-            const jumlah =
-                parseFloat(document.getElementById('jumlah').value) || 0;
-
-            const harga =
-                parseFloat(document.getElementById('harga_satuan').value) || 0;
-
+            const jumlah = parseFloat(document.getElementById('jumlah').value) || 0;
+            const harga = parseFloat(document.getElementById('harga_satuan').value) || 0;
             const total = jumlah * harga;
-
             document.getElementById('total_harga').value = total;
-
             document.getElementById('total_harga_display').textContent =
                 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
         }
 
-
         document.addEventListener('DOMContentLoaded', function() {
-
             const jumlah = document.getElementById('jumlah');
             const harga = document.getElementById('harga_satuan');
-
             jumlah.addEventListener('input', updateTotalHarga);
             harga.addEventListener('input', updateTotalHarga);
-
             updateTotalHarga();
-
         });
 
-
         function confirmUpdate() {
-
-            return confirm(
-                'Apakah Anda yakin ingin menyimpan perubahan barang masuk ini?'
-            );
-
+            return confirm('Apakah Anda yakin ingin menyimpan perubahan barang masuk ini?');
         }
     </script>
-
 @endsection
