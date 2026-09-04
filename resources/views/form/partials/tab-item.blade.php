@@ -1,107 +1,143 @@
-<section id="tab-content-item" class="oneshot-tab-content" role="tabpanel">
+<section id="item" class="tab-content active" role="tabpanel">
 
-    {{-- Voice Assistant Section --}}
-    <div class="mb-6 rounded-3xl border border-brand-accent bg-emerald-50/60 p-5 shadow-sm sm:p-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h3 class="text-base font-black text-brand-emerald flex items-center gap-2">
-                    <i class="fas fa-robot text-lg text-emerald-600"></i> Asisten Suara (Bantu Isian)
-                </h3>
-                <p class="mt-1 text-xs text-brand-slate leading-relaxed">
-                    Tekan tombol mic, lalu sebutkan detail barang secara bebas.<br>
-                    <span class="font-semibold text-emerald-800">Contoh:</span> <em>"Tambah item Cattleya Mantini,
-                        kategori Bunga Tangkai, satuan Ikat, stok 30, harga 5 ribu, deskripsi ini bunga impor"</em>
-                </p>
+    {{-- Voice Assistant --}}
+    <div class="voice-box">
+        <div>
+            <div class="title">
+                <i class="fas fa-robot"></i> Asisten Suara (Bantu Isian)
             </div>
-            <button type="button" id="btn-voice-input"
-                class="inline-flex shrink-0 items-center justify-center gap-3 rounded-2xl bg-brand-emerald px-6 py-4 text-sm font-black text-white shadow-md transition hover:bg-emerald-800 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
-                <i class="fas fa-microphone text-lg" id="voice-icon"></i>
-                <span id="voice-status-text">Mulai Bicara</span>
-            </button>
+            <div class="desc">
+                Tekan tombol mic, lalu sebutkan detail barang secara bebas.<br>
+                <em>Contoh:</em> "Tambah item Cattleya Mantini, kategori Bunga Tangkai, satuan Ikat, stok 30, harga 5 ribu, deskripsi ini bunga impor"
+            </div>
         </div>
-        <div id="voice-transcript-box"
-            class="mt-3 hidden rounded-xl bg-white p-3 border border-emerald-200 text-xs text-slate-600">
-            <span class="font-bold text-emerald-700">Terdengar:</span> <span id="voice-transcript-text"
-                class="italic">...</span>
+        <button type="button" id="btn-voice-input" class="btn-voice">
+            <i class="fas fa-microphone" id="voice-icon"></i>
+            <span id="voice-status-text">Mulai Bicara</span>
+        </button>
+        <div id="voice-transcript-box" class="voice-transcript">
+            <span class="label">Terdengar:</span> <span id="voice-transcript-text" class="italic">...</span>
         </div>
     </div>
 
     {{-- Form Tambah Item --}}
-    <form id="form-tambah-item" action="{{ route('form.item.store') }}" method="POST" enctype="multipart/form-data"
-        class="rounded-3xl border border-brand-accent bg-white p-5 shadow-sm sm:p-7">
+    <form id="form-tambah-item" action="{{ route('form.item.store') }}" method="POST" enctype="multipart/form-data" class="form-card">
         @csrf
-        <h2 class="mb-6 text-xl font-black text-brand-emerald">Tambah Item Baru</h2>
-        <div class="grid gap-5 md:grid-cols-2">
-            <div>
-                <label class="field-label">Nama Barang</label>
-                <input name="nama_barang" id="input-nama-barang" required class="field-input"
-                    placeholder="Masukkan nama barang">
+
+        {{-- FORM HEADER --}}
+        <div class="form-header">
+            <div class="icon-box">
+                <i class="fas fa-box"></i>
             </div>
             <div>
-                <label class="field-label">Kategori (Pilih atau Ketik Baru)</label>
-                <div class="relative hybrid-select" id="hybrid-kategori">
-                    <input type="text" name="kategori_input" id="kategori_input" value="{{ old('kategori_input') }}"
-                        required class="field-input pr-10 hybrid-input" placeholder="-- Pilih / Ketik Kategori --"
-                        autocomplete="off">
-                    <button type="button"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-brand-slate hybrid-toggle">
-                        <i class="fas fa-chevron-down text-xs pointer-events-none"></i>
-                    </button>
-                    <ul
-                        class="hybrid-options hidden absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-brand-accent bg-white py-1 shadow-lg text-brand-slate">
-                        @foreach ($kategories ?? [] as $item)
-                            <li class="hybrid-option cursor-pointer px-4 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 font-medium"
-                                data-value="{{ $item->kategori }}">{{ $item->kategori }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            <div>
-                <label class="field-label">Satuan (Pilih atau Ketik Baru)</label>
-                <div class="relative hybrid-select" id="hybrid-satuan">
-                    <input type="text" name="satuan_input" id="satuan_input" value="{{ old('satuan_input') }}"
-                        required class="field-input pr-10 hybrid-input" placeholder="-- Pilih / Ketik Satuan --"
-                        autocomplete="off">
-                    <button type="button"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-brand-slate hybrid-toggle">
-                        <i class="fas fa-chevron-down text-xs pointer-events-none"></i>
-                    </button>
-                    <ul
-                        class="hybrid-options hidden absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border border-brand-accent bg-white py-1 shadow-lg text-brand-slate">
-                        @foreach ($satuans ?? [] as $item)
-                            <li class="hybrid-option cursor-pointer px-4 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 font-medium"
-                                data-value="{{ $item->nama_satuan }}">{{ $item->nama_satuan }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            <div>
-                <label class="field-label">Stok Minimum</label>
-                <input name="stok_minimum" id="input-stok-minimum" type="number" min="0" required
-                    class="field-input" value="0">
-            </div>
-            <div>
-                <label class="field-label">Harga Dasar (Rp)</label>
-                <input name="harga_dasar" id="input-harga-dasar" type="number" min="0" step="0.01" required
-                    class="field-input" placeholder="0.00">
-            </div>
-            <div>
-                <label class="field-label">Foto Item</label>
-                <input name="foto" type="file" accept="image/*" class="field-input">
-            </div>
-            <div class="md:col-span-2">
-                <label class="field-label">Deskripsi Item</label>
-                <textarea name="deskripsi" id="input-deskripsi" rows="3" class="field-input"
-                    placeholder="Catatan/deskripsi tambahan item"></textarea>
+                <h2>Tambah Item Baru</h2>
+                <p>Masukkan detail item yang akan ditambahkan ke inventori.</p>
             </div>
         </div>
-        <button type="submit"
-            class="mt-6 rounded-xl bg-brand-emerald px-5 py-3 text-sm font-black text-white transition hover:bg-brand-slate">
-            <i class="fas fa-save mr-2"></i>Simpan Item
-        </button>
+
+        {{-- FORM BODY --}}
+        <div class="form-body">
+
+            {{-- NAMA BARANG --}}
+            <div class="form-group">
+                <label for="input-nama-barang" class="form-label">Nama Barang <span class="required">*</span></label>
+                <input type="text" name="nama_barang" id="input-nama-barang" required class="form-control" placeholder="Masukkan nama barang">
+                @error('nama_barang')
+                    <p class="form-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- KATEGORI + SATUAN --}}
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="kategori_input" class="form-label">Kategori <span class="required">*</span></label>
+                    <div class="hybrid-select" id="hybrid-kategori">
+                        <input type="text" name="kategori_input" id="kategori_input" value="{{ old('kategori_input') }}"
+                               required class="hybrid-input" placeholder="-- Pilih / Ketik Kategori --" autocomplete="off">
+                        <button type="button" class="hybrid-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <ul class="hybrid-options">
+                            @foreach ($kategories ?? [] as $item)
+                                <li class="hybrid-option" data-value="{{ $item->kategori }}">{{ $item->kategori }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @error('kategori_input')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="satuan_input" class="form-label">Satuan <span class="required">*</span></label>
+                    <div class="hybrid-select" id="hybrid-satuan">
+                        <input type="text" name="satuan_input" id="satuan_input" value="{{ old('satuan_input') }}"
+                               required class="hybrid-input" placeholder="-- Pilih / Ketik Satuan --" autocomplete="off">
+                        <button type="button" class="hybrid-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <ul class="hybrid-options">
+                            @foreach ($satuans ?? [] as $item)
+                                <li class="hybrid-option" data-value="{{ $item->nama_satuan }}">{{ $item->nama_satuan }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @error('satuan_input')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- STOK MINIMUM + HARGA DASAR --}}
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="input-stok-minimum" class="form-label">Stok Minimum <span class="required">*</span></label>
+                    <input type="number" name="stok_minimum" id="input-stok-minimum" min="0" required class="form-control" value="{{ old('stok_minimum', 0) }}">
+                    @error('stok_minimum')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="input-harga-dasar" class="form-label">Harga Dasar (Rp) <span class="required">*</span></label>
+                    <input type="number" name="harga_dasar" id="input-harga-dasar" min="0" step="0.01" required class="form-control" placeholder="0.00">
+                    @error('harga_dasar')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- FOTO --}}
+            <div class="form-group">
+                <label for="input-foto" class="form-label">Foto Item</label>
+                <input type="file" name="foto" id="input-foto" accept="image/*" class="form-control">
+                <div class="form-hint">Upload foto item (opsional, format: JPG, PNG, WebP)</div>
+                @error('foto')
+                    <p class="form-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- DESKRIPSI --}}
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="input-deskripsi" class="form-label">Deskripsi Item</label>
+                <textarea name="deskripsi" id="input-deskripsi" rows="3" class="form-control" placeholder="Catatan/deskripsi tambahan item">{{ old('deskripsi') }}</textarea>
+                @error('deskripsi')
+                    <p class="form-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+        </div>
+
+        {{-- FORM FOOTER --}}
+        <div class="form-footer">
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Simpan Item
+            </button>
+        </div>
+
     </form>
 
-    {{-- Script Voice Assistant --}}
+    {{-- SCRIPT VOICE ASSISTANT --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnVoice = document.getElementById('btn-voice-input');
@@ -119,51 +155,44 @@
             let isRecording = false;
 
             function updateUI(status, message = '') {
+                btnVoice.disabled = false;
+                btnVoice.classList.remove('recording', 'processing');
+
                 if (status === 'recording') {
-                    btnVoice.disabled = false;
-                    btnVoice.classList.remove('bg-brand-emerald', 'bg-amber-600');
-                    btnVoice.classList.add('bg-rose-600', 'animate-pulse');
-                    if (voiceIcon) voiceIcon.className = 'fas fa-stop text-lg';
-                    if (voiceStatusText) voiceStatusText.textContent = 'Merekam... (Klik Stop)';
-                    if (transcriptBox) transcriptBox.classList.remove('hidden');
+                    btnVoice.classList.add('recording');
+                    if (voiceIcon) voiceIcon.className = 'fas fa-stop';
+                    if (voiceStatusText) voiceStatusText.textContent = 'Rekam... (Stop)';
+                    if (transcriptBox) {
+                        transcriptBox.classList.add('show');
+                        transcriptBox.style.display = 'block';
+                    }
                     if (transcriptText) transcriptText.textContent = 'Sedang merekam suara Anda...';
                 } else if (status === 'processing') {
                     btnVoice.disabled = true;
-                    btnVoice.classList.remove('bg-rose-600', 'animate-pulse', 'bg-brand-emerald');
-                    btnVoice.classList.add('bg-amber-600');
-                    if (voiceIcon) voiceIcon.className = 'fas fa-spinner fa-spin text-lg';
+                    btnVoice.classList.add('processing');
+                    if (voiceIcon) voiceIcon.className = 'fas fa-spinner fa-spin';
                     if (voiceStatusText) voiceStatusText.textContent = message || 'AI Mendengarkan...';
                     if (transcriptText) transcriptText.textContent = 'Mengirim rekaman suara ke AI...';
-                } else { // idle
-                    btnVoice.disabled = false;
-                    btnVoice.classList.remove('bg-rose-600', 'animate-pulse', 'bg-amber-600');
-                    btnVoice.classList.add('bg-brand-emerald');
-                    if (voiceIcon) voiceIcon.className = 'fas fa-microphone text-lg';
+                } else {
+                    btnVoice.classList.remove('recording', 'processing');
+                    if (voiceIcon) voiceIcon.className = 'fas fa-microphone';
                     if (voiceStatusText) voiceStatusText.textContent = message || 'Mulai Bicara';
                 }
             }
 
             async function startRecording() {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: true
-                    });
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
 
                     mediaRecorder.ondataavailable = event => {
-                        if (event.data.size > 0) {
-                            audioChunks.push(event.data);
-                        }
+                        if (event.data.size > 0) audioChunks.push(event.data);
                     };
 
                     mediaRecorder.onstop = async () => {
-                        // Matikan stream mikrofon setelah selesai
                         stream.getTracks().forEach(track => track.stop());
-
-                        const audioBlob = new Blob(audioChunks, {
-                            type: 'audio/webm'
-                        });
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         await sendAudioToAI(audioBlob);
                     };
 
@@ -206,8 +235,8 @@
                         throw new Error(result.message || 'Gagal memproses AI');
                     }
 
-                    // Isi Form
                     const d = result.data;
+
                     const setVal = (id, val) => {
                         const el = document.getElementById(id);
                         if (el && val !== null && val !== undefined) el.value = val;
@@ -220,8 +249,8 @@
                     setVal('input-harga-dasar', d.harga_dasar);
                     setVal('input-deskripsi', d.deskripsi);
 
-                    updateUI('idle', 'Selesai! Form Terisi');
                     if (transcriptText) transcriptText.textContent = 'Form berhasil diisi oleh AI!';
+                    updateUI('idle', 'Selesai! Form Terisi');
 
                     if (typeof window.toast === 'function') {
                         window.toast('Form berhasil terisi dari suara!', 'success');
@@ -230,7 +259,7 @@
                 } catch (err) {
                     console.error('Audio processing error:', err);
                     updateUI('idle', 'Gagal Memproses');
-                    if (transcriptText) transcriptText.textContent = `Error: ${err.message}`;
+                    if (transcriptText) transcriptText.textContent = 'Error: ' + err.message;
                 }
             }
 
@@ -243,4 +272,5 @@
             });
         });
     </script>
+
 </section>
