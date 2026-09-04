@@ -225,13 +225,13 @@
                         
                         <td class="text-start">
                             <div class="d-flex flex-wrap gap-2">
-                                <a href="{{ route('item.show', $item->kode_barang) }}" 
+                                <a href="{{ route('item.show', $item->id) }}" 
                                 class="btn-action" style="background-color: #60a5fa; color: #fff;">Lihat</a>
-                                <a href="{{ route('item.edit', $item->kode_barang) }}" 
+                                <a href="{{ route('item.edit', $item->id) }}" 
                                 class="btn-action" style="background-color: #fbbf24; color: #111;">Edit</a>
                                 <a href="{{ route('barang-masuk.qrshow.kode', $item->kode_barang) }}" 
                                 class="btn-action" style="background-color: #10b981; color: #fff;" target="_blank" title="Lihat QR Code">🌸 QR</a>
-                                {{--<form action="{{ route('item.destroy', $item->kode_barang) }}" 
+                                {{--<form action="{{ route('item.destroy', $item->id) }}" 
                                     method="POST" onsubmit="return confirm('Yakin hapus?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn-action" style="background-color: #ef4444; color: #fff;">Hapus</button>

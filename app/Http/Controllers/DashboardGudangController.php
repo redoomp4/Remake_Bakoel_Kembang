@@ -22,30 +22,30 @@ class DashboardGudangController extends Controller
         $stokMinimum = DB::table('items as i')
             ->leftJoinSub(
                 DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('SUM(jumlah) AS total_masuk'))
+                    ->select('item_id', DB::raw('SUM(jumlah) AS total_masuk'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'm',
-                'm.kode_barang',
+                'm.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
             ->leftJoinSub(
                 DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('SUM(jumlah_keluar) AS total_keluar'))
+                    ->select('item_id', DB::raw('SUM(jumlah_keluar) AS total_keluar'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'k',
-                'k.kode_barang',
+                'k.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
+            ->where('i.user_id', $userId)
             ->select(
                 'i.nama_barang',
                 'i.stok_minimum',
                 DB::raw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) AS stok_akhir')
             )
-            // PAKAI WHERE, BUKAN HAVING
             ->whereRaw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) <= i.stok_minimum')
             ->orderBy('stok_akhir', 'asc')
             ->orderBy('i.nama_barang')
@@ -54,7 +54,7 @@ class DashboardGudangController extends Controller
 
         // 2. Barang kadaluarsa dalam 30 hari
         $kadaluarsa = DB::table('barang_masuks')
-            ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
+            ->join('items', 'barang_masuks.item_id', '=', 'items.id')
             ->where('barang_masuks.user_id', $userId)
             ->whereBetween('barang_masuks.tanggal_kadaluarsa', [$today, $today->copy()->addDays(30)])
             ->select('items.nama_barang', 'barang_masuks.tanggal_kadaluarsa')
@@ -75,35 +75,33 @@ class DashboardGudangController extends Controller
 
 
         // 4. 5 Barang Stok Terendah
-        // 5 stok terendah, dihitung dari total_masuk - total_keluar
         $stokTerendah = DB::table('items as i')
             ->leftJoinSub(
                 DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('SUM(jumlah) as total_masuk'))
+                    ->select('item_id', DB::raw('SUM(jumlah) as total_masuk'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'm',
-                'm.kode_barang',
+                'm.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
             ->leftJoinSub(
                 DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('SUM(jumlah_keluar) as total_keluar'))
+                    ->select('item_id', DB::raw('SUM(jumlah_keluar) as total_keluar'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'k',
-                'k.kode_barang',
+                'k.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
+            ->where('i.user_id', $userId)
             ->select(
                 'i.kode_barang',
                 'i.nama_barang',
                 DB::raw('GREATEST(COALESCE(m.total_masuk,0) - COALESCE(k.total_keluar,0), 0) as stok_akhir')
             )
-            // Kalau mau sembunyikan barang yang belum pernah ada pergerakan, buka komentar di bawah:
-            // ->havingRaw('(COALESCE(m.total_masuk,0) + COALESCE(k.total_keluar,0)) > 0')
             ->orderBy('stok_akhir', 'asc')
             ->orderBy('i.nama_barang')
             ->limit(5)
@@ -112,48 +110,40 @@ class DashboardGudangController extends Controller
 
         // 5) Idle Stock: barang yang tidak bergerak > 30 hari
         $idleStock = DB::table('items as i')
-            // last_in per barang
             ->leftJoinSub(
                 DB::table('barang_masuks')
-                    ->select('kode_barang', DB::raw('MAX(tanggal_masuk) AS last_in'))
+                    ->select('item_id', DB::raw('MAX(tanggal_masuk) AS last_in'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'm',
-                'm.kode_barang',
+                'm.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
-            // last_out per barang
             ->leftJoinSub(
                 DB::table('barang_keluars')
-                    ->select('kode_barang', DB::raw('MAX(tanggal_keluar) AS last_out'))
+                    ->select('item_id', DB::raw('MAX(tanggal_keluar) AS last_out'))
                     ->where('user_id', $userId)
-                    ->groupBy('kode_barang'),
+                    ->groupBy('item_id'),
                 'k',
-                'k.kode_barang',
+                'k.item_id',
                 '=',
-                'i.kode_barang'
+                'i.id'
             )
-            // ambil lokasi dari transaksi masuk TERAKHIR
             ->leftJoin('barang_masuks as bm_latest', function ($join) use ($userId) {
-                $join->on('bm_latest.kode_barang', '=', 'i.kode_barang')
+                $join->on('bm_latest.item_id', '=', 'i.id')
                     ->where('bm_latest.user_id', '=', $userId);
             })
-            // join tabel lokasi untuk nama lokasi (dari bm_latest)
             ->leftJoin('lokasis as l', 'l.id', '=', 'bm_latest.id_lokasi')
+            ->where('i.user_id', $userId)
             ->select(
                 'i.nama_barang',
                 DB::raw('COALESCE(l.nama_lokasi, "-") AS nama_lokasi'),
-                // opsional: berapa hari mengendap
                 DB::raw("DATEDIFF(NOW(), GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01'))) AS hari_idle"),
-                // tanggal pergerakan terakhir (buat referensi/tampilan)
                 DB::raw("GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01')) AS last_move")
             )
-            // pastikan bm_latest adalah baris last_in agar lokasinya sesuai
             ->whereColumn('bm_latest.tanggal_masuk', '=', DB::raw('m.last_in'))
-            // filter idle > 30 hari
             ->whereRaw("DATEDIFF(NOW(), GREATEST(COALESCE(m.last_in, '1970-01-01'), COALESCE(k.last_out, '1970-01-01'))) > 30")
-            // urutkan yang paling lama mengendap di atas
             ->orderByDesc('hari_idle')
             ->limit(5)
             ->get();
@@ -162,29 +152,30 @@ class DashboardGudangController extends Controller
 
         // 6. 5 Barang paling banyak masuk
         $topMasuk = DB::table('barang_masuks')
-            ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
+            ->join('items', 'barang_masuks.item_id', '=', 'items.id')
             ->where('barang_masuks.user_id', $userId)
             ->select(
                 'items.nama_barang',
                 DB::raw('SUM(jumlah) as total'),
                 DB::raw('COUNT(barang_masuks.id) as frekuensi')
             )
-            ->groupBy('barang_masuks.kode_barang', 'items.nama_barang')
+            ->groupBy('barang_masuks.item_id', 'items.nama_barang')
             ->orderByDesc('total')
             ->limit(5)
             ->get();
 
 
+
         // 7. 5 Barang paling banyak keluar
         $topKeluar = DB::table('barang_keluars')
-            ->join('items', 'barang_keluars.kode_barang', '=', 'items.kode_barang')
+            ->join('items', 'barang_keluars.item_id', '=', 'items.id')
             ->where('barang_keluars.user_id', $userId)
             ->select(
                 'items.nama_barang',
                 DB::raw('SUM(jumlah_keluar) as total'),
                 DB::raw('COUNT(barang_keluars.id) as frekuensi')
             )
-            ->groupBy('barang_keluars.kode_barang', 'items.nama_barang')
+            ->groupBy('barang_keluars.item_id', 'items.nama_barang')
             ->orderByDesc('total')
             ->limit(5)
             ->get();

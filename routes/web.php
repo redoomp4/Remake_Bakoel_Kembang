@@ -112,12 +112,11 @@ Route::get('/dashboard', fn() => redirect(App\Providers\RouteServiceProvider::re
 Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     // Dashboard per role
-    Route::get('/dashboard/superadmin', [UserController::class, 'dashboardSuperadmin'])->name('dashboard.superadmin');
+    Route::get('/dashboard/admin', [DashboardGudangController::class, 'index'])->name('dashboard.admin');
     Route::get('/dashboard/gudang', [DashboardGudangController::class, 'index'])->name('dashboard.gudang');
-    Route::get('/dashboard/viewer', fn() => view('dashboard.viewer'))->name('dashboard.viewer');
 
-    // Notifikasi (gudang & penjual)
-    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
+    // Notifikasi (Admin & Kios)
+    Route::middleware(['role:admin,kios'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markSingleRead'])->name('notifications.markSingleRead');
@@ -125,10 +124,10 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | AJAX / Helper untuk Barang Keluar (gudang & penjual)
+    | AJAX / Helper untuk Barang Keluar (Admin & Kios)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
+    Route::middleware(['role:admin,kios'])->group(function () {
         Route::get('/stok-terpakai', [BarangKeluarController::class, 'cekStok'])->name('barang-keluar.cekStok');
         Route::get('/barang-keluar/detail-barang', [BarangKeluarController::class, 'getDetailBarang'])->name('barang-keluar.detail-barang');
         Route::get('/barang-keluar/barang-bersisa', [BarangKeluarController::class, 'getBarangBersisa'])->name('barang-keluar.barang-bersisa');
@@ -141,36 +140,40 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Laporan & Export
+    | Laporan & Export (Admin & Kios)
     |--------------------------------------------------------------------------
     */
-    Route::get('/laporan/arus-barang', [LaporanController::class, 'arus'])->name('laporan.arus');
+    Route::middleware(['role:admin,kios'])->group(function () {
+        Route::get('/laporan/arus-barang', [LaporanController::class, 'arus'])->name('laporan.arus');
 
-    Route::get('/laporan', [ExportController::class, 'laporan'])->name('laporan');
+        Route::get('/laporan', [ExportController::class, 'laporan'])->name('laporan');
 
-    Route::get('/laporan/print/pdf', [ExportController::class, 'exportPdf'])->name('laporan.pdf');
-    Route::get('/laporan/print/excel', [ExportController::class, 'exportExcel'])->name('laporan.excel');
-    Route::get('/laporan/arus/pdf', [ExportController::class, 'exportArusPdf'])->name('laporan.arus.pdf');
-    Route::get('/laporan/arus/excel', [ExportController::class, 'exportArusExcel'])->name('laporan.arus.excel');
+        Route::get('/laporan/print/pdf', [ExportController::class, 'exportPdf'])->name('laporan.pdf');
+        Route::get('/laporan/print/excel', [ExportController::class, 'exportExcel'])->name('laporan.excel');
+        Route::get('/laporan/arus/pdf', [ExportController::class, 'exportArusPdf'])->name('laporan.arus.pdf');
+        Route::get('/laporan/arus/excel', [ExportController::class, 'exportArusExcel'])->name('laporan.arus.excel');
 
-    Route::get('/laporan/aset', [LaporanAsetController::class, 'index'])->name('laporan.aset');
-    Route::get('/export-aset-excel', [ExportController::class, 'exportAsetExcel'])->name('export.aset.excel');
-    Route::get('/export-aset-pdf', [ExportController::class, 'exportAsetPdf'])->name('export.aset.pdf');
+        Route::get('/laporan/aset', [LaporanAsetController::class, 'index'])->name('laporan.aset');
+        Route::get('/export-aset-excel', [ExportController::class, 'exportAsetExcel'])->name('export.aset.excel');
+        Route::get('/export-aset-pdf', [ExportController::class, 'exportAsetPdf'])->name('export.aset.pdf');
 
-    Route::get('/export/omzet/pdf', [ExportController::class, 'exportOmzetPdf'])->name('export.omzet.pdf');
-    Route::get('/export/omzet/excel', [ExportController::class, 'exportOmzetExcel'])->name('export.omzet.excel');
+        Route::get('/export/omzet/pdf', [ExportController::class, 'exportOmzetPdf'])->name('export.omzet.pdf');
+        Route::get('/export/omzet/excel', [ExportController::class, 'exportOmzetExcel'])->name('export.omzet.excel');
 
-    // Laporan Keuangan (Laba Rugi) Excel
-    Route::get('/export/keuangan/excel', [ExportController::class, 'exportKeuanganExcel'])->name('export.keuangan.excel');
+        // Laporan Keuangan (Laba Rugi) Excel
+        Route::get('/export/keuangan/excel', [ExportController::class, 'exportKeuanganExcel'])->name('export.keuangan.excel');
+
+        // Laporan Stok Admin / Viewer
+        Route::get('/laporan-stok-viewer', [LaporanController::class, 'stokViewer'])->name('laporan.stok.viewer');
+        Route::get('/laporan-stok-admin', [LaporanController::class, 'stokAdmin'])->name('laporan.stok.admin');
+    });
 
     /*
     |--------------------------------------------------------------------------
-    | Resource per Role (GUDANG & PENJUAL)
+    | Resource per Role (Admin & Kios)
     |--------------------------------------------------------------------------
     */
-
-    // GUDANG ONLY
-    Route::middleware(['role:admin,kios,gudang,penjual,superadmin'])->group(function () {
+    Route::middleware(['role:admin,kios'])->group(function () {
         // Master data
         Route::get('/form', [FormController::class, 'index'])->name('form.index');
         Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
@@ -219,8 +222,9 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::delete('/barang-keluar/{id}', [BarangKeluarController::class, 'destroy'])->name('barang-keluar.destroy');
     });
 
-    // SUPERADMIN ONLY
-    Route::middleware(['role:admin,superadmin,kios'])->group(function () {
+    // ADMIN ONLY (Kelola User)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/dashboard/superadmin', [UserController::class, 'dashboardSuperadmin'])->name('dashboard.superadmin');
         Route::get('/kelola-user', [UserController::class, 'index'])->name('user.index');
         Route::get('/kelola-user/create', [UserController::class, 'create'])->name('user.create');
         Route::post('/kelola-user', [UserController::class, 'store'])->name('user.store');
@@ -228,10 +232,6 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::put('/kelola-user/{user}', [UserController::class, 'update'])->name('user.update');
         Route::patch('/user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('user.toggleStatus');
     });
-
-    // Viewer/Admin (siapapun yang auth+verified) untuk lihat stok
-    Route::get('/laporan-stok-viewer', [LaporanController::class, 'stokViewer'])->name('laporan.stok.viewer');
-    Route::get('/laporan-stok-admin', [LaporanController::class, 'stokAdmin'])->name('laporan.stok.admin');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

@@ -64,7 +64,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:superadmin,gudang,penjual,viewer',
+            'role' => 'required|in:admin,kios',
             'position' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'status' => 'required|string|max:255',
@@ -107,7 +107,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:superadmin,gudang,penjual,viewer',
+            'role' => 'required|in:admin,kios',
             'position' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'status' => 'nullable|string|max:255',
@@ -163,8 +163,8 @@ class UserController extends Controller
         $totalUsers = \App\Models\User::count();
 
 
-        // Jumlah user per role
-        $roles = ['superadmin', 'gudang', 'penjual', 'viewer'];
+        // Jumlah user per role (Hanya admin dan kios)
+        $roles = ['admin', 'kios'];
         $usersPerRole = [];
         foreach ($roles as $role) {
             $usersPerRole[$role] = \App\Models\User::where('role', $role)->count();

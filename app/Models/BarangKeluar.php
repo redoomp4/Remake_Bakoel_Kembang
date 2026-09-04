@@ -14,27 +14,38 @@ class BarangKeluar extends Model
 
 
     protected $fillable = [
-        'kode_barang',
+        'user_id',
+        'item_id',
         'id_lokasi',
         'id_kondisi',
         'jumlah_keluar',
         'harga_jual',
         'total_harga_jual',
         'tanggal_keluar',
-        'user_id',
-        'tujuan_pengeluaran',
         'penerima',
         'lokasi_tujuan',
         'catatan',
+        'jenis_transaksi',
     ];
 
+    protected $casts = [
+        'tanggal_keluar' => 'datetime',
+        'harga_jual' => 'decimal:2',
+        'total_harga_jual' => 'decimal:2',
+    ];
+
+    // Accessor Kode Barang untuk fallback kompatibilitas view
+    public function getKodeBarangAttribute()
+    {
+        return $this->item?->kode_barang ?? '-';
+    }
 
     /**
-     * Relasi ke model Item berdasarkan kode_barang (bukan id)
+     * Relasi ke model Item berdasarkan item_id
      */
     public function item()
     {
-        return $this->belongsTo(Item::class, 'kode_barang', 'kode_barang');
+        return $this->belongsTo(Item::class, 'item_id', 'id');
     }
 
 

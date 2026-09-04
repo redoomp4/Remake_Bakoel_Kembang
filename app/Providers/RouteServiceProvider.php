@@ -20,16 +20,11 @@ class RouteServiceProvider extends ServiceProvider
         $role = strtolower(auth()->user()->role ?? '');
 
         // Admin dan Kios diarahkan ke Dashboard utama
-        if (in_array($role, ['admin', 'kios', 'superadmin', 'gudang', 'penjual'])) {
+        if (in_array($role, ['admin', 'kios'])) {
             return route('dashboard.gudang');
         }
 
-        // Viewer hanya diarahkan ke Dashboard Viewer
-        if ($role === 'viewer') {
-            return route('dashboard.viewer');
-        }
-
-        return route('dashboard.gudang');
+        abort(403, 'Akses ditolak: Akun Anda tidak memiliki izin.');
     }
 
     /**

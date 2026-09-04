@@ -49,7 +49,7 @@
                             ? 'bg-white text-brand-emerald shadow-sm'
                             : 'text-brand-slate hover:text-brand-emerald' }}">
 
-                        <i class="fas fa-chart-line mr-1.5 text-brand-sage"></i>`n                        Dashboard
+                        <i class="fas fa-chart-line mr-1.5 text-brand-sage"></i>Dashboard
                     </a>
                 @endauth
 

@@ -164,7 +164,7 @@ class ItemController extends Controller
                 'required','string','max:150',
                 Rule::unique('items','nama_barang')
                     ->where(fn($q)=>$q->where('user_id', Auth::id()))
-                    ->ignore($item->kode_barang, 'kode_barang'), // abaikan record sendiri
+                    ->ignore($item->id), // abaikan record sendiri
             ],
             'id_kategori'  => [
                 'required',
@@ -235,11 +235,11 @@ class ItemController extends Controller
         }
 
         try {
-            // Opsional: pre-check jika punya relasi transaksi
-            if (method_exists($item, 'barangMasuks') && $item->barangMasuks()->exists()) {
+            // Pre-check jika punya relasi transaksi
+            if ($item->barangMasuk()->exists()) {
                 return back()->with('error', 'Tidak dapat menghapus karena sudah dipakai pada barang masuk.');
             }
-            if (method_exists($item, 'barangKeluars') && $item->barangKeluars()->exists()) {
+            if ($item->barangKeluar()->exists()) {
                 return back()->with('error', 'Tidak dapat menghapus karena sudah dipakai pada barang keluar.');
             }
 
@@ -265,10 +265,12 @@ class ItemController extends Controller
         }
     }
 
-    public function show($kode_barang)
+    public function show($id)
     {
         $item = Item::with(['kategori', 'satuan'])
-            ->where('kode_barang', $kode_barang)
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id)->orWhere('kode_barang', $id);
+            })
             ->where('user_id', Auth::id())
             ->firstOrFail();
 

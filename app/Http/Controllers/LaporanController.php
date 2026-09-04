@@ -260,14 +260,14 @@ class LaporanController extends Controller
                 'stok_akhir' => function ($q) {
                     $q->selectRaw('COALESCE(SUM(jumlah),0)')
                         ->from('barang_masuks')
-                        ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang');
+                        ->whereColumn('barang_masuks.item_id', 'items.id');
                 },
                 // username terakhir input barang masuk
                 'username' => function ($q) {
                     $q->selectRaw('COALESCE(users.username, users.name)')
                         ->from('barang_masuks')
                         ->join('users', 'users.id', '=', 'barang_masuks.user_id')
-                        ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang')
+                        ->whereColumn('barang_masuks.item_id', 'items.id')
                         ->orderBy('barang_masuks.created_at', 'desc')
                         ->limit(1);
                 },
@@ -283,7 +283,7 @@ class LaporanController extends Controller
                         "(SELECT COALESCE(u.username, u.name)
                       FROM barang_masuks bm
                       JOIN users u ON u.id = bm.user_id
-                     WHERE bm.kode_barang = items.kode_barang
+                     WHERE bm.item_id = items.id
                   ORDER BY bm.created_at DESC
                      LIMIT 1) LIKE ?",
                         ["%{$search}%"]
@@ -295,7 +295,7 @@ class LaporanController extends Controller
         $query->whereExists(function ($q) {
             $q->select(DB::raw(1))
                 ->from('barang_masuks')
-                ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang');
+                ->whereColumn('barang_masuks.item_id', 'items.id');
         });
 
         // Sorting aman (izinkan hanya kolom berikut)
@@ -323,7 +323,7 @@ class LaporanController extends Controller
             DB::raw('COALESCE(SUM(bm.jumlah),0) as stok_akhir'),
             DB::raw('COALESCE(u.username, u.name) as username')
         )
-            ->leftJoin('barang_masuks as bm', 'bm.kode_barang', '=', 'items.kode_barang')
+            ->leftJoin('barang_masuks as bm', 'bm.item_id', '=', 'items.id')
             ->leftJoin('users as u', 'u.id', '=', 'bm.user_id')
             ->groupBy('items.nama_barang', 'items.kode_barang', 'u.username', 'u.name');
 

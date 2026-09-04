@@ -82,7 +82,8 @@
                 <label class="form-label">Role:</label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror">
                     <option value="">-- Pilih Role --</option>
-                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>`n                    <option value="kios" {{ old('role') == 'kios' ? 'selected' : '' }}>Kios</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="kios" {{ old('role') == 'kios' ? 'selected' : '' }}>Kios</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>

@@ -127,5 +127,13 @@
                 </a>
             </div>
         </details>
+
+        @if(strtolower(Auth::user()->role ?? '') === 'admin')
+            <!-- Kelola User (Admin Only) -->
+            <a href="{{ route('user.index') }}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold {{ request()->routeIs('user*') ? 'bg-brand-emerald text-white shadow-md' : 'text-brand-slate hover:bg-brand-offwhite' }}">
+                <i class="fas fa-users-cog w-5 text-brand-sage"></i>Kelola User
+            </a>
+        @endif
     </nav>
 </aside>

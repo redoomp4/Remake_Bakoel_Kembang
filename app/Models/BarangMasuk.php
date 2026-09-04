@@ -22,7 +22,8 @@ class BarangMasuk extends Model
 
 
     protected $fillable = [
-        'kode_barang',
+        'user_id',
+        'item_id',
         'jumlah',
         'harga_satuan',
         'total_harga',
@@ -32,12 +33,21 @@ class BarangMasuk extends Model
         'id_lokasi',
         'id_kondisi',
         'qr_code',
-        'user_id',
         'catatan',
     ];
 
+    protected $casts = [
+        'tanggal_masuk' => 'datetime',
+        'tanggal_kadaluarsa' => 'date',
+        'harga_satuan' => 'decimal:2',
+        'total_harga' => 'decimal:2',
+    ];
 
-
+    // Accessor Kode Barang untuk fallback kompatibilitas view
+    public function getKodeBarangAttribute()
+    {
+        return $this->item?->kode_barang ?? '-';
+    }
 
     // Accessor Umur Tanaman (dihitung dari tanggal_masuk/created_at hingga sekarang)
     public function getUmurTanamanAttribute()
@@ -59,10 +69,10 @@ class BarangMasuk extends Model
         }
     }
 
-    // Relasi ke model Item
+    // Relasi ke model Item berdasarkan item_id
     public function item()
     {
-        return $this->belongsTo(Item::class, 'kode_barang', 'kode_barang');
+        return $this->belongsTo(Item::class, 'item_id', 'id');
     }
 
 

@@ -75,16 +75,23 @@ class BarangMasukController extends Controller
 
     public function qrShowByKode($kode_barang)
     {
-        $barangMasuk = BarangMasuk::with([
-            'item',
-            'kondisi',
-            'lokasi',
-        ])->where('kode_barang', $kode_barang)->latest('tanggal_masuk')->first();
+        $item = Item::where('kode_barang', $kode_barang)->orWhere('id', $kode_barang)->first();
+
+        $barangMasuk = null;
+        if ($item) {
+            $barangMasuk = BarangMasuk::with([
+                'item',
+                'kondisi',
+                'lokasi',
+            ])->where('item_id', $item->id)->latest('tanggal_masuk')->first();
+        }
 
         if (!$barangMasuk) {
-            $item = Item::with(['kategori', 'satuan'])->where('kode_barang', $kode_barang)->firstOrFail();
+            if (!$item) {
+                abort(404, 'Data barang tidak ditemukan.');
+            }
             $barangMasuk = new BarangMasuk();
-            $barangMasuk->kode_barang = $item->kode_barang;
+            $barangMasuk->item_id = $item->id;
             $barangMasuk->jumlah = 0;
             $barangMasuk->harga_satuan = $item->harga_dasar ?? 0;
             $barangMasuk->total_harga = 0;
@@ -97,8 +104,16 @@ class BarangMasukController extends Controller
 
     public function store(Request $request)
     {
+        // Support either item_id or kode_barang input
+        if (!$request->filled('item_id') && $request->filled('kode_barang')) {
+            $matchedItem = Item::where('kode_barang', $request->kode_barang)->first();
+            if ($matchedItem) {
+                $request->merge(['item_id' => $matchedItem->id]);
+            }
+        }
+
         $validated = $request->validate([
-            'kode_barang'        => 'required|string|max:255',
+            'item_id'            => 'required|exists:items,id',
             'jumlah'             => 'required|integer|min:1',
             'harga_satuan'       => 'required|numeric|min:0',
             'total_harga'        => 'nullable|numeric',
@@ -114,7 +129,7 @@ class BarangMasukController extends Controller
             $total = $validated['jumlah'] * $validated['harga_satuan'];
 
             $barang = BarangMasuk::create([
-                'kode_barang'        => $validated['kode_barang'],
+                'item_id'            => $validated['item_id'],
                 'jumlah'             => $validated['jumlah'],
                 'harga_satuan'       => $validated['harga_satuan'],
                 'total_harga'        => $total,
@@ -141,7 +156,7 @@ class BarangMasukController extends Controller
     public function edit($id)
     {
         return view('barangmasuk.edit', [
-            'barangmasuk' => BarangMasuk::findOrFail($id),
+            'barangMasuk' => BarangMasuk::findOrFail($id),
             'items'       => Item::where('user_id', Auth::id())->get(),
             'pemasoks'    => Pemasok::where('user_id', Auth::id())->get(),
             'lokasis'     => Lokasi::where('user_id', Auth::id())->get(),
@@ -151,8 +166,15 @@ class BarangMasukController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$request->filled('item_id') && $request->filled('kode_barang')) {
+            $matchedItem = Item::where('kode_barang', $request->kode_barang)->first();
+            if ($matchedItem) {
+                $request->merge(['item_id' => $matchedItem->id]);
+            }
+        }
+
         $validated = $request->validate([
-            'kode_barang'        => 'required|exists:items,kode_barang',
+            'item_id'            => 'required|exists:items,id',
             'jumlah'             => 'required|integer|min:1',
             'harga_satuan'       => 'required|numeric|min:0',
             'tanggal_masuk'      => 'required|date',
@@ -165,10 +187,10 @@ class BarangMasukController extends Controller
 
         $barang = BarangMasuk::findOrFail($id);
 
-        $oldKode = $barang->kode_barang;
+        $oldItemId = $barang->item_id;
 
         $barang->update([
-            'kode_barang'        => $validated['kode_barang'],
+            'item_id'            => $validated['item_id'],
             'jumlah'             => $validated['jumlah'],
             'harga_satuan'       => $validated['harga_satuan'],
             'total_harga'        => $validated['jumlah'] * $validated['harga_satuan'],
@@ -180,8 +202,8 @@ class BarangMasukController extends Controller
             'catatan'            => $validated['catatan'] ?? null,
         ]);
 
-        // Jika kode_barang berubah, regenerasi QR
-        if ($oldKode !== $barang->kode_barang) {
+        // Jika item_id berubah, regenerasi QR
+        if ($oldItemId !== $barang->item_id) {
             // Hapus file QR lama jika ada
             if ($barang->qr_code && Storage::disk('public')->exists($barang->qr_code)) {
                 Storage::disk('public')->delete($barang->qr_code);

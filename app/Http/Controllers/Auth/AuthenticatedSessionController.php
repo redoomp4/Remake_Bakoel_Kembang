@@ -34,13 +34,13 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if (in_array($user->role, ['admin', 'kios', 'gudang', 'penjual', 'superadmin', 'viewer'])) {
+        if (in_array($user->role, ['admin', 'kios'])) {
             $userId = auth()->id();
 
             try {
                 /** 1) Barang Kadaluarsa (H-30) — per USER */
                 $expiredSoonItems = DB::table('barang_masuks')
-                    ->join('items', 'barang_masuks.kode_barang', '=', 'items.kode_barang')
+                    ->join('items', 'barang_masuks.item_id', '=', 'items.id')
                     ->leftJoin('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                     ->leftJoin('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
                     ->where('barang_masuks.user_id', $userId)
@@ -70,6 +70,7 @@ class AuthenticatedSessionController extends Controller
                 /** 2) Stok Minimum — per USER */
                 $lowStockItems = DB::table('items')
                     ->select(
+                        'items.id',
                         'items.kode_barang',
                         'items.nama_barang',
                         'items.stok_minimum'
@@ -77,11 +78,11 @@ class AuthenticatedSessionController extends Controller
                     ->selectRaw('
                         (SELECT COALESCE(SUM(jumlah),0)
                          FROM barang_masuks
-                         WHERE barang_masuks.kode_barang = items.kode_barang
+                         WHERE barang_masuks.item_id = items.id
                            AND barang_masuks.user_id = ?) AS total_masuk,
                         (SELECT COALESCE(SUM(jumlah_keluar),0)
                          FROM barang_keluars
-                         WHERE barang_keluars.kode_barang = items.kode_barang
+                         WHERE barang_keluars.item_id = items.id
                            AND barang_keluars.user_id = ?) AS total_keluar
                     ', [$userId, $userId])
                     ->where('items.user_id', $userId)
@@ -94,7 +95,7 @@ class AuthenticatedSessionController extends Controller
                         $latestData = DB::table('barang_masuks')
                             ->leftJoin('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                             ->leftJoin('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
-                            ->where('barang_masuks.kode_barang', $item->kode_barang)
+                            ->where('barang_masuks.item_id', $item->id)
                             ->where('barang_masuks.user_id', $userId)
                             ->latest('barang_masuks.tanggal_masuk')
                             ->select('lokasis.nama_lokasi', 'kondisis.nama_kondisi')
@@ -117,17 +118,18 @@ class AuthenticatedSessionController extends Controller
                 /** 3) Slow Moving (> 60 hari tanpa pergerakan) — per USER */
                 $slowMovingItems = DB::table('items')
                     ->select(
+                        'items.id',
                         'items.kode_barang',
                         'items.nama_barang'
                     )
                     ->selectRaw('
                         (SELECT MAX(tanggal_masuk)
                          FROM barang_masuks
-                         WHERE barang_masuks.kode_barang = items.kode_barang
+                         WHERE barang_masuks.item_id = items.id
                            AND barang_masuks.user_id = ?) AS last_in,
                         (SELECT MAX(tanggal_keluar)
                          FROM barang_keluars
-                         WHERE barang_keluars.kode_barang = items.kode_barang
+                         WHERE barang_keluars.item_id = items.id
                            AND barang_keluars.user_id = ?) AS last_out
                     ', [$userId, $userId])
                     ->where('items.user_id', $userId)
@@ -147,7 +149,7 @@ class AuthenticatedSessionController extends Controller
                         $latestData = DB::table('barang_masuks')
                             ->leftJoin('lokasis', 'barang_masuks.id_lokasi', '=', 'lokasis.id')
                             ->leftJoin('kondisis', 'barang_masuks.id_kondisi', '=', 'kondisis.id')
-                            ->where('barang_masuks.kode_barang', $item->kode_barang)
+                            ->where('barang_masuks.item_id', $item->id)
                             ->where('barang_masuks.user_id', $userId)
                             ->latest('barang_masuks.tanggal_masuk')
                             ->select('lokasis.nama_lokasi', 'kondisis.nama_kondisi')

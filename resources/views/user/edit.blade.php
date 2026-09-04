@@ -82,7 +82,8 @@
             <div class="col-md-6">
                 <label class="form-label">Role:</label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror" required>
-                    <option value="admin" {{ in_array($user->role, ['admin', 'superadmin']) ? 'selected' : '' }}>Admin</option>`n                    <option value="kios" {{ in_array($user->role, ['kios', 'penjual', 'gudang']) ? 'selected' : '' }}>Kios</option>
+                    <option value="admin" {{ in_array($user->role, ['admin', 'superadmin']) ? 'selected' : '' }}>Admin</option>
+                    <option value="kios" {{ in_array($user->role, ['kios', 'penjual', 'gudang']) ? 'selected' : '' }}>Kios</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>

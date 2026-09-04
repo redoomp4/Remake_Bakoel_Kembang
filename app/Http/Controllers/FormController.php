@@ -57,7 +57,9 @@ class FormController extends Controller
     public function getItemDetail($kode)
     {
         $item = Item::where('user_id', Auth::id())
-            ->where('kode_barang', $kode)
+            ->where(function ($q) use ($kode) {
+                $q->where('id', $kode)->orWhere('kode_barang', $kode);
+            })
             ->first();
 
         if (!$item) {
@@ -486,17 +488,18 @@ PROMPT;
                 );
 
                 // 5. SIMPAN TRANSAKSI BARANG MASUK
-                $barangMasuk                 = new BarangMasuk();
-                $barangMasuk->user_id        = $userId;
-                $barangMasuk->id_item        = $item->id;
-                $barangMasuk->id_pemasok     = $pemasok->id;
-                $barangMasuk->id_lokasi      = $lokasi->id;
-                $barangMasuk->id_kondisi     = $kondisi->id;
-                $barangMasuk->jumlah         = (int) $request->jumlah;
-                $barangMasuk->harga_beli     = (float) $request->harga_beli;
-                $barangMasuk->tgl_masuk      = $request->tgl_masuk;
-                $barangMasuk->tgl_kadaluarsa = $request->tgl_kadaluarsa;
-                $barangMasuk->catatan        = $request->catatan;
+                $barangMasuk                     = new BarangMasuk();
+                $barangMasuk->user_id            = $userId;
+                $barangMasuk->item_id            = $item->id;
+                $barangMasuk->id_pemasok         = $pemasok->id;
+                $barangMasuk->id_lokasi          = $lokasi->id;
+                $barangMasuk->id_kondisi         = $kondisi->id;
+                $barangMasuk->jumlah             = (int) $request->jumlah;
+                $barangMasuk->harga_satuan       = (float) $request->harga_beli;
+                $barangMasuk->total_harga        = ((int) $request->jumlah) * ((float) $request->harga_beli);
+                $barangMasuk->tanggal_masuk      = $request->tgl_masuk;
+                $barangMasuk->tanggal_kadaluarsa = $request->tgl_kadaluarsa;
+                $barangMasuk->catatan            = $request->catatan;
                 $barangMasuk->save();
 
                 // 6. UPDATE STOK DI MASTER ITEM
@@ -853,7 +856,7 @@ PROMPT;
                 // 5. Simpan Record Barang Keluar
                 $barangKeluar                   = new BarangKeluar();
                 $barangKeluar->user_id          = $userId;
-                $barangKeluar->id_item          = $item->id;
+                $barangKeluar->item_id          = $item->id;
                 $barangKeluar->id_lokasi        = $request->id_lokasi;
                 $barangKeluar->id_kondisi       = $request->id_kondisi;
                 $barangKeluar->jumlah_keluar    = (int) $request->jumlah_keluar;

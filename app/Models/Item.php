@@ -20,23 +20,32 @@ class Item extends Model
 
     protected $table = 'items';
 
-    protected $primaryKey = 'kode_barang'; // Jika kode_barang adalah PRIMARY
-    public $incrementing = false; // Jika kode_barang berupa string/non-auto increment
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
+        'user_id',
         'kode_barang',
         'nama_barang',
+        'public_token',
         'deskripsi',
         'foto',
         'id_kategori',
         'id_satuan',
         'stok_minimum',
-         'harga_dasar',
-         'user_id',
+        'harga_dasar',
+        'qr_code',
     ];
-    protected $keyType = 'string';
 
-
+    protected static function booted()
+    {
+        static::creating(function ($item) {
+            if (empty($item->public_token)) {
+                $item->public_token = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+    }
 
     // Accessor Umur Tanaman & Total Stok
     public function getUmurTanamanAttribute()
@@ -66,16 +75,16 @@ class Item extends Model
         return max(0, $totalIn - $totalOut);
     }
 
-    // ✅ Barang Masuk berdasarkan kode_barang
+    // ✅ Barang Masuk berdasarkan item_id
     public function barangMasuk()
     {
-        return $this->hasMany(BarangMasuk::class, 'kode_barang', 'kode_barang');
+        return $this->hasMany(BarangMasuk::class, 'item_id', 'id');
     }
 
-    // ✅ Barang Keluar berdasarkan kode_barang
+    // ✅ Barang Keluar berdasarkan item_id
     public function barangKeluar()
     {
-        return $this->hasMany(BarangKeluar::class, 'kode_barang', 'kode_barang');
+        return $this->hasMany(BarangKeluar::class, 'item_id', 'id');
     }
 
     public function kategori()
