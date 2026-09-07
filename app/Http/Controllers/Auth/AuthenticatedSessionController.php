@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if ($user->role === 'gudang') {
+        if ($user->role === 'penjual') {
             $userId = $user->id;
 
             /** 1) Barang Kadaluarsa (H-30) — per USER */

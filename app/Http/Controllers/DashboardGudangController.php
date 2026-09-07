@@ -450,7 +450,7 @@ class DashboardGudangController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('dashboard.gudang', compact(
+        return view('dashboard.penjual', compact(
             'omzetHariIni',
             'transaksiKeluarHariIni',
             'hppHariIni',

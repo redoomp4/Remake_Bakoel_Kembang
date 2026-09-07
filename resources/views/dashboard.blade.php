@@ -13,7 +13,7 @@
         Anda telah berhasil masuk sebagai <strong>{{ Auth::user()->name }}</strong> ({{ strtoupper(Auth::user()->role) }}). Silakan pilih menu di sidebar untuk mengelola transaksi kas kebun dan inventaris.
       </p>
       <div class="pt-4 flex justify-center gap-4">
-        <a href="{{ route('dashboard.gudang') }}" class="px-6 py-3 bg-brand-emerald text-white rounded-xl font-bold text-sm shadow-md">
+        <a href="{{ route('dashboard.penjual') }}" class="px-6 py-3 bg-brand-emerald text-white rounded-xl font-bold text-sm shadow-md">
           <i class="fas fa-wallet mr-2"></i> Laci Kas Kebun
         </a>
         <a href="{{ route('barang-masuk.index') }}" class="px-6 py-3 bg-brand-offwhite text-brand-emerald border border-brand-accent rounded-xl font-bold text-sm">

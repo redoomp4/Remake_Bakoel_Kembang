@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Auth\MagicLinkController; // ⬅️ pastikan namespace sesuai file kamu
+use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\PublicVerifyEmailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BarangMasukController;
@@ -21,6 +21,7 @@ use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\DashboardGudangController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FormController;
+
 /*
 |--------------------------------------------------------------------------
 | Magic Link (Guest)
@@ -66,19 +67,9 @@ Route::get('/l/{code}', function (string $code) {
 | Public / Landing
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn() => view('welcome'))->name('welcome');
-Route::get('/welcome', fn() => view('home'));
 
-Route::get('/profil', fn() => view('landingpage.profil'))->name('profil');
-Route::get('/fitur/gudang', fn() => view('landingpage.gudang'))->name('gudang');
-Route::get('/fitur/superadmin', fn() => view('landingpage.superadmin'))->name('superadmin');
-Route::get('/fitur/viewer', fn() => view('landingpage.viewer'))->name('viewer');
-Route::get('/faq', fn() => view('landingpage.faq'))->name('faq');
-Route::get('/galeri', fn() => view('landingpage.galeri'))->name('galeri');
-Route::get('/kontak', fn() => view('landingpage.kontak'))->name('kontak');
-
-Route::get('/learn-more', fn() => view('learn-more'))->name('learn.more');
-
+Route::get('/katalog', fn() => view('welcome'))->name('welcome');
+Route::get('/', fn() => view('landingpage.index'))->name('profil');
 
 /*
 |--------------------------------------------------------------------------
@@ -91,9 +82,6 @@ Route::get('/learn-more', fn() => view('learn-more'))->name('learn.more');
 
 Route::get('/p/{public_token}', [ItemController::class, 'publicShow'])->name('item.public');
 
-
-// Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
-// Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])->name('barang-masuk.qrshow.kode');
 
 /*
 |--------------------------------------------------------------------------
@@ -113,11 +101,10 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     // Dashboard per role
     Route::get('/dashboard/superadmin', [UserController::class, 'dashboardSuperadmin'])->name('dashboard.superadmin');
-    Route::get('/dashboard/gudang', [DashboardGudangController::class, 'index'])->name('dashboard.gudang');
-    Route::get('/dashboard/viewer', fn() => view('dashboard.viewer'))->name('dashboard.viewer');
+    Route::get('/dashboard/penjual', [DashboardGudangController::class, 'index'])->name('dashboard.penjual');
 
     // Notifikasi (gudang & penjual)
-    Route::middleware(['role:gudang,penjual'])->group(function () {
+    Route::middleware(['role:penjual'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markSingleRead'])->name('notifications.markSingleRead');
@@ -128,7 +115,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     | AJAX / Helper untuk Barang Keluar (gudang & penjual)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:gudang,penjual'])->group(function () {
+    Route::middleware(['role:penjual'])->group(function () {
         Route::get('/stok-terpakai', [BarangKeluarController::class, 'cekStok'])->name('barang-keluar.cekStok');
         Route::get('/barang-keluar/detail-barang', [BarangKeluarController::class, 'getDetailBarang'])->name('barang-keluar.detail-barang');
         Route::get('/barang-keluar/barang-bersisa', [BarangKeluarController::class, 'getBarangBersisa'])->name('barang-keluar.barang-bersisa');
@@ -170,7 +157,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     */
 
     // GUDANG ONLY
-    Route::middleware(['role:gudang'])->group(function () {
+    Route::middleware(['role:penjual'])->group(function () {
         // Master data
         Route::get('/form', [FormController::class, 'index'])->name('form.index');
         Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
@@ -207,10 +194,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
         Route::get('/barang-masuk/{id}/cetak-detail', [BarangMasukController::class, 'cetakDetail'])->name('barang-masuk.cetak-detail');
         Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy');
-
-        // Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
-        // Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
-        // Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
+ 
 
         // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
@@ -228,7 +212,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::patch('/user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('user.toggleStatus');
     });
 
-    // Viewer/Admin (siapapun yang auth+verified) untuk lihat stok
+    // penjual (siapapun yang auth+verified) untuk lihat stok
     Route::get('/laporan-stok-viewer', [LaporanController::class, 'stokViewer'])->name('laporan.stok.viewer');
     Route::get('/laporan-stok-admin', [LaporanController::class, 'stokAdmin'])->name('laporan.stok.admin');
 

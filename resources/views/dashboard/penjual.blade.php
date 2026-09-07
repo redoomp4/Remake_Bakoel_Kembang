@@ -15,18 +15,18 @@
                     class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-accent/40 pb-6">
                     <div>
                         <h2 class="text-3xl font-black text-brand-emerald tracking-tight">
-                            DASHBOARD GUDANG
+                            DASHBOARD PENJUAL
                         </h2>
 
                         <p class="text-brand-slate font-medium text-md mt-1">
                             Pantau stok, pergerakan barang, transaksi, dan kondisi persediaan kebun.
                         </p>
                     </div>
-                      <a href="{{ route('form.index') }}"
-           class="bg-brand-emerald text-white px-5 py-3 rounded-2xl font-black text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2">
-            <i class="fas fa-plus-circle text-lg"></i>
-            <span>TAMBAH DATA</span>
-        </a>
+                    <a href="{{ route('form.index') }}"
+                        class="bg-brand-emerald text-white px-5 py-3 rounded-2xl font-black text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-lg"></i>
+                        <span>TAMBAH DATA</span>
+                    </a>
                     <div
                         class="bg-white/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-brand-accent font-bold text-md shadow-sm flex items-center gap-2">
                         <i class="far fa-calendar-alt text-brand-emerald"></i>
@@ -127,6 +127,7 @@
                     $inPct = round(($totalMasuk / $maxVal) * 100);
                     $outPct = round(($totalKeluar / $maxVal) * 100);
                 @endphp
+
                 <div class="bg-white rounded-3xl border border-brand-accent p-6 md:p-8 shadow-sm">
 
                     <div class="mb-6">
@@ -405,38 +406,71 @@
                     </div>
 
                     <form action="{{ route('export.keuangan.excel') }}" method="GET"
-                        class="flex flex-col sm:flex-row items-end gap-4">
-                        <div class="space-y-1.5 flex-1">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Tanggal
-                                Mulai</label>
-                            <input type="date" name="start_date"
-                                class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder-white/50">
+                        class="flex flex-col gap-4 w-full">
+
+                        <!-- Container Input -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+
+                            <!-- Tanggal Mulai -->
+                            <div class="space-y-1.5 min-w-0">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">
+                                    Tanggal Mulai
+                                </label>
+
+                                <input type="date" name="start_date"
+                                    class="w-full min-w-0 px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage">
+                            </div>
+
+                            <!-- Tanggal Akhir -->
+                            <div class="space-y-1.5 min-w-0">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">
+                                    Tanggal Akhir
+                                </label>
+
+                                <input type="date" name="end_date"
+                                    class="w-full min-w-0 px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage">
+                            </div>
+
+                            <!-- Format File -->
+                            <div class="space-y-1.5 min-w-0">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">
+                                    Format File
+                                </label>
+
+                                <select name="format"
+                                    class="w-full min-w-0 px-4 py-3 rounded-2xl border border-white/20 bg-[#0A452E] text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage cursor-pointer">
+
+                                    <option value="xlsx">📊 Excel (.xlsx)</option>
+                                    <option value="csv">📄 CSV (.csv)</option>
+
+                                </select>
+                            </div>
+
+                            <!-- Tombol -->
+                            <div class="flex items-end min-w-0">
+
+                                <button type="submit"
+                                    class="w-full bg-white text-brand-emerald font-black text-sm px-4 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer">
+
+                                    <i class="fas fa-download text-lg"></i>
+
+                                    <span class="truncate">
+                                        UNDUH KEUANGAN
+                                    </span>
+
+                                </button>
+
+                            </div>
+
                         </div>
-                        <div class="space-y-1.5 flex-1">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Tanggal
-                                Akhir</label>
-                            <input type="date" name="end_date"
-                                class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder-white/50">
-                        </div>
-                        <div class="space-y-1.5 min-w-[130px]">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-white/70 block">Format
-                                File</label>
-                            <select name="format"
-                                class="w-full px-4 py-3 rounded-2xl border border-white/20 bg-[#0A452E] text-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-sage cursor-pointer">
-                                <option value="xlsx">📊 Excel (.xlsx)</option>
-                                <option value="csv">📄 CSV (.csv)</option>
-                            </select>
-                        </div>
-                        <button type="submit"
-                            class="bg-white text-brand-emerald font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
-                            <i class="fas fa-download text-lg"></i> UNDUH KEUANGAN
-                        </button>
+
                     </form>
 
                     <p class="text-[10px] font-medium text-white/40">
                         Kosongkan tanggal untuk mengunduh semua data keuangan sejak awal.
                     </p>
                 </div>
+
             </section>
 
         </main>

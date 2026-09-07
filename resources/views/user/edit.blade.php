@@ -83,8 +83,7 @@
                 <label class="form-label">Role:</label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                     <option value="superadmin" {{ $user->role == 'superadmin' ? 'selected' : '' }}>Superadmin</option>
-                    <option value="gudang" {{ $user->role == 'gudang' ? 'selected' : '' }}>Gudang</option>
-                    <option value="viewer" {{ $user->role == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                    <option value="penjual" {{ $user->role == 'penjual' ? 'selected' : '' }}>Penjual</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>

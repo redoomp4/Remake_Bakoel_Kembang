@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
@@ -17,13 +18,12 @@ class RouteServiceProvider extends ServiceProvider
      */
     public static function redirectByRole(): string
     {
-        $role = auth()->user()->role ?? null;
+        $role = Auth::user()?->role;
 
         return match (strtolower($role ?? '')) {
             'superadmin'        => route('dashboard.superadmin'),
-            'gudang', 'penjual' => route('dashboard.gudang'),
-            'viewer'            => route('dashboard.viewer'),
-            default             => route('dashboard.gudang'),
+            'penjual'           => route('dashboard.penjual'),
+            default             => route('dashboard.penjual'),
         };
     }
 

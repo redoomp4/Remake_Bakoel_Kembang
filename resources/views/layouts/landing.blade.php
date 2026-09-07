@@ -52,11 +52,6 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased bg-brand-offwhite text-gray-900">
 
-    <!-- Header Banner Mode Lansia -->
-    {{-- <div class="bg-brand-emerald text-brand-offwhite py-3 px-6 text-center text-xs md:text-sm font-black tracking-wider flex items-center justify-center gap-2 border-b border-white/10">
-        <span class="animate-pulse">🟢</span>
-        DESAIN RAMAH LANSIA V3 ACTIVE • TEKS EKSTRA BESAR (18px+) • TOMBOL LAPANG • FORM SAT-SET BEBAS BINGUNG!
-    </div> --}}
 
     <!-- Main Navigation Header -->
     @include('partials.header')

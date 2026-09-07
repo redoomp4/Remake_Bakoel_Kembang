@@ -33,7 +33,7 @@ class RegisteredUserController extends Controller
             'username' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:users,username'],
             'email'    => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
             'phone'    => ['required', 'string', 'max:30'],
-            'role'     => ['nullable', 'string', 'in:penjual,viewer,gudang,superadmin'],
+            'role'     => ['nullable', 'string', 'in:penjual,superadmin'],
             'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'note'     => ['nullable', 'string', 'max:500'],
             'password' => ['required', 'string', 'confirmed', 'min:8'],
