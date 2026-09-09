@@ -117,19 +117,32 @@
                 <div class="flex items-center gap-1.5
                             border-l border-brand-accent pl-2">
 
-                    <span
-                        class="hidden lg:inline-flex
+                    <a href="{{ route('profile.show') }}"
+                        class="hidden lg:inline-flex items-center
                                  text-[10px] font-bold text-brand-emerald
                                  bg-emerald-50 border border-emerald-200
-                                 px-2 py-1.5 rounded-lg">
+                                 px-2 py-1.5 rounded-lg hover:bg-emerald-100
+                                 transition-colors"
+                        aria-label="Buka profil saya">
 
-                        {{ Auth::user()->name }}
+                        {{ Auth::user()->username ?? Auth::user()->name }}
 
                         <span class="text-brand-sage ml-1">
                             ({{ strtoupper(Auth::user()->role) }})
                         </span>
 
-                    </span>
+                    </a>
+
+                    @if (strtolower(Auth::user()->role ?? '') === 'superadmin')
+                        <a href="{{ route('user.index') }}"
+                            class="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg
+                                   text-xs font-extrabold text-brand-slate
+                                   hover:bg-brand-offwhite hover:text-brand-emerald"
+                            aria-label="Kelola akun">
+                            <i class="fas fa-users-cog text-sm"></i>
+                            <span class="hidden xl:inline">Kelola Akun</span>
+                        </a>
+                    @endif
 
 
                     <form method="POST" action="{{ route('logout') }}">
