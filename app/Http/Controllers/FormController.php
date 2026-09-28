@@ -50,7 +50,15 @@ class FormController extends Controller
             'pemasoks'   => Pemasok::where('user_id', $userId)->orderBy('nama_pemasok')->select('id', 'nama_pemasok as nama')->get(),
             'lokasis'    => Lokasi::where('user_id', $userId)->orderBy('nama_lokasi')->select('id', 'nama_lokasi as nama')->get(),
             'kondisis'   => Kondisi::where('user_id', $userId)->orderBy('nama_kondisi')->select('id', 'nama_kondisi as nama')->get(),
-            'items'      => Item::where('user_id', $userId)->orderBy('nama_barang')->select('id', 'kode_barang', 'nama_barang', 'harga_dasar', 'stok')->get(),
+            'items'      => Item::where('user_id', $userId)->orderBy('nama_barang')->get()->map(function ($item) {
+                return [
+                    'id'          => $item->id,
+                    'kode_barang' => $item->kode_barang,
+                    'nama_barang' => $item->nama_barang,
+                    'harga_dasar' => $item->harga_dasar,
+                    'stok'        => $item->total_stok,
+                ];
+            }),
         ]);
     }
 
@@ -66,7 +74,9 @@ class FormController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $item
+            'data'    => array_merge($item->toArray(), [
+                'stok' => $item->total_stok,
+            ])
         ]);
     }
 
@@ -486,21 +496,20 @@ PROMPT;
                 );
 
                 // 5. SIMPAN TRANSAKSI BARANG MASUK
+                $totalHarga                  = ((int) $request->jumlah) * ((float) $request->harga_beli);
                 $barangMasuk                 = new BarangMasuk();
                 $barangMasuk->user_id        = $userId;
-                $barangMasuk->id_item        = $item->id;
+                $barangMasuk->item_id        = $item->id;
                 $barangMasuk->id_pemasok     = $pemasok->id;
                 $barangMasuk->id_lokasi      = $lokasi->id;
                 $barangMasuk->id_kondisi     = $kondisi->id;
                 $barangMasuk->jumlah         = (int) $request->jumlah;
-                $barangMasuk->harga_beli     = (float) $request->harga_beli;
-                $barangMasuk->tgl_masuk      = $request->tgl_masuk;
-                $barangMasuk->tgl_kadaluarsa = $request->tgl_kadaluarsa;
+                $barangMasuk->harga_satuan   = (float) $request->harga_beli;
+                $barangMasuk->total_harga    = $totalHarga;
+                $barangMasuk->tanggal_masuk  = $request->tgl_masuk;
+                $barangMasuk->tanggal_kadaluarsa = $request->tgl_kadaluarsa;
                 $barangMasuk->catatan        = $request->catatan;
                 $barangMasuk->save();
-
-                // 6. UPDATE STOK DI MASTER ITEM
-                $item->increment('stok', (int) $request->jumlah);
 
                 return redirect()
                     ->route('barang-masuk.index')
@@ -638,7 +647,7 @@ PROMPT;
                     'jenis_transaksi' => $parsedData['jenis_transaksi'] ?? 'Penjualan',
                     'lokasi_tujuan'   => $parsedData['lokasi_tujuan'] ?? null,
                     'catatan'         => $parsedData['catatan'] ?? null,
-                    'stok_tersedia'   => $matchedItem ? $matchedItem->stok : 0,
+                    'stok_tersedia'   => $matchedItem ? $matchedItem->total_stok : 0,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -712,7 +721,7 @@ PROMPT;
                     'lokasi'      => $defaultLokasi?->nama_lokasi ?? 'Gudang Utama',
                     'kondisi_id'  => $defaultKondisi?->id ?? 1,
                     'kondisi'     => $defaultKondisi?->nama_kondisi ?? 'Baik',
-                    'stok'        => (int) $item->stok,
+                    'stok'        => (int) $item->total_stok,
                     'satuan'      => $item->satuan?->nama_satuan ?? 'Pcs',
                     'harga_dasar' => (int) round($item->harga_dasar ?? 0),
                 ];
@@ -793,7 +802,7 @@ PROMPT;
         ]);
     }
     /**
-     * Menyimpan Transaksi Barang Keluar & Mengurangi Stok Master Item
+     * Menyimpan Transaksi Barang Keluar
      */
     public function barangKeluarStore(Request $request)
     {
@@ -833,18 +842,41 @@ PROMPT;
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($request) {
                 $userId = Auth::id();
 
-                // 3. Ambil Item & Validasi Ketersediaan Stok
+                // 3. Ambil Item, Lokasi, dan Kondisi
                 $item = Item::where('user_id', $userId)
                     ->where('id', $request->item_id)
-                    ->lockForUpdate()
                     ->firstOrFail();
 
-                // Melempar Exception agar DB::transaction membatalkan (rollback) transaksi jika stok kurang
-                if ($item->stok < $request->jumlah_keluar) {
-                    throw new \Exception("Stok tidak mencukupi! Stok saat ini: {$item->stok}, permintaan keluar: {$request->jumlah_keluar}.");
+                $lokasi = Lokasi::where('user_id', $userId)
+                    ->where('id', $request->id_lokasi)
+                    ->firstOrFail();
+
+                $kondisi = Kondisi::where('user_id', $userId)
+                    ->where('id', $request->id_kondisi)
+                    ->firstOrFail();
+
+                // Kalkulasi Stok Dinamis:
+                // Stok = (Sum BarangMasuk WHERE item_id, id_lokasi, id_kondisi, user_id) - (Sum BarangKeluar WHERE item_id, id_lokasi, id_kondisi, user_id)
+                $masuk = BarangMasuk::where('user_id', $userId)
+                    ->where('item_id', $item->id)
+                    ->where('id_lokasi', $lokasi->id)
+                    ->where('id_kondisi', $kondisi->id)
+                    ->sum('jumlah');
+
+                $keluar = BarangKeluar::where('user_id', $userId)
+                    ->where('item_id', $item->id)
+                    ->where('id_lokasi', $lokasi->id)
+                    ->where('id_kondisi', $kondisi->id)
+                    ->sum('jumlah_keluar');
+
+                $stokDinamis = (int) ($masuk - $keluar);
+
+                // Melempar Exception jika stok tidak mencukupi
+                if ($request->jumlah_keluar > $stokDinamis) {
+                    throw new \Exception("Stok tidak mencukupi! Stok saat ini: {$stokDinamis}, permintaan keluar: {$request->jumlah_keluar}.");
                 }
 
                 // 4. Hitung Total Nilai Jual
@@ -853,26 +885,24 @@ PROMPT;
                 // 5. Simpan Record Barang Keluar
                 $barangKeluar                   = new BarangKeluar();
                 $barangKeluar->user_id          = $userId;
-                $barangKeluar->id_item          = $item->id;
-                $barangKeluar->id_lokasi        = $request->id_lokasi;
-                $barangKeluar->id_kondisi       = $request->id_kondisi;
+                $barangKeluar->item_id          = $item->id;
+                $barangKeluar->id_lokasi        = $lokasi->id;
+                $barangKeluar->id_kondisi       = $kondisi->id;
                 $barangKeluar->jumlah_keluar    = (int) $request->jumlah_keluar;
                 $barangKeluar->harga_jual       = (float) $request->harga_jual;
                 $barangKeluar->total_harga_jual = $totalHargaJual;
+                $barangKeluar->tanggal_keluar   = now();
                 $barangKeluar->penerima         = trim((string) $request->penerima);
                 $barangKeluar->jenis_transaksi  = $request->jenis_transaksi;
                 $barangKeluar->lokasi_tujuan    = trim((string) $request->lokasi_tujuan);
                 $barangKeluar->catatan          = $request->catatan;
                 $barangKeluar->save();
 
-                // 6. Kurangi Stok pada Master Item
-                $item->decrement('stok', (int) $request->jumlah_keluar);
+                return redirect()
+                    ->route('barang-keluar.index')
+                    ->with('success', 'Transaksi barang keluar berhasil dicatat!');
             });
-
-            return redirect()
-                ->route('barang-keluar.index')
-                ->with('success', 'Transaksi barang keluar berhasil dicatat!');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error Barang Keluar: ' . $e->getMessage());
             return back()->withInput()->with('error', $e->getMessage());
         }

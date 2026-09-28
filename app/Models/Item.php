@@ -112,6 +112,11 @@ class Item extends Model
         $totalOut = (int) $this->barangKeluar()->sum('jumlah_keluar');
         return max(0, $totalIn - $totalOut);
     }
+
+    public function getStokAttribute()
+    {
+        return $this->total_stok;
+    }
     public function getUmurTanamanAttribute()
     {
         $firstEntry = $this->barangMasuk()
