@@ -415,15 +415,14 @@
                 </div>
 
                 {{-- HARGA + STOK MINIMUM --}}
-                <div class="grid-2">
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="harga_dasar" class="form-label">Harga Dasar *</label>
                         <input type="number" id="harga_dasar" name="harga_dasar"
                                value="{{ old('harga_dasar', $item->harga_dasar) }}" required class="form-control">
                         @error('harga_dasar')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
-                    </div>
+                    </div> -->
                     <div class="form-group">
                         <label for="stok_minimum" class="form-label">Stok Minimum *</label>
                         <input type="number" id="stok_minimum" name="stok_minimum"
@@ -432,7 +431,6 @@
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
-                </div>
 
                 {{-- KATEGORI + SATUAN --}}
                 <div class="grid-2">

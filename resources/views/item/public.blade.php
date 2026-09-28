@@ -181,6 +181,51 @@
 
 
                         {{-- STOK --}}
+                        
+
+
+                        {{-- HARGA --}}
+                        <!-- {{-- <div class="bg-emerald-50/70 p-2.5 rounded-xl
+                                border border-emerald-100">
+
+                        <span class="text-[7px] font-black uppercase
+                                     tracking-widest text-emerald-600">
+
+                            💰 HARGA DASAR
+
+                        </span>
+
+                        <p class="text-base md:text-lg font-black
+                                  text-brand-emerald mt-0.5">
+
+                            Rp {{ number_format($item->harga_dasar, 0, ',', '.') }}
+
+                        </p>
+
+                    </div> --}} -->
+
+
+                        {{-- KATEGORI --}}
+                        <div
+                            class="bg-amber-50/70 p-2.5 rounded-xl
+                                border border-amber-100">
+
+                            <span
+                                class="text-[7px] font-black uppercase
+                                     tracking-widest text-amber-600">
+
+                                🌱 KATEGORI
+
+                            </span>
+
+                            <p class="text-sm font-black
+                                  text-amber-700 mt-0.5">
+
+                                {{ $item->kategori->kategori ?? '-' }}
+
+                            </p>
+
+                        </div>
                         <div class="bg-blue-50/70 p-2.5 rounded-xl
                                 border border-blue-100">
 
@@ -201,50 +246,6 @@
                                 <span class="text-[9px] font-bold">
                                     {{ $item->satuan->nama_satuan ?? 'unit' }}
                                 </span>
-
-                            </p>
-
-                        </div>
-
-
-                        {{-- HARGA --}}
-                        {{-- <div class="bg-emerald-50/70 p-2.5 rounded-xl
-                                border border-emerald-100">
-
-                        <span class="text-[7px] font-black uppercase
-                                     tracking-widest text-emerald-600">
-
-                            💰 HARGA DASAR
-
-                        </span>
-
-                        <p class="text-base md:text-lg font-black
-                                  text-brand-emerald mt-0.5">
-
-                            Rp {{ number_format($item->harga_dasar, 0, ',', '.') }}
-
-                        </p>
-
-                    </div> --}}
-
-
-                        {{-- KATEGORI --}}
-                        <div
-                            class="bg-amber-50/70 p-2.5 rounded-xl
-                                border border-amber-100">
-
-                            <span
-                                class="text-[7px] font-black uppercase
-                                     tracking-widest text-amber-600">
-
-                                🌱 KATEGORI
-
-                            </span>
-
-                            <p class="text-sm font-black
-                                  text-amber-700 mt-0.5">
-
-                                {{ $item->kategori->kategori ?? '-' }}
 
                             </p>
 

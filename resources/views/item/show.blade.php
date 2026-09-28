@@ -30,8 +30,8 @@
                         style="display:grid;grid-template-columns:1fr 1.4fr;gap:.8rem;border-top:1px solid #E4E4D9;padding-top:1rem;">
                         <dt style="font-weight:800;color:#475569;">Kode Barang</dt>
                         <dd style="margin:0;">{{ $item->kode_barang }}</dd>
-                        <dt style="font-weight:800;color:#475569;">Harga Dasar</dt>
-                        <dd style="margin:0;">Rp {{ number_format($item['harga_dasar'], 0, ',', '.') }}</dd>
+                        <!-- <dt style="font-weight:800;color:#475569;">Harga Dasar</dt>
+                        <dd style="margin:0;">Rp {{ number_format($item['harga_dasar'], 0, ',', '.') }}</dd> -->
                         <dt style="font-weight:800;color:#475569;">Kategori</dt>
                         <dd style="margin:0;">{{ $item->kategori->kategori }}</dd>
                         <dt style="font-weight:800;color:#475569;">Satuan</dt>

@@ -89,11 +89,11 @@ class ItemController extends Controller
                 'min:0'
             ],
 
-            'harga_dasar' => [
-                'required',
-                'numeric',
-                'min:0'
-            ],
+            // 'harga_dasar' => [
+            //     'required',
+            //     'numeric',
+            //     'min:0'
+            // ],
 
             'deskripsi' => [
                 'nullable',
@@ -120,7 +120,7 @@ class ItemController extends Controller
 
             'stok_minimum.required' => 'Stok minimum wajib diisi.',
 
-            'harga_dasar.required' => 'Harga dasar wajib diisi.',
+            // 'harga_dasar.required' => 'Harga dasar wajib diisi.',
 
             'foto.image' => 'File foto harus berupa gambar.',
             'foto.max' => 'Ukuran foto maksimal 2MB.',
@@ -147,7 +147,7 @@ class ItemController extends Controller
 
             $item->stok_minimum = (int) $request->stok_minimum;
 
-            $item->harga_dasar = (float) $request->harga_dasar;
+            $item->harga_dasar = 0;
 
             $item->deskripsi = $request->deskripsi;
 
@@ -283,7 +283,7 @@ class ItemController extends Controller
                 Rule::exists('satuans', 'id')->where(fn($q) => $q->where('user_id', Auth::id())),
             ],
             'stok_minimum' => ['required', 'integer', 'min:0'],
-            'harga_dasar'  => ['required', 'numeric', 'min:0'],
+            // 'harga_dasar'  => ['required', 'numeric', 'min:0'],
             'deskripsi'    => ['nullable', 'string', 'max:500'],
             'foto'         => ['nullable', 'image', 'max:2048'],
         ];
@@ -297,7 +297,7 @@ class ItemController extends Controller
             'id_satuan.exists'      => 'Satuan tidak valid.',
 
             'stok_minimum.required' => 'Stok minimum wajib diisi.',
-            'harga_dasar.required'  => 'Harga dasar wajib diisi.',
+            // 'harga_dasar.required'  => 'Harga dasar wajib diisi.',
             'foto.image'            => 'File foto harus berupa gambar.',
             'foto.max'              => 'Ukuran foto maksimal 2MB.',
         ];
@@ -310,7 +310,7 @@ class ItemController extends Controller
             $item->id_satuan    = (int)$request->id_satuan;
 
             $item->stok_minimum = (int)$request->stok_minimum;
-            $item->harga_dasar  = (float)$request->harga_dasar;
+            $item->harga_dasar  = 0;
             $item->deskripsi    = $request->deskripsi;
 
             if ($request->hasFile('foto')) {
