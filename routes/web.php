@@ -163,13 +163,16 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
         Route::get('/api/form/item-detail/{kode}', [FormController::class, 'getItemDetail'])->name('form.item-detail');
         Route::post('/form/item/store', [FormController::class, 'store'])->name('form.item.store');
+        Route::post('/form/item/store-bulk', [FormController::class, 'itemStoreBulk'])->name('form.item.store-bulk');
         Route::post('/form/parse-voice', [FormController::class, 'parseVoice'])->name('form.parse-voice');
         Route::post('/form/barang-masuk/store', [FormController::class, 'barangMasukStore'])->name('form.barang-masuk.store');
+        Route::post('/form/barang-masuk/store-bulk', [FormController::class, 'barangMasukStoreBulk'])->name('form.barang-masuk.store-bulk');
         Route::post('/form/barang-masuk/parse-voice', [FormController::class, 'parseVoiceBarangMasuk'])->name('form.barang-masuk.parse-voice');
         Route::post('/form/barang-keluar/store', [FormController::class, 'barangKeluarStore'])->name('form.barang-keluar.store');
+        Route::post('/form/barang-keluar/store-bulk', [FormController::class, 'barangKeluarStoreBulk'])->name('form.barang-keluar.store-bulk');
         Route::post('/form/barang-keluar/parse-voice', [FormController::class, 'parseVoiceBarangKeluar'])->name('form.barang-keluar.parse-voice');
-        Route::post('/form/barang-keluar/detail-barang', [FormController::class, 'getDetailBarang'])->name('form.barang-keluar.detail-barang');
-        Route::post('/form/barang-keluar/pilihan-barang', [FormController::class, 'getPilihanBarang'])->name('form.barang-keluar.pilihan-barang');
+        Route::match(['get', 'post'], '/form/barang-keluar/detail-barang', [FormController::class, 'getDetailBarang'])->name('form.barang-keluar.detail-barang');
+        Route::match(['get', 'post'], '/form/barang-keluar/pilihan-barang', [FormController::class, 'getPilihanBarang'])->name('form.barang-keluar.pilihan-barang');
 
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);
