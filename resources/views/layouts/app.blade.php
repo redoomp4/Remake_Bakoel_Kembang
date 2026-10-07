@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery + Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
@@ -557,7 +561,103 @@
                 min-height: calc(100vh - 150px)
             }
         }
+
+        /* ===== SELECT2 CUSTOM THEME (Emerald) ===== */
+        .select2-container--default .select2-selection--single {
+            height: auto !important;
+            padding: 0.4rem 0.6rem;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            background: #fff !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: #0f172a;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #0B4F35 !important;
+            box-shadow: 0 0 0 4px rgba(11,79,53,.12) !important;
+            outline: none !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #0f172a;
+            font-weight: 600;
+            line-height: 1.4;
+            padding-left: 0;
+            padding-right: 22px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 0;
+            right: 8px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #0B4F35 transparent transparent transparent;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            border-color: transparent transparent #0B4F35 transparent;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__clear {
+            margin-right: 14px;
+            font-size: 1rem;
+            color: #ef4444;
+            font-weight: 800;
+        }
+        .select2-dropdown {
+            border: 2px solid #0B4F35 !important;
+            border-radius: 0.75rem !important;
+            box-shadow: 0 10px 28px rgba(11,79,53,.2) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            z-index: 99999 !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 0.5rem !important;
+            padding: 0.4rem 0.6rem !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.825rem;
+            font-weight: 600;
+            outline: none !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+            border-color: #0B4F35 !important;
+        }
+        .select2-results__option {
+            padding: 0.45rem 0.75rem !important;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #0B4F35 !important;
+        }    color: #fff !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #d1fae5 !important;
+            color: #064e3b !important;
+        }
+        .select2-container {
+            width: 100% !important;
+        }
+        /* Untuk bulk table agar Select2 full-width dalam cell */
+        #tbody-masuk-bulk .select2-container,
+        #tbody-keluar-bulk .select2-container {
+            width: 100% !important;
+            min-width: 220px;
+        }
     </style>
+
 </head>
 @if (Auth::check())
     <script>
@@ -599,7 +699,7 @@
     <main class="flex-grow flex flex-col lg:flex-row">
         @auth @include('partials.sidebar') @endauth
         {{-- <div class="page-shell flex-grow w-full p-4 md:p-8">@auth @include('partials.gaptek-assistant') @endauth --}}
-            @yield('content')</div>
+            @yield('content')
     </main>
     @include('partials.toast')
     @include('partials.footer')

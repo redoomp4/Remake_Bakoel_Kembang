@@ -1,65 +1,75 @@
 @extends('layouts.app')
 
-@if (session('success'))
-    <div class="mb-6 rounded-2xl border border-emerald-300 bg-emerald-100 p-4 text-sm font-bold text-emerald-800">
-        {{ session('success') }}
-    </div>
-@endif
-
-@if ($errors->any())
-    <div class="mb-6 rounded-2xl border border-rose-300 bg-rose-100 p-4 text-sm font-bold text-rose-800">
-        <p class="font-black mb-1">Gagal Menyimpan Data:</p>
-        <ul class="list-disc pl-5 space-y-1">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
 @section('content')
-    <div class="min-h-full bg-brand-offwhite">
-        <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div class="flex-1 w-full min-w-0 bg-brand-offwhite p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-full">
+
+            @if (session('success'))
+                <div class="mb-6 rounded-2xl border-2 border-emerald-300 bg-emerald-100 p-5 text-base font-bold text-emerald-900 shadow-sm flex items-center gap-3">
+                    <i class="fas fa-check-circle text-2xl text-emerald-700"></i>
+                    <div>{{ session('success') }}</div>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-6 rounded-2xl border-2 border-rose-300 bg-rose-100 p-5 text-base font-bold text-rose-900 shadow-sm flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-2xl text-rose-700"></i>
+                    <div>{{ session('error') }}</div>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-6 rounded-2xl border-2 border-rose-300 bg-rose-100 p-5 text-base font-bold text-rose-900 shadow-sm">
+                    <p class="font-black mb-2 flex items-center gap-2 text-lg text-rose-950">
+                        <i class="fas fa-times-circle text-rose-700"></i> Gagal Menyimpan Data:
+                    </p>
+                    <ul class="list-disc pl-6 space-y-1 text-sm font-semibold">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             {{-- Header --}}
             <header class="mb-8 flex flex-col gap-4 border-b border-brand-accent/60 pb-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="mb-2 text-xs font-black uppercase tracking-[0.2em] text-brand-slate">Operasional Gudang</p>
-                    <h1 class="text-3xl font-black tracking-tight text-brand-emerald">Form Transaksi</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-brand-slate">Input item baru, dan transaksi tanpa berpindah halaman.</p>
+                    <p class="mb-2 text-xs font-black uppercase tracking-[0.2em] text-brand-slate">Operasional Gudang & Kasir</p>
+                    <h1 class="text-3xl font-black tracking-tight text-brand-emerald">Form Transaksi & Input Massal</h1>
+                    <p class="mt-2 max-w-3xl text-sm leading-6 text-brand-slate">Input item baru, restock masuk, dan penjualan kasir baik satuan maupun massal tabel nota secara responsif dan praktis.</p>
                 </div>
-                <a href="{{ url()->previous() }}" class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-accent bg-white px-4 py-3 text-sm font-bold text-brand-slate shadow-sm transition hover:border-brand-emerald hover:text-brand-emerald">
+                <a href="{{ url()->previous() }}" class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-accent bg-white px-5 py-3 text-sm font-bold text-brand-slate shadow-sm transition hover:border-brand-emerald hover:text-brand-emerald">
                     <i class="fas fa-arrow-left" aria-hidden="true"></i><span>Kembali</span>
                 </a>
             </header>
 
             {{-- Tab Navigation --}}
-            <div class="mb-6 overflow-x-auto rounded-2xl border border-brand-accent bg-white p-2 shadow-sm" role="tablist">
+            <div class="mb-6 overflow-x-auto rounded-2xl border border-brand-accent bg-white p-2 shadow-sm w-full" role="tablist">
                 <div class="flex min-w-max gap-2">
-                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-emerald-600 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700" data-tab="item" role="tab" aria-selected="true">
+                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-emerald-600 bg-emerald-50 px-5 py-3.5 text-sm font-black text-emerald-700" data-tab="item" role="tab" aria-selected="true">
                         <i class="fas fa-box mr-2" aria-hidden="true"></i>Tambah Item Baru
                     </button>
-                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-brand-slate hover:bg-brand-offwhite" data-tab="masuk" role="tab" aria-selected="false">
+                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-transparent px-5 py-3.5 text-sm font-bold text-brand-slate hover:bg-brand-offwhite" data-tab="masuk" role="tab" aria-selected="false">
                         <i class="fas fa-arrow-down mr-2" aria-hidden="true"></i>Transaksi Masuk
                     </button>
-                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-transparent px-4 py-3 text-sm font-bold text-brand-slate hover:bg-brand-offwhite" data-tab="keluar" role="tab" aria-selected="false">
+                    <button type="button" class="oneshot-tab-btn rounded-xl border-b-2 border-transparent px-5 py-3.5 text-sm font-bold text-brand-slate hover:bg-brand-offwhite" data-tab="keluar" role="tab" aria-selected="false">
                         <i class="fas fa-arrow-up mr-2" aria-hidden="true"></i>Transaksi Keluar
                     </button>
                 </div>
             </div>
 
             {{-- Tab Contents --}}
-            <div id="tab-content-item" class="oneshot-tab-content">
+            <div id="tab-content-item" class="oneshot-tab-content w-full">
                 @include('form.partials.tab-item')
             </div>
-            <div id="tab-content-masuk" class="oneshot-tab-content hidden">
+            <div id="tab-content-masuk" class="oneshot-tab-content w-full hidden">
                 @include('form.partials.tab-masuk')
             </div>
-            <div id="tab-content-keluar" class="oneshot-tab-content hidden">
+            <div id="tab-content-keluar" class="oneshot-tab-content w-full hidden">
                 @include('form.partials.tab-keluar')
             </div>
 
-        </main>
+        </div>
     </div>
 
     {{-- ================================================================ --}}
@@ -478,24 +488,10 @@
             right: 0 !important;
         }
 
-        /* Main container sudah max-w-7xl, namun biarkan konten di dalamnya 100% */
-        main {
+        /* Container responsive styles */
+        .oneshot-container {
             width: 100% !important;
             max-width: 100% !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }
-        @media (min-width: 640px) {
-            main {
-                padding-left: 1.5rem !important;
-                padding-right: 1.5rem !important;
-            }
-        }
-        @media (min-width: 1024px) {
-            main {
-                padding-left: 2rem !important;
-                padding-right: 2rem !important;
-            }
         }
 
         /* Hilangkan overflow horizontal */
