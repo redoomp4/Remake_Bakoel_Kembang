@@ -134,6 +134,7 @@
     <!-- Footer -->
     @include('partials.footer')
 
+    @include('partials.image-compressor')
     @stack('scripts')
 </body>
 

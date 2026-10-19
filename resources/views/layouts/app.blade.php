@@ -634,14 +634,14 @@
             border-color: #0B4F35 !important;
         }
         .select2-results__option {
-            padding: 0.45rem 0.75rem !important;
-            font-size: 0.825rem;
+            padding: 0.6rem 0.85rem !important;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #1e293b;
         }
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
             background-color: #0B4F35 !important;
-        }    color: #fff !important;
+            color: #fff !important;
         }
         .select2-container--default .select2-results__option[aria-selected=true] {
             background-color: #d1fae5 !important;
@@ -654,7 +654,7 @@
         #tbody-masuk-bulk .select2-container,
         #tbody-keluar-bulk .select2-container {
             width: 100% !important;
-            min-width: 220px;
+            min-width: 240px;
         }
     </style>
 
@@ -704,6 +704,7 @@
     @include('partials.toast')
     @include('partials.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @include('partials.image-compressor')
     @stack('scripts')
 </body>
 
