@@ -34,7 +34,7 @@ class RegisteredUserController extends Controller
             'email'    => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
             'phone'    => ['required', 'string', 'max:30'],
             'role'     => ['nullable', 'string', 'in:penjual,superadmin'],
-            'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'note'     => ['nullable', 'string', 'max:500'],
             'password' => ['required', 'string', 'confirmed', 'min:8'],
         ], [

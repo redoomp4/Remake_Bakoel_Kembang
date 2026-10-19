@@ -68,7 +68,7 @@ class UserController extends Controller
             'position' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'status' => 'required|string|max:255',
-            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'note' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
@@ -113,7 +113,7 @@ class UserController extends Controller
             'status' => 'nullable|string|max:255',
             'note' => 'nullable|string',
             'is_active' => 'nullable|boolean',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|max:5120',
         ]);
 
 
