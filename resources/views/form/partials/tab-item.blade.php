@@ -135,7 +135,7 @@
                 <div class="form-group">
                     <label for="input-foto" class="form-label">Foto Item (Opsional)</label>
                     <input type="file" name="foto" id="input-foto" accept="image/*" class="form-control">
-                    <div class="form-hint">Format: JPG, PNG, WebP (Maks 2MB)</div>
+                    <div class="form-hint">Format: JPG, PNG, WebP — foto otomatis dioptimalkan saat dipilih</div>
                     @error('foto')
                         <p class="form-error">{{ $message }}</p>
                     @enderror

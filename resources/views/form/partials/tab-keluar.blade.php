@@ -3,12 +3,12 @@
     {{-- SWITCHER MODE INPUT (SATUAN vs MASSAL) --}}
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-emerald-200 bg-white p-3 shadow-sm">
         <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 font-black">
-                <i class="fas fa-cash-register text-lg"></i>
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 font-black">
+                <i class="fas fa-cash-register text-xl"></i>
             </span>
             <div>
-                <h3 class="text-base font-black text-emerald-950">Mode Transaksi Barang Keluar</h3>
-                <p class="text-xs text-slate-500">Pilih ingin catat 1 barang atau catat nota penjualan kasir banyak barang sekaligus</p>
+                <h3 class="text-base sm:text-lg font-black text-emerald-950">Mode Transaksi Barang Keluar</h3>
+                <p class="text-xs text-slate-500">Pilih catat satu transaksi pengeluaran atau nota kasir penjualan banyak barang</p>
             </div>
         </div>
         <div class="flex rounded-xl bg-slate-100 p-1">
@@ -27,15 +27,14 @@
     {{-- 1. MODE SATU PER SATU / SUARA --}}
     {{-- ======================================================== --}}
     <div id="container-keluar-single">
-        {{-- Voice Assistant --}}
-        <div class="voice-box">
+        {{-- Voice Assistant Ringkas --}}
+        <div class="voice-box mb-6">
             <div>
-                <div class="title">
-                    <i class="fas fa-robot"></i> Asisten Suara (Barang Keluar)
+                <div class="title text-base">
+                    <i class="fas fa-robot text-emerald-600"></i> Asisten Suara (Barang Keluar)
                 </div>
-                <div class="desc">
-                    Tekan tombol mic, lalu sebutkan transaksi barang keluar.<br>
-                    <em>Contoh:</em> "Keluar Mawar Merah 20 tangkai harga 15 ribu untuk Pelanggan Ani, transaksi Penjualan, ke Toko Cabang"
+                <div class="desc text-xs mt-1">
+                    Tekan mic & sebutkan transaksi (Contoh: <em>"Keluar Mawar Merah 20 tangkai harga 15 ribu untuk Bu Ani penjualan"</em>).
                 </div>
             </div>
             <button type="button" id="btn-voice-keluar" class="btn-voice">
@@ -43,104 +42,115 @@
                 <span id="voice-status-keluar">Mulai Bicara</span>
             </button>
             <div id="voice-transcript-keluar" class="voice-transcript">
-                <span class="label">Terdengar:</span> <span id="voice-text-keluar" class="italic">...</span>
+                <span class="label font-bold text-emerald-700">Terdengar:</span> <span id="voice-text-keluar" class="italic">...</span>
             </div>
         </div>
 
         {{-- Form Barang Keluar Satuan --}}
-        <form method="POST" action="{{ route('form.barang-keluar.store') }}" onsubmit="return confirmSimpanKeluar();" class="form-card">
+        <form method="POST" action="{{ route('form.barang-keluar.store') }}" onsubmit="return confirmSimpanKeluar();" class="form-card border border-slate-200 shadow-sm">
             @csrf
 
-            <div class="form-header">
-                <div class="icon-box">
-                    <i class="fas fa-arrow-up"></i>
+            <div class="form-header bg-slate-50 border-b border-slate-200 p-4 sm:p-5 flex items-center gap-3">
+                <div class="icon-box w-10 h-10 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-black">
+                    <i class="fas fa-arrow-up text-lg"></i>
                 </div>
                 <div>
-                    <h2>Informasi Barang Keluar (Satuan)</h2>
-                    <p>Pilih barang dan masukkan detail pengeluaran.</p>
+                    <h2 class="text-lg font-black text-emerald-950">Transaksi Barang Keluar (Satuan)</h2>
+                    <p class="text-xs text-slate-500">Pilih barang yang tersedia dan tentukan detail transaksi keluar.</p>
                 </div>
             </div>
 
-            <div class="form-body">
-                {{-- SELECT BARANG --}}
+            <div class="form-body p-5 sm:p-6 space-y-5">
+                {{-- PILIH BARANG TERSEDIA --}}
                 <div class="form-group">
-                    <label for="kode_lokasi_kondisi" class="form-label">Pilih Barang <span class="required">*</span></label>
-                    <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" required class="form-control">
-                        <option value="" disabled selected>-- Pilih Barang --</option>
+                    <label for="kode_lokasi_kondisi" class="block text-base font-black text-slate-800 mb-2">
+                        Pilih Bunga / Barang Tersedia <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" required class="select2 w-full text-base font-bold">
+                        <option value="" disabled selected>-- Memuat Pilihan Barang... --</option>
                     </select>
                     @error('kode_lokasi_kondisi')
-                        <p class="form-error">{{ $message }}</p>
+                        <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- HIDDEN INPUTS --}}
+                {{-- HIDDEN INPUTS (MENJAGA LOGIC CONTROLLER TETAP 100% AMAN) --}}
                 <input type="hidden" name="id_lokasi" id="id_lokasi">
                 <input type="hidden" name="id_kondisi" id="id_kondisi">
                 <input type="hidden" name="item_id" id="item_id">
+                <input type="hidden" id="harga_dasar" value="0">
 
-                {{-- INFORMASI BARANG (READONLY) --}}
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="nama_barang" class="form-label">Nama Barang</label>
-                        <input type="text" id="nama_barang" readonly class="form-control" placeholder="-">
+                {{-- INFORMASI BARANG TERPILIH (READONLY) - HARGA DASAR DIHAPUS DARI TAMPILAN SESUAI INSTRUKSI --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                        <label for="nama_barang" class="block text-xs font-black uppercase text-slate-500 mb-1">Nama Barang</label>
+                        <input type="text" id="nama_barang" readonly class="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-base font-black text-slate-900" placeholder="-">
                     </div>
-                    <div class="form-group">
-                        <label for="satuan" class="form-label">Satuan</label>
-                        <input type="text" id="satuan" readonly class="form-control" placeholder="-">
+                    <div>
+                        <label for="satuan" class="block text-xs font-black uppercase text-slate-500 mb-1">Satuan</label>
+                        <input type="text" id="satuan" readonly class="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-base font-black text-slate-900" placeholder="-">
                     </div>
-                    <div class="form-group">
-                        <label for="stok_tersedia" class="form-label">Stok Tersedia</label>
-                        <input type="text" id="stok_tersedia" readonly class="form-control" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="harga_dasar" class="form-label">Harga Rata-Rata</label>
-                        <input type="text" id="harga_dasar" readonly class="form-control" placeholder="0">
+                    <div>
+                        <label for="stok_tersedia" class="block text-xs font-black uppercase text-slate-500 mb-1">Stok Tersedia Saat Ini</label>
+                        <input type="text" id="stok_tersedia" readonly class="w-full rounded-xl border-2 border-emerald-400 bg-emerald-50 p-2.5 text-lg font-black text-emerald-950" placeholder="0">
                     </div>
                 </div>
 
                 {{-- JUMLAH + HARGA JUAL --}}
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="jumlah_keluar" class="form-label">Jumlah Keluar <span class="required">*</span></label>
-                        <input type="number" name="jumlah_keluar" id="jumlah_keluar" min="1" required class="form-control" placeholder="Contoh: 5">
-                        <p id="jumlah_warning" class="form-error"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="jumlah_keluar" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                            Jumlah Keluar <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" name="jumlah_keluar" id="jumlah_keluar" min="1" required
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-slate-900 bg-white"
+                            placeholder="Contoh: 5">
+                        <p id="jumlah_warning" class="text-xs font-bold text-rose-600 mt-1"></p>
                     </div>
-                    <div class="form-group">
-                        <label for="harga_jual" class="form-label">Harga Jual / Unit <span class="required">*</span></label>
-                        <input type="number" name="harga_jual" id="harga_jual" min="0" step="0.01" required class="form-control" placeholder="0">
+
+                    <div>
+                        <label for="harga_jual" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                            Harga Jual per Unit (Rp) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" name="harga_jual" id="harga_jual" min="0" step="100" required
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-emerald-900 bg-white"
+                            placeholder="0">
                     </div>
                 </div>
 
-                {{-- TOTAL NILAI --}}
-                <div class="form-group">
-                    <div class="total-box">
-                        <div>
-                            <p class="label">Total Nilai Barang</p>
-                            <p class="sub-label">Jumlah × Harga Jual</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <p style="color:#059669;font-size:.7rem;font-weight:800;margin:0;">TOTAL</p>
-                            <p id="total_harga_display" class="amount">Rp 0</p>
-                        </div>
+                {{-- TOTAL NILAI BARANG NOTA --}}
+                <div class="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-black uppercase text-emerald-800">Total Nilai Transaksi</p>
+                        <p class="text-xs text-slate-500">Jumlah Keluar × Harga Jual</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="total_harga_display" class="text-2xl sm:text-3xl font-black text-emerald-950">Rp 0</p>
                     </div>
                     <input type="hidden" id="total_harga_jual" name="total_harga_jual" value="0">
                 </div>
 
                 {{-- PENERIMA + JENIS TRANSAKSI + LOKASI TUJUAN --}}
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label for="penerima" class="form-label">Penerima <span class="required">*</span></label>
-                        <input type="text" name="penerima" id="penerima" value="{{ old('penerima') }}" required class="form-control" placeholder="Nama penerima">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="penerima" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                            Nama Pembeli / Penerima <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="penerima" id="penerima" value="{{ old('penerima', 'Pelanggan Langsung') }}" required
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
+                            placeholder="Contoh: Ibu Rina / Pembeli">
                         @error('penerima')
-                            <p class="form-error">{{ $message }}</p>
+                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="jenis_transaksi" class="form-label">Jenis Transaksi <span class="required">*</span></label>
-                        <select name="jenis_transaksi" id="jenis_transaksi" required class="form-control">
-                            <option value="" disabled {{ old('jenis_transaksi') ? '' : 'selected' }}>-- Pilih Jenis Transaksi --</option>
-                            <option value="Penjualan" {{ old('jenis_transaksi') == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
+                    <div>
+                        <label for="jenis_transaksi" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                            Jenis Transaksi <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="jenis_transaksi" id="jenis_transaksi" required
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white">
+                            <option value="Penjualan" {{ old('jenis_transaksi', 'Penjualan') == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
                             <option value="Donasi" {{ old('jenis_transaksi') == 'Donasi' ? 'selected' : '' }}>Donasi</option>
                             <option value="Pemakaian Internal" {{ old('jenis_transaksi') == 'Pemakaian Internal' ? 'selected' : '' }}>Pemakaian Internal</option>
                             <option value="Pemindahan Barang" {{ old('jenis_transaksi') == 'Pemindahan Barang' ? 'selected' : '' }}>Pemindahan Barang</option>
@@ -149,32 +159,38 @@
                             <option value="Lainnya" {{ old('jenis_transaksi') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('jenis_transaksi')
-                            <p class="form-error">{{ $message }}</p>
+                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="lokasi_tujuan" class="form-label">Lokasi Tujuan <span class="required">*</span></label>
-                        <input type="text" name="lokasi_tujuan" id="lokasi_tujuan" value="{{ old('lokasi_tujuan') }}" required class="form-control" placeholder="Contoh: Toko Cabang / Pelanggan">
+                    <div>
+                        <label for="lokasi_tujuan" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                            Tujuan / Kirim Ke <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="lokasi_tujuan" id="lokasi_tujuan" value="{{ old('lokasi_tujuan', 'Pelanggan Langsung') }}" required
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
+                            placeholder="Contoh: Toko Cabang / Pelanggan">
                         @error('lokasi_tujuan')
-                            <p class="form-error">{{ $message }}</p>
+                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 {{-- CATATAN --}}
-                <div class="form-group" style="margin-bottom:0;">
-                    <label for="catatan" class="form-label">Catatan</label>
-                    <textarea name="catatan" id="catatan" rows="3" maxlength="255" class="form-control" placeholder="Contoh: Penerimaan Penjualan, Penghapusan, Retur...">{{ old('catatan') }}</textarea>
-                    @error('catatan')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
+                <div>
+                    <label for="catatan" class="block text-sm font-black uppercase text-slate-700 mb-1">
+                        Catatan Transaksi <span class="text-xs text-slate-400 font-normal lowercase">(opsional)</span>
+                    </label>
+                    <input type="text" name="catatan" id="catatan" maxlength="255"
+                        placeholder="Catatan kasir, pesanan khusus, atau keterangan..."
+                        value="{{ old('catatan') }}"
+                        class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base text-slate-800 bg-white">
                 </div>
             </div>
 
-            <div class="form-footer">
-                <button type="submit" id="submitBtn" class="btn-submit text-base py-3 px-6">
-                    <i class="fas fa-save text-lg"></i> Simpan Barang Keluar
+            <div class="form-footer bg-slate-50 border-t border-slate-200 p-4 sm:p-5 flex justify-end">
+                <button type="submit" id="submitBtn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white px-8 py-3.5 text-base font-black shadow-md transition">
+                    <i class="fas fa-save text-lg"></i> Simpan Transaksi Keluar
                 </button>
             </div>
         </form>
@@ -184,12 +200,12 @@
     {{-- 2. MODE INPUT MASSAL (KASIR / NOTA PENJUALAN SPREADSHEET) --}}
     {{-- ======================================================== --}}
     <div id="container-keluar-bulk" class="hidden">
-        <form id="form-keluar-bulk" action="{{ route('form.barang-keluar.store-bulk') }}" method="POST" class="form-card">
+        <form id="form-keluar-bulk" action="{{ route('form.barang-keluar.store-bulk') }}" method="POST" class="form-card border border-slate-200 shadow-sm">
             @csrf
 
             {{-- HEADER NOTA PENJUALAN / KASIR --}}
-            <div class="border-b-2 border-emerald-200 bg-emerald-50/80 p-5 sm:p-6">
-                <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="border-b-2 border-emerald-300 bg-[#fbfdfa] p-5 sm:p-6">
+                <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-200 pb-3">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-200 px-3 py-1 text-xs font-black text-emerald-900 mb-1">
                             <i class="fas fa-cash-register"></i> Kasir Nota Penjualan
@@ -204,23 +220,23 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                     {{-- Tanggal Keluar --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-600 mb-1">Tanggal Transaksi <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Tanggal Transaksi <span class="text-rose-500">*</span></label>
                         <input type="date" name="tanggal_keluar" value="{{ date('Y-m-d') }}" required
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-base font-bold text-slate-900 bg-white">
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
                     </div>
 
                     {{-- Nama Pembeli / Penerima --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-600 mb-1">Nama Pembeli / Penerima <span class="text-rose-500">*</span></label>
-                        <input type="text" name="penerima" required value="Pelanggan Toko" placeholder="Contoh: Ibu Rina / Pelanggan"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-base font-bold text-slate-900 bg-white">
+                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Nama Pembeli <span class="text-rose-500">*</span></label>
+                        <input type="text" name="penerima" required value="Pelanggan Toko" placeholder="Nama pembeli"
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
                     </div>
 
                     {{-- Jenis Transaksi --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-600 mb-1">Jenis Transaksi <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Jenis Transaksi <span class="text-rose-500">*</span></label>
                         <select name="jenis_transaksi" required
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-base font-bold text-slate-900 bg-white">
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
                             <option value="Penjualan" selected>Penjualan</option>
                             <option value="Donasi">Donasi</option>
                             <option value="Pemakaian Internal">Pemakaian Internal</option>
@@ -233,43 +249,43 @@
 
                     {{-- Lokasi Tujuan --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-600 mb-1">Tujuan / Kirim Ke <span class="text-rose-500">*</span></label>
-                        <input type="text" name="lokasi_tujuan" required value="Pelanggan Langsung" placeholder="Contoh: Pelanggan / Toko Cabang"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-base font-bold text-slate-900 bg-white">
+                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Tujuan / Kirim Ke <span class="text-rose-500">*</span></label>
+                        <input type="text" name="lokasi_tujuan" required value="Pelanggan Langsung" placeholder="Tujuan pengiriman"
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
                     </div>
 
                     {{-- Catatan Nota --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-600 mb-1">Catatan Nota (Opsional)</label>
+                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Catatan Nota (Opsional)</label>
                         <input type="text" name="catatan" placeholder="Catatan kasir / nomor nota"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-base font-bold text-slate-900 bg-white">
+                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base text-slate-800 bg-white">
                     </div>
                 </div>
             </div>
 
             {{-- TABEL RINCIAN KASIR --}}
-            <div class="p-4 sm:p-6">
-                <div class="flex items-center justify-between gap-4 mb-3">
-                    <h3 class="text-base sm:text-lg font-black text-emerald-950">
-                        <i class="fas fa-shopping-cart mr-1 text-emerald-600"></i> Daftar Barang yang Dijual / Dikeluarkan
+            <div class="p-4 sm:p-6 bg-white">
+                <div class="flex items-center justify-between gap-4 mb-4">
+                    <h3 class="text-base sm:text-lg font-black text-emerald-950 flex items-center gap-2">
+                        <i class="fas fa-shopping-cart text-emerald-700"></i> Daftar Barang yang Dijual / Dikeluarkan
                     </h3>
                     <button type="button" onclick="addKeluarRow()"
-                        class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 text-sm font-black shadow transition">
-                        <i class="fas fa-plus-circle text-base"></i> + Tambah Baris Kasir
+                        class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 text-sm font-black shadow transition">
+                        <i class="fas fa-plus text-sm"></i> + Tambah Baris Kasir
                     </button>
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border-2 border-emerald-100 bg-white">
-                    <table class="w-full text-left border-collapse min-w-[800px]" id="table-keluar-bulk">
+                <div class="overflow-x-auto rounded-2xl border-2 border-emerald-200 bg-white shadow-sm">
+                    <table class="w-full text-left border-collapse min-w-[850px]" id="table-keluar-bulk">
                         <thead>
                             <tr class="bg-emerald-900 text-white text-sm font-black uppercase tracking-wider">
-                                <th class="py-3.5 px-4 text-center w-12">No</th>
-                                <th class="py-3.5 px-4 min-w-[260px]">Pilih Bunga / Barang <span class="text-rose-300">*</span></th>
-                                <th class="py-3.5 px-4 w-32 text-center">Sisa Stok</th>
-                                <th class="py-3.5 px-4 w-36 text-center">Qty Jual <span class="text-rose-300">*</span></th>
-                                <th class="py-3.5 px-4 w-44 text-right">Harga Jual (Rp) <span class="text-rose-300">*</span></th>
+                                <th class="py-3.5 px-3 text-center w-12">No</th>
+                                <th class="py-3.5 px-4 min-w-[320px]">Pilih Bunga / Barang <span class="text-rose-300">*</span></th>
+                                <th class="py-3.5 px-3 w-32 text-center">Sisa Stok</th>
+                                <th class="py-3.5 px-3 w-36 text-center">Qty Jual <span class="text-rose-300">*</span></th>
+                                <th class="py-3.5 px-4 w-48 text-right">Harga Jual (Rp) <span class="text-rose-300">*</span></th>
                                 <th class="py-3.5 px-4 w-48 text-right">Subtotal (Rp)</th>
-                                <th class="py-3.5 px-3 text-center w-14">Hapus</th>
+                                <th class="py-3.5 px-2 text-center w-14">Hapus</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-keluar-bulk" class="divide-y divide-slate-200 text-slate-800">
@@ -281,24 +297,24 @@
                 {{-- PETUNJUK & QUICK BUTTON --}}
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
                     <p class="text-xs text-slate-500 italic">
-                        <i class="fas fa-info-circle text-emerald-600"></i> Sistem otomatis mengecek kecukupan stok saat Anda memilih barang dan mengetik jumlah.
+                        <i class="fas fa-info-circle text-emerald-600"></i> Sistem otomatis memvalidasi ketersediaan stok saat memilih barang dan mengisi jumlah.
                     </p>
                     <button type="button" onclick="addKeluarRow()"
-                        class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 text-sm font-black text-emerald-800 transition">
+                        class="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-5 py-2.5 text-sm font-black text-emerald-900 transition">
                         <i class="fas fa-plus"></i> + Tambah Baris Baru
                     </button>
                 </div>
             </div>
 
             {{-- FOOTER TOTAL & TOMBOL SIMPAN --}}
-            <div class="form-footer flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-slate-50 border-t-2 border-slate-200">
+            <div class="form-footer flex flex-col sm:flex-row items-center justify-between gap-6 p-5 sm:p-6 bg-slate-50 border-t-2 border-slate-200">
                 <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-start">
-                    <div class="bg-emerald-100/90 border border-emerald-300 px-5 py-3 rounded-2xl">
-                        <p class="text-xs font-black uppercase text-emerald-800">TOTAL PENJUALAN NOTA</p>
+                    <div class="bg-emerald-100/90 border border-emerald-300 px-5 py-3 rounded-2xl shadow-sm">
+                        <p class="text-xs font-black uppercase text-emerald-800 tracking-wider">TOTAL PENJUALAN NOTA</p>
                         <p id="keluar-bulk-grand-total" class="text-2xl sm:text-3xl font-black text-emerald-950">Rp 0</p>
                     </div>
                     <div class="text-sm font-bold text-slate-600">
-                        Total: <span id="keluar-bulk-total-qty" class="font-black text-emerald-800 text-lg">0</span> item keluar
+                        Total Qty: <span id="keluar-bulk-total-qty" class="font-black text-emerald-800 text-xl">0</span> unit keluar
                     </div>
                 </div>
                 <button type="submit" id="btn-submit-keluar-bulk" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-2xl bg-emerald-800 hover:bg-emerald-900 text-white px-8 py-4 text-lg font-black shadow-lg shadow-emerald-900/20 transition-all transform active:scale-95">
@@ -310,7 +326,6 @@
 
     {{-- SCRIPT JAVASCRIPT KHUSUS BARANG KELUAR --}}
     <script>
-        // Data Items Keluar dari Server dengan dynamic stock
         const ALL_ITEMS_KELUAR = @json($itemsJson ?? []);
         let PILIHAN_BARANG_KELUAR = @json($barangKeluarItemsJson ?? []);
 
@@ -332,7 +347,6 @@
                 if (document.getElementById('tbody-keluar-bulk').children.length === 0) {
                     for (let i = 0; i < 3; i++) addKeluarRow();
                 } else {
-                    // Trigger resize untuk Select2 agar fit container
                     if (window.jQuery) $(window).trigger('resize');
                 }
             } else {
@@ -343,6 +357,8 @@
 
                 contBulk.classList.add('hidden');
                 contSingle.classList.remove('hidden');
+
+                if (window.jQuery) $(window).trigger('resize');
             }
         }
 
@@ -353,7 +369,7 @@
             if (!selectEl || !window.jQuery || !$.fn.select2) return;
 
             $(selectEl).select2({
-                placeholder: '🔍 Cari / Pilih Barang Tersedia...',
+                placeholder: '🔍 Cari / Pilih Bunga Tersedia...',
                 allowClear: true,
                 width: '100%',
                 dropdownParent: $('body'),
@@ -395,9 +411,9 @@
 
             tr.innerHTML = `
                 <td class="py-3 px-3 text-center font-black text-slate-400 row-number text-base"></td>
-                <td class="py-3 px-3" style="min-width:180px; max-width:280px;">
+                <td class="py-3 px-4" style="min-width:300px">
                     <select name="rows[${idx}][kode_lokasi_kondisi]" required
-                        class="w-full select-keluar-item">
+                        class="w-full select-keluar-item text-base">
                         ${itemOptionsHtml}
                     </select>
                     <input type="hidden" name="rows[${idx}][item_id]" id="input-item-id-${idx}">
@@ -412,15 +428,15 @@
                 <td class="py-3 px-3 text-center">
                     <input type="number" name="rows[${idx}][jumlah_keluar]" min="1" value="1" required
                         oninput="calcKeluarRow(${idx})"
-                        class="w-28 mx-auto text-center rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-lg font-black text-slate-900 bg-white input-qty-keluar">
+                        class="w-28 mx-auto text-center rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2 text-lg font-black text-slate-900 bg-white input-qty-keluar">
                     <p id="warning-keluar-${idx}" class="text-xs font-bold text-rose-600 mt-1 hidden"></p>
                 </td>
-                <td class="py-3 px-3 text-right">
+                <td class="py-3 px-4 text-right">
                     <input type="number" name="rows[${idx}][harga_jual]" min="0" step="100" value="0" required
                         oninput="calcKeluarRow(${idx})" 
-                        class="w-full text-right rounded-xl border-2 border-slate-300 focus:border-emerald-600 p-2.5 text-lg font-black text-emerald-900 bg-white">
+                        class="w-full text-right rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2 text-lg font-black text-emerald-900 bg-white">
                 </td>
-                <td class="py-3 px-3 text-right">
+                <td class="py-3 px-4 text-right">
                     <span id="subtotal-keluar-${idx}" class="text-base font-black text-emerald-950">Rp 0</span>
                 </td>
                 <td class="py-3 px-2 text-center">
@@ -433,7 +449,6 @@
             `;
 
             tbody.appendChild(tr);
-            // Inisialisasi Select2 pada baris baru
             initKeluarRowSelect2(idx);
             reindexKeluarRows();
             calcKeluarGrandTotal();
@@ -541,13 +556,13 @@
             if (hasItem) {
                 if (stok <= 0) {
                     if (warningP) {
-                        warningP.textContent = `Stok barang kosong (0)!`;
+                        warningP.textContent = `Stok kosong (0)!`;
                         warningP.classList.remove('hidden');
                     }
                     qtyInput?.classList.add('border-rose-500', 'bg-rose-50');
                 } else if (qty > stok) {
                     if (warningP) {
-                        warningP.textContent = `Jumlah melebihi stok (${stok})!`;
+                        warningP.textContent = `Melebihi stok (${stok})!`;
                         warningP.classList.remove('hidden');
                     }
                     qtyInput?.classList.add('border-rose-500', 'bg-rose-50');
@@ -568,7 +583,6 @@
             let grandTotal = 0;
             let totalQty = 0;
             let hasAnyError = false;
-            let validCount = 0;
 
             rows.forEach(r => {
                 const qtyInput   = r.querySelector('input[name*="[jumlah_keluar]"]');
@@ -577,7 +591,6 @@
                 const stokBadge  = r.querySelector('[id^="stok-tersedia-badge-"]');
 
                 if (itemSelect && itemSelect.value) {
-                    validCount++;
                     const qty   = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
                     const harga = hargaInput ? (parseFloat(hargaInput.value) || 0) : 0;
                     const stok  = stokBadge && stokBadge.dataset.stok !== undefined ? parseInt(stokBadge.dataset.stok) : 0;
@@ -601,20 +614,17 @@
                 badge.textContent = totalQty;
             }
 
-            // Real-time disable tombol Submit jika ada error stok
             const submitBtn = document.getElementById('btn-submit-keluar-bulk');
             if (submitBtn) {
+                submitBtn.disabled = hasAnyError;
                 if (hasAnyError) {
-                    submitBtn.disabled = true;
                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
-                    submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
         }
 
-        // Form submit validation for bulk
         document.getElementById('form-keluar-bulk')?.addEventListener('submit', function(e) {
             const rows = document.querySelectorAll('#tbody-keluar-bulk tr');
             let hasError = false;
@@ -653,12 +663,11 @@
             }
         });
 
-        // Voice Assistant & Single Mode Handler
+        // Handler untuk Single Mode & Voice
         (function() {
             let mediaRecorder = null;
             let audioChunks = [];
             let isRecording = false;
-
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             function num(value) {
@@ -745,7 +754,7 @@
 
             async function sendAudioToAI(blob) {
                 const formData = new FormData();
-                formData.append('audio', blob, 'recording.webm');
+                formData.append('audio', blob, 'recording_keluar.webm');
 
                 try {
                     const response = await fetch("{{ route('form.barang-keluar.parse-voice') }}", {
@@ -805,7 +814,7 @@
                         return;
                     }
 
-                    select.innerHTML = '<option value="" disabled selected>-- Pilih Barang Tersedia --</option>';
+                    select.innerHTML = '<option value="" disabled selected>-- Cari / Pilih Bunga Tersedia --</option>';
 
                     data.forEach(item => {
                         const option = document.createElement('option');
@@ -825,7 +834,7 @@
 
                     if (window.jQuery && $.fn.select2) {
                         $(select).select2({
-                            placeholder: '-- Pilih Barang Tersedia --',
+                            placeholder: '🔍 Cari / Pilih Bunga Tersedia...',
                             allowClear: true,
                             width: '100%',
                             language: {
@@ -870,7 +879,8 @@
                     document.getElementById('nama_barang').value = data.nama_barang ?? '';
                     document.getElementById('satuan').value = data.satuan ?? '';
                     document.getElementById('stok_tersedia').value = num(data.stok);
-                    document.getElementById('harga_dasar').value = hargaItem;
+                    const hargaDasarEl = document.getElementById('harga_dasar');
+                    if (hargaDasarEl) hargaDasarEl.value = hargaItem;
 
                     const hargaJualInput = document.getElementById('harga_jual');
                     if (hargaJualInput && (!hargaJualInput.value || hargaJualInput.value == 0)) {
@@ -993,7 +1003,8 @@
                         document.getElementById('stok_tersedia').value = num(option.dataset.stok);
 
                         const hargaDefault = num(option.dataset.harga);
-                        document.getElementById('harga_dasar').value = hargaDefault;
+                        const hargaDasarEl = document.getElementById('harga_dasar');
+                        if (hargaDasarEl) hargaDasarEl.value = hargaDefault;
 
                         const hargaJualInput = document.getElementById('harga_jual');
                         if (hargaJualInput && (!hargaJualInput.value || hargaJualInput.value == 0)) {

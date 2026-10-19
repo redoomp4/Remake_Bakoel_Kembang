@@ -161,14 +161,14 @@ class FormController extends Controller
             'stok_minimum'   => ['required', 'integer', 'min:0'],
             'harga_dasar'    => ['required', 'numeric', 'min:0'],
             'deskripsi'      => ['nullable', 'string', 'max:500'],
-            'foto'           => ['nullable', 'image', 'max:2048'],
+            'foto'           => ['nullable', 'image', 'max:5120'],
         ], [
             'nama_barang.required'    => 'Nama barang wajib diisi.',
             'nama_barang.unique'      => 'Nama barang sudah digunakan.',
             'kategori_input.required' => 'Kategori wajib diisi atau dipilih.',
             'satuan_input.required'   => 'Satuan wajib diisi atau dipilih.',
             'foto.image'              => 'File foto harus berupa gambar.',
-            'foto.max'                => 'Ukuran foto maksimal 2MB.',
+            'foto.max'                => 'Ukuran foto maksimal 5MB.',
         ]);
 
         try {
@@ -252,6 +252,108 @@ class FormController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'System Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * AJAX Quick Store Item (Bunga/Item Baru Langsung dari Form Barang Masuk)
+     */
+    public function quickStoreItem(Request $request)
+    {
+        $userId = Auth::id();
+        $namaItem = trim((string) $request->input('nama_item', $request->input('nama_barang', '')));
+
+        if (empty($namaItem)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Nama bunga / item barang wajib diisi.'
+            ], 422);
+        }
+
+        try {
+            // Cek apakah item sudah terdaftar untuk user ini (case-insensitive)
+            $existing = Item::with('satuan')
+                ->where('user_id', $userId)
+                ->whereRaw('LOWER(nama_barang) = ?', [mb_strtolower($namaItem)])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'Barang sudah ada di katalog, langsung dipilih.',
+                    'item'    => [
+                        'id'          => $existing->id,
+                        'nama_item'   => $existing->nama_barang,
+                        'kode_barang' => $existing->kode_barang,
+                        'satuan'      => optional($existing->satuan)->nama_satuan ?? 'Pcs',
+                        'harga_dasar' => (float) $existing->harga_dasar,
+                        'stok'        => (int) $existing->total_stok,
+                    ]
+                ]);
+            }
+
+            // Kategori default jika tidak dikirim
+            $kategoriInput = trim((string) ($request->kategori_input ?? $request->kategori ?? 'Bunga & Tanaman'));
+            if (empty($kategoriInput)) {
+                $kategoriInput = 'Bunga & Tanaman';
+            }
+            $kategori = Kategori::firstOrCreate(
+                ['user_id' => $userId, 'kategori' => $kategoriInput],
+                ['deskripsi' => 'Dibuat otomatis dari Form Barang Masuk']
+            );
+
+            // Satuan (Tangkai, Pot, Pcs, dll)
+            $satuanInput = trim((string) ($request->satuan_input ?? $request->satuan ?? $request->nama_satuan ?? 'Tangkai'));
+            if (empty($satuanInput)) {
+                $satuanInput = 'Tangkai';
+            }
+            $satuan = Satuan::firstOrCreate(
+                ['user_id' => $userId, 'nama_satuan' => $satuanInput]
+            );
+
+            // Simpan Item Baru
+            $item = new Item();
+            $item->user_id      = $userId;
+            $item->kode_barang  = Item::generateKodeBarang();
+            $item->public_token = (string) Str::uuid();
+            $item->nama_barang  = $namaItem;
+            $item->id_kategori  = $kategori->id;
+            $item->id_satuan    = $satuan->id;
+            $item->stok_minimum = 0;
+            $item->harga_dasar  = 0;
+            $item->save();
+
+            // Generate QR Code Item
+            try {
+                Storage::disk('public')->makeDirectory('qrcodes/items');
+                $qrLink = route('item.public', ['public_token' => $item->public_token]);
+                $filename = 'qr_item_' . $item->public_token . '.svg';
+                $relativePath = 'qrcodes/items/' . $filename;
+                $qr = QrCode::format('svg')->size(300)->margin(2)->generate($qrLink);
+                Storage::disk('public')->put($relativePath, $qr);
+                $item->update(['qr_code' => $relativePath]);
+            } catch (\Throwable $qrEx) {
+                Log::warning('QuickStoreItem QR Code warning: ' . $qrEx->getMessage());
+            }
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Item ' . $item->nama_barang . ' berhasil didaftarkan!',
+                'item'    => [
+                    'id'          => $item->id,
+                    'nama_item'   => $item->nama_barang,
+                    'kode_barang' => $item->kode_barang,
+                    'satuan'      => $satuan->nama_satuan,
+                    'harga_dasar' => 0,
+                    'stok'        => 0,
+                ]
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('QuickStoreItem Error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Gagal mendaftarkan item: ' . $e->getMessage()
+            ], 500);
         }
     }
 
