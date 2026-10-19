@@ -40,7 +40,7 @@ class ProfileController extends Controller
             'phone'     => 'required|string|max:20',
             'position'  => 'required|string|max:255',
             'note'      => 'nullable|string',
-            'photo'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'photo'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
 
 
             // Tambahan validasi password

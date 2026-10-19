@@ -82,7 +82,7 @@
 
                     <div class="col-6">
                         <label class="form-label d-block">Foto (optional)</label>
-                        <input name="photo" type="file" class="form-control">
+                        <input name="photo" type="file" accept="image/*" class="form-control">
                         <small class="text-muted">Biarkan kosong jika tidak mengganti.</small>
                     </div>
 

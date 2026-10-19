@@ -164,6 +164,8 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/api/form/item-detail/{kode}', [FormController::class, 'getItemDetail'])->name('form.item-detail');
         Route::post('/form/item/store', [FormController::class, 'store'])->name('form.item.store');
         Route::post('/form/item/store-bulk', [FormController::class, 'itemStoreBulk'])->name('form.item.store-bulk');
+        Route::post('/items/quick-store', [FormController::class, 'quickStoreItem'])->name('items.quick-store');
+        Route::post('/form/item/quick-store', [FormController::class, 'quickStoreItem'])->name('form.item.quick-store');
         Route::post('/form/parse-voice', [FormController::class, 'parseVoice'])->name('form.parse-voice');
         Route::post('/form/barang-masuk/store', [FormController::class, 'barangMasukStore'])->name('form.barang-masuk.store');
         Route::post('/form/barang-masuk/store-bulk', [FormController::class, 'barangMasukStoreBulk'])->name('form.barang-masuk.store-bulk');
