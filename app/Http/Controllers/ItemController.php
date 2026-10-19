@@ -104,7 +104,7 @@ class ItemController extends Controller
             'foto' => [
                 'nullable',
                 'image',
-                'max:2048'
+                'max:5120'
             ],
         ];
 
@@ -123,7 +123,7 @@ class ItemController extends Controller
             // 'harga_dasar.required' => 'Harga dasar wajib diisi.',
 
             'foto.image' => 'File foto harus berupa gambar.',
-            'foto.max' => 'Ukuran foto maksimal 2MB.',
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
         ];
 
         $request->validate($rules, $messages);
@@ -285,7 +285,7 @@ class ItemController extends Controller
             'stok_minimum' => ['required', 'integer', 'min:0'],
             // 'harga_dasar'  => ['required', 'numeric', 'min:0'],
             'deskripsi'    => ['nullable', 'string', 'max:500'],
-            'foto'         => ['nullable', 'image', 'max:2048'],
+            'foto'         => ['nullable', 'image', 'max:5120'],
         ];
 
         $messages = [
@@ -299,7 +299,7 @@ class ItemController extends Controller
             'stok_minimum.required' => 'Stok minimum wajib diisi.',
             // 'harga_dasar.required'  => 'Harga dasar wajib diisi.',
             'foto.image'            => 'File foto harus berupa gambar.',
-            'foto.max'              => 'Ukuran foto maksimal 2MB.',
+            'foto.max'              => 'Ukuran foto maksimal 5MB.',
         ];
 
         $request->validate($rules, $messages);

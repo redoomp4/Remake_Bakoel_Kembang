@@ -444,7 +444,7 @@
                 {{-- FOTO --}}
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="foto" class="form-label">Foto Barang</label>
-                    <input type="file" id="foto" name="foto" class="form-control">
+                    <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
                     @error('foto')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
