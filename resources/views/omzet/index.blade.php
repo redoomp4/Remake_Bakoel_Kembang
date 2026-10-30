@@ -1,304 +1,337 @@
 @extends('layouts.app')
 
-
-
+@push('styles')
+    @include('reports.partials.accordion-style')
+@endpush
 
 @section('content')
-<style>
-    .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
-
-    .header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-
-
-
-    /* Filter Form */
-    .filter-form {
-        background-color: #f9fafb;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: flex-end;
-    }
-    .filter-form .form-group {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-width: 160px;
-    }
-    .filter-form label {
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 4px;
-    }
-    .filter-form input,
-    .filter-form select {
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-
-
-
-
-    /* Tombol */
-    .filter-form .action-group {
-        display: flex;
-        flex-direction: row;
-        gap: 10px;
-        flex-shrink: 0;
-    }
-    .filter-form button {
-        padding: 8px 16px;
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-    .filter-form button:hover { background-color: #2563eb; }
-    .back-button {
-        padding: 8px 14px;
-        background-color: #e5e7eb;
-        color: #111827;
-        border-radius: 6px;
-        font-size: 14px;
-        text-decoration: none;
-        transition: background 0.2s ease;
-        text-align: center;
-    }
-    .back-button:hover { background-color: #d1d5db; }
-
-
-
-
-    /* Export */
-    .export-buttons { margin-bottom: 20px; }
-    .export-buttons a {
-        padding: 8px 12px;
-        background-color: #2563eb;
-        color: #fff;
-        border-radius: 6px;
-        margin-right: 10px;
-        text-decoration: none;
-        font-size: 14px;
-    }
-    .export-buttons a:hover { background-color: #1d4ed8; }
-
-
-
-
-    /* Table */
-    .table-wrapper { overflow-x: auto; }
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-        min-width: 900px;
-    }
-    th, td {
-        padding: 12px;
-        background-color: white;
-        text-align: center;
-    }
-    th {
-        background-color: #f3f4f6;
-        font-weight: 600;
-        border-bottom: 1px solid #ddd;
-    }
-    th a { color: inherit; text-decoration: none; }
-    th a:hover { text-decoration: underline; }
-    tr { box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05); border-radius: 8px; }
-    .total-row { background-color: yellow; font-weight: bold; }
-
-
-
-
-    /* Responsif */
-    @media(max-width: 768px) {
-        .filter-form { flex-direction: column; gap: 12px; align-items: stretch; }
-        .filter-form .form-group,
-        .filter-form .action-group { width: 100%; }
-        .filter-form .action-group { flex-direction: column; }
-        .filter-form .action-group .back-button,
-        .filter-form .action-group button { width: 100%; }
-        .container-laporan { padding: 15px 10px; }
-    }
-    :root{--emerald:#059669;--emerald-dark:#065f46;--emerald-soft:#ecfdf5;--slate:#1e293b;--border:#e2e8f0} body{background:#f7faf8;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}.container{max-width:1280px!important;padding:2rem 1.25rem 3rem}.header{background:#fff;border:1px solid var(--border);border-radius:1.25rem;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.header h4{color:var(--emerald-dark);font-weight:900;font-size:1.75rem;margin:0}.filter-form{background:#fff!important;border:1px solid var(--border)!important;border-radius:1.25rem!important;padding:1.5rem!important;box-shadow:0 2px 8px rgba(15,23,42,.05)}.filter-form label{font-size:.7rem;font-weight:900;text-transform:uppercase;color:#64748b;letter-spacing:.05em}.filter-form input,.filter-form select{border:1px solid #cbd5e1;border-radius:.75rem;padding:.75rem}.filter-form button{background:var(--emerald)!important;border-radius:.75rem}.back-button{border-radius:.75rem}.export-buttons{display:flex;flex-wrap:wrap;gap:.75rem}.export-buttons a{margin:0;background:var(--emerald)!important;border-radius:.75rem;font-weight:800}.widget-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.5rem 0}.widget{background:#fff;border:1px solid var(--border);border-radius:1.25rem;padding:1.25rem;box-shadow:0 2px 8px rgba(15,23,42,.05)}.widget-kicker{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#64748b}.widget-value{font-size:clamp(1.5rem,3vw,2rem);font-weight:900;color:var(--emerald-dark);margin:.5rem 0}.widget-sub{font-size:.85rem;color:#64748b}.widget-icon{display:grid;place-items:center;width:2.75rem;height:2.75rem;border-radius:.9rem;background:var(--emerald-soft);color:var(--emerald-dark);font-size:1.3rem}.table-wrapper{background:#fff;border:1px solid var(--border);border-radius:1.25rem;overflow:auto;box-shadow:0 2px 8px rgba(15,23,42,.05)}table{border-spacing:0!important}th{background:#f8fafc!important;color:#64748b;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}td{border-bottom:1px solid #f1f5f9!important;color:#334155;padding:1rem}tr:hover td{background:#f8fafc!important}.total-row td{background:#ecfdf5!important;color:#065f46;font-weight:900}@media(max-width:768px){.widget-grid{grid-template-columns:1fr}.container{padding:1rem}.widget-value{font-size:1.5rem}}
-</style>
-
-
-
-
-<div class="container">
-    <div class="header">
-        <h4>Laporan Omzet</h4>
-    </div>
-
-
-
-
-    {{-- Filter --}}
-    <form method="GET" class="filter-form">
-        <div class="form-group">
-            <label>Tanggal Mulai:</label>
-            <input type="date" name="start_date" value="{{ request('start_date') }}">
-        </div>
-        <div class="form-group">
-            <label>Tanggal Selesai:</label>
-            <input type="date" name="end_date" value="{{ request('end_date') }}">
-        </div>
-        <div class="form-group">
-            <label>Cari Barang (Kode/Nama):</label>
-            <input type="text" name="search" placeholder="Cari kode atau nama barang..." value="{{ request('search') }}">
-        </div>
-        <div class="form-group">
-            <label>Lokasi:</label>
-            <select name="lokasi">
-                <option value="">-- Semua Lokasi --</option>
-                @foreach($lokasis as $lokasi)
-                    <option value="{{ $lokasi->id }}" {{ request('lokasi') == $lokasi->id ? 'selected' : '' }}>
-                        {{ $lokasi->nama_lokasi }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Kondisi:</label>
-            <select name="kondisi">
-                <option value="">-- Semua Kondisi --</option>
-                @foreach($kondisis as $kondisi)
-                    <option value="{{ $kondisi->id }}" {{ request('kondisi') == $kondisi->id ? 'selected' : '' }}>
-                        {{ $kondisi->nama_kondisi }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="action-group">
-            <button type="submit">Terapkan Filter</button>
-            <a href="{{ route('omzet.index') }}" class="back-button">Reset Filter</a>
-        </div>
-    </form>
-
-
-
-
-    {{-- Export Buttons --}}
-    <div class="export-buttons">
-        <a href="{{ route('export.omzet.pdf', request()->query()) }}" target="_blank">📄 Cetak PDF</a>
-        <a href="{{ route('export.omzet.excel', request()->query()) }}">📊 Export Excel</a>
-    </div>
-
-
-
-
     @php
+        $omzetData = $omzetData ?? $data ?? $paginated ?? collect();
+        $rows = $omzetData;
         $omzetTotal = $total_omzet ?? $totalOmzet ?? 0;
-        $transactionCount = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->total() : (is_countable($data) ? count($data) : collect($data)->count());
+        $modalTotal = $total_modal ?? $totalModal ?? 0;
+        $labaTotal = $total_laba ?? $totalLaba ?? 0;
+        $isPaginator = $omzetData instanceof \Illuminate\Pagination\LengthAwarePaginator;
+        $transactionCount = $isPaginator ? $omzetData->total() : count($rows);
         $averageOmzet = $transactionCount > 0 ? $omzetTotal / $transactionCount : 0;
+        $sortBy = request('sort_by', 'tanggal');
+        $sortDir = request('sort_dir', 'desc');
+
+        $sortRoute = function (string $col) use ($sortBy, $sortDir) {
+            $nextDir = ($sortBy === $col && $sortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(['sort_by' => $col, 'sort_dir' => $nextDir]);
+        };
     @endphp
-    <section class="widget-grid" aria-label="Ringkasan omzet">
-        <article class="widget"><div class="widget-icon">↗</div><div class="widget-kicker">Total Omzet Pendapatan</div><div class="widget-value">Rp {{ number_format($omzetTotal, 0, ',', '.') }}</div><div class="widget-sub">Total pendapatan terbaca</div></article>
-        <article class="widget"><div class="widget-icon">▤</div><div class="widget-kicker">Total Transaksi Penjualan</div><div class="widget-value">{{ $transactionCount }}</div><div class="widget-sub">Volume nota dan pesanan</div></article>
-        <article class="widget"><div class="widget-icon">◎</div><div class="widget-kicker">Rata-rata Per Transaksi</div><div class="widget-value">Rp {{ number_format($averageOmzet, 0, ',', '.') }}</div><div class="widget-sub">Berdasarkan filter aktif</div></article>
-    </section>
 
-    {{-- Table --}}
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    @php
-                        function sortUrlBlade($field) {
-                            return route('omzet.index', array_merge(request()->all(), [
-                                'sort_by' => $field,
-                                'sort_dir' => (request('sort_by') === $field && request('sort_dir') === 'asc') ? 'desc' : 'asc'
-                            ]));
-                        }
-                    @endphp
-                    <th>No</th>
-                    <th><a href="{{ sortUrlBlade('nama_barang') }}">Nama Barang {!! request('sort_by') === 'nama_barang' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('tanggal') }}">Tanggal {!! request('sort_by') === 'tanggal' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('lokasi') }}">Lokasi {!! request('sort_by') === 'lokasi' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('kondisi') }}">Kondisi {!! request('sort_by') === 'kondisi' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('jumlah_keluar') }}">Jumlah Keluar {!! request('sort_by') === 'jumlah_keluar' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('harga_jual') }}">Harga Jual {!! request('sort_by') === 'harga_jual' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                    <th><a href="{{ sortUrlBlade('omzet_item') }}">Omzet {!! request('sort_by') === 'omzet_item' ? (request('sort_dir') === 'asc' ? '↑' : '↓') : '▲▼' !!}</a></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($data as $index => $item)
-                    <tr>
-                        {{-- nomor urut mengikuti halaman jika paginator --}}
-                        <td>
-                            {{ ($data instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                ? (($data->firstItem() ?? 0) + $index)
-                                : ($loop->iteration) }}
-                        </td>
-                        <td>{{ $item['nama_barang'] }}</td>
-                        <td>{{ \Carbon\Carbon::parse($item['tanggal'])->format('j/n/Y H:i:s') }}</td>
-                        <td>{{ $item['lokasi'] }}</td>
-                        <td>{{ $item['kondisi'] }}</td>
-                        <td>{{ $item['jumlah_keluar'] }}</td>
-                        <td>Rp {{ number_format($item['harga_jual'], 0, ',', '.') }}</td>
-                        <td>Rp {{ number_format($item['omzet_item'], 0, ',', '.') }}</td>
-                    </tr>
-                @endforeach
-                <tr class="total-row">
-                    <td colspan="7">Total Omzet</td>
-                    <td>Rp {{ number_format($total_omzet, 0, ',', '.') }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <div class="container report-shell">
+        <!-- Header Ramah Lansia -->
+        <header class="report-header">
+            <div>
+                <h1>💰 Laporan Omzet & Keuntungan Riil</h1>
+                <p>Omzet penjualan dan laba bersih riil dihitung langsung dari harga jual dikurangi modal beli nota aslinya.</p>
+            </div>
+            @if (Route::has('laporan'))
+                <a href="{{ route('laporan') }}" class="report-back">
+                    <span>←</span> Kembali ke Laporan Stok
+                </a>
+            @endif
+        </header>
 
+        <!-- Filter Sederhana -->
+        <form method="GET" class="report-filter" aria-label="Saring data omzet">
+            <div class="field">
+                <label for="start_date">📅 Tanggal Mulai</label>
+                <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}">
+            </div>
+            <div class="field">
+                <label for="end_date">📅 Tanggal Selesai</label>
+                <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}">
+            </div>
+            <div class="field">
+                <label for="search">🌸 Cari Barang / Catatan</label>
+                <input type="text" id="search" name="search" placeholder="Ketik nama atau kode bunga..." value="{{ request('search') }}">
+            </div>
+            @if (isset($lokasis) && count($lokasis))
+                <div class="field">
+                    <label for="lokasi">📍 Lokasi Gudang</label>
+                    <select id="lokasi" name="lokasi">
+                        <option value="">Semua Lokasi</option>
+                        @foreach ($lokasis as $lok)
+                            @php
+                                $lokId = is_object($lok) ? ($lok->id ?? $lok->nama_lokasi) : (is_array($lok) ? ($lok['id'] ?? $lok['nama_lokasi']) : $lok);
+                                $lokName = is_object($lok) ? ($lok->nama_lokasi ?? $lokId) : (is_array($lok) ? ($lok['nama_lokasi'] ?? $lokId) : $lok);
+                            @endphp
+                            <option value="{{ $lokId }}" @selected((string) request('lokasi') === (string) $lokId)>{{ $lokName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            @if (isset($kondisis) && count($kondisis))
+                <div class="field">
+                    <label for="kondisi">🌿 Kondisi Bunga</label>
+                    <select id="kondisi" name="kondisi">
+                        <option value="">Semua Kondisi</option>
+                        @foreach ($kondisis as $kon)
+                            @php
+                                $konId = is_object($kon) ? ($kon->id ?? $kon->nama_kondisi) : (is_array($kon) ? ($kon['id'] ?? $kon['nama_kondisi']) : $kon);
+                                $konName = is_object($kon) ? ($kon->nama_kondisi ?? $konId) : (is_array($kon) ? ($kon['nama_kondisi'] ?? $konId) : $kon);
+                            @endphp
+                            <option value="{{ $konId }}" @selected((string) request('kondisi') === (string) $konId)>{{ $konName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+            <input type="hidden" name="sort_dir" value="{{ request('sort_dir') }}">
+            <div class="actions">
+                <button type="submit" class="report-btn">Terapkan Filter</button>
+                <a href="{{ url()->current() }}" class="report-btn report-btn--soft">Reset Filter</a>
+            </div>
+        </form>
 
+        <!-- Tombol Aksi Export -->
+        <div class="report-exports">
+            @if (Route::has('export.omzet.pdf'))
+                <a href="{{ route('export.omzet.pdf', request()->query()) }}" target="_blank" class="report-btn report-btn--pdf">📄 Cetak PDF</a>
+            @elseif (Route::has('laporan.arus.pdf'))
+                <a href="{{ route('laporan.arus.pdf', request()->query()) }}" target="_blank" class="report-btn report-btn--pdf">📄 Cetak PDF</a>
+            @endif
 
-
-    {{-- Pagination + summary (selalu tampil) --}}
-    @php
-        $isPaginator = $data instanceof \Illuminate\Pagination\LengthAwarePaginator;
-        $total = $isPaginator ? $data->total() : (is_countable($data) ? count($data) : collect($data)->count());
-        $first = $isPaginator ? ($data->firstItem() ?? ($total ? 1 : 0)) : ($total ? 1 : 0);
-        $last  = $isPaginator ? ($data->lastItem()  ?? $total) : $total;
-    @endphp
-    <div style="margin-top:20px; text-align:center;">
-        <div class="small text-muted">
-            Showing {{ $first }} to {{ $last }} of {{ $total }} results
-        </div>
-        <div class="ms-auto">
-            @if($isPaginator)
-                {!! $data->appends(request()->query())->links('pagination::bootstrap-5') !!}
+            @if (Route::has('export.omzet.excel'))
+                <a href="{{ route('export.omzet.excel', request()->query()) }}" class="report-btn">📊 Export Excel</a>
+            @elseif (Route::has('laporan.arus.excel'))
+                <a href="{{ route('laporan.arus.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}" class="report-btn">📊 Export Excel</a>
             @endif
         </div>
+
+        <!-- Banner Ringkasan Raksasa di Atas -->
+        <section class="report-cards" aria-label="Ringkasan omzet dan laba">
+            <article class="report-card report-card--omzet">
+                <div class="report-card__label">🟢 TOTAL OMZET RIIL <span class="sr-only">Total Omzet Riil</span></div>
+                <div class="report-card__value">Rp {{ number_format($omzetTotal, 0, ',', '.') }}</div>
+                <div class="report-card__sub">Total pemasukan bersih dari seluruh transaksi penjualan</div>
+            </article>
+            <article class="report-card report-card--laba">
+                <div class="report-card__label">💙 TOTAL LABA BERSIH RIIL <span class="sr-only">Total Laba Bersih Riil</span></div>
+                <div class="report-card__value">Rp {{ number_format($labaTotal, 0, ',', '.') }}</div>
+                <div class="report-card__sub">Keuntungan riil = Total Omzet − Modal Beli Riil Batch</div>
+            </article>
+            <article class="report-card">
+                <div class="report-card__label">TOTAL MODAL RIIL <span class="sr-only">Total Modal / HPP Riil</span></div>
+                <div class="report-card__value" style="color: var(--report-amber);">Rp {{ number_format($modalTotal, 0, ',', '.') }}</div>
+                <div class="report-card__sub">{{ $transactionCount }} transaksi penjualan · rata-rata Rp {{ number_format($averageOmzet, 0, ',', '.') }}</div>
+            </article>
+        </section>
+
+        <!-- Tabel Utama (Induk) -->
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="{{ $sortRoute('tanggal') }}">
+                                Tanggal {!! $sortBy === 'tanggal' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('nama_barang') }}">
+                                Nama Item {!! $sortBy === 'nama_barang' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('jumlah_keluar') }}">
+                                Jumlah {!! $sortBy === 'jumlah_keluar' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('harga_jual') }}">
+                                Harga Jual Riil {!! $sortBy === 'harga_jual' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('omzet_item') }}">
+                                Total Omzet {!! $sortBy === 'omzet_item' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th style="text-align: center; width: 230px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($rows as $item)
+                        @php
+                            $detailId = 'omzet-detail-'.$loop->index;
+                            $allocations = $item['allocations'] ?? [];
+                            $hpp = (float) ($item['modal_riil'] ?? collect($allocations)->sum('subtotal'));
+                            $omzetItem = (float) ($item['omzet_item'] ?? $item['omzet'] ?? 0);
+                            $labaItem = (float) ($item['laba_riil'] ?? ($omzetItem - $hpp));
+                            $qty = (int) ($item['jumlah_keluar'] ?? $item['jumlah'] ?? 0);
+                            $tgl = $item['tanggal'] ?? null;
+                            $tglStr = $tgl instanceof \Carbon\CarbonInterface ? $tgl->format('d/m/Y') : ($tgl ? date('d/m/Y', strtotime((string)$tgl)) : '-');
+                            $hargaJual = (float) ($item['harga_jual'] ?? 0);
+                        @endphp
+                        <tr class="parent-row">
+                            <td>
+                                <strong style="font-size: 1.05rem; color: #1e293b;">{{ $tglStr }}</strong>
+                            </td>
+                            <td>
+                                <span class="report-name">{{ $item['nama_barang'] ?? '-' }}</span>
+                                <span class="report-meta">
+                                    Kode: {{ $item['kode_barang'] ?? '-' }}
+                                    @if (!empty($item['lokasi'])) · {{ $item['lokasi'] }} @endif
+                                    @if (!empty($item['kondisi'])) · {{ $item['kondisi'] }} @endif
+                                </span>
+                            </td>
+                            <td class="report-quantity">
+                                {{ number_format($qty, 0, ',', '.') }} {{ $item['satuan'] ?? '' }}
+                            </td>
+                            <td>
+                                Rp {{ number_format($hargaJual, 0, ',', '.') }}
+                            </td>
+                            <td class="report-value">
+                                Rp {{ number_format($omzetItem, 0, ',', '.') }}
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="report-toggle" data-report-toggle data-target="{{ $detailId }}" aria-expanded="false" aria-controls="{{ $detailId }}">
+                                    <span class="toggle-label">🔍 Detail Modal Beli</span>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Sub-Tabel Lipat (Detail Expand Modal Beli) -->
+                        <tr class="report-detail-row" id="{{ $detailId }}" hidden>
+                            <td colspan="6">
+                                <div class="report-detail-panel">
+                                    <p class="report-detail-title">
+                                        🔍 Rincian Modal Beli Riil (Batch Nota Masuk) & Keuntungan
+                                    </p>
+                                    <table class="report-detail-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No. Nota / Tanggal Masuk</th>
+                                                <th>Qty Diambil</th>
+                                                <th>Harga Beli Batch</th>
+                                                <th>Subtotal Modal (HPP)</th>
+                                                <th>Laba Bersih Batch</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($allocations as $alloc)
+                                                @php
+                                                    $allocQty = (int) ($alloc['jumlah'] ?? 0);
+                                                    $beli = (float) ($alloc['harga_beli'] ?? 0);
+                                                    $subtotalModal = (float) ($alloc['subtotal'] ?? ($allocQty * $beli));
+                                                    $labaBatch = ($hargaJual - $beli) * $allocQty;
+                                                    $allocTgl = $alloc['tanggal_masuk'] ?? null;
+                                                    $allocTglStr = $allocTgl instanceof \Carbon\CarbonInterface ? $allocTgl->format('d/m/Y') : ($allocTgl ? date('d/m/Y', strtotime((string)$allocTgl)) : '-');
+                                                    $allocTitle = !empty($alloc['catatan']) ? $alloc['catatan'] : $alloc['batch_code'];
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <strong style="color: var(--report-emerald-dark); font-size: 1.05rem;">
+                                                            {{ $allocTitle }}
+                                                        </strong>
+                                                        <div class="report-meta">
+                                                            Ref: {{ $alloc['batch_code'] }} · Tgl Masuk: {{ $allocTglStr }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="font-size: 1.1rem; color: #1e293b;">
+                                                            {{ number_format($allocQty, 0, ',', '.') }}
+                                                        </strong> {{ $item['satuan'] ?? '' }}
+                                                    </td>
+                                                    <td>
+                                                        Rp {{ number_format($beli, 0, ',', '.') }}
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-amber); font-size: 1.05rem;">
+                                                            Rp {{ number_format($subtotalModal, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-blue); font-size: 1.1rem;">
+                                                            Rp {{ number_format($labaBatch, 0, ',', '.') }}
+                                                        </strong>
+                                                        <div class="report-meta">
+                                                            (Rp {{ number_format($hargaJual, 0, ',', '.') }} − Rp {{ number_format($beli, 0, ',', '.') }}) × {{ $allocQty }}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center py-3 text-slate-500">
+                                                        Belum ada rincian alokasi batch nota untuk transaksi ini.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <strong>Total Modal Beli Riil (HPP Transaksi Ini)</strong>
+                                                </td>
+                                                <td colspan="2">
+                                                    <strong style="color: var(--report-amber); font-size: 1.1rem;">
+                                                        Rp {{ number_format($hpp, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <strong>Total Laba Bersih Riil (Total Omzet − Total Modal)</strong>
+                                                </td>
+                                                <td colspan="2">
+                                                    <strong style="color: var(--report-blue); font-size: 1.2rem;">
+                                                        Rp {{ number_format($labaItem, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="report-empty">
+                                💰 Belum ada transaksi penjualan bunga yang tercatat untuk saringan ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($isPaginator && $omzetData->hasPages())
+            <div class="report-pagination mt-6">
+                <div class="summary mb-3 text-sm font-semibold text-slate-600">
+                    Menampilkan data transaksi ke-{{ $omzetData->firstItem() ?? 0 }} sampai {{ $omzetData->lastItem() ?? 0 }} dari total {{ $omzetData->total() }} transaksi
+                </div>
+                {{ $omzetData->links() }}
+            </div>
+        @endif
     </div>
-</div>
 @endsection
 
-
-
-
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("input[type=date]", {
-            dateFormat: "d/m/Y",
-            locale: "id"
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-report-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const targetId = button.getAttribute('data-target');
+                    const panel = document.getElementById(targetId);
+                    if (!panel) return;
+
+                    const isOpen = button.getAttribute('aria-expanded') === 'true';
+                    button.setAttribute('aria-expanded', String(!isOpen));
+                    button.classList.toggle('is-open', !isOpen);
+                    panel.hidden = isOpen;
+
+                    const label = button.querySelector('.toggle-label');
+                    if (label) {
+                        label.textContent = isOpen ? '🔍 Detail Modal Beli' : '🙈 Tutup Detail';
+                    }
+                });
+            });
         });
-    });
-</script>
+    </script>
 @endpush
