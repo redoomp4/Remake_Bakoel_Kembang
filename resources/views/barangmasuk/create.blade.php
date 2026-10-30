@@ -430,12 +430,21 @@
 
                 {{-- ITEM --}}
                 <div class="form-group">
-                    <label for="item_id" class="form-label">Pilih Item</label>
-                    <select name="item_id" id="item_id" required class="form-control">
-                        <option value="" disabled {{ old('item_id') ? '' : 'selected' }}>-- Pilih Item --</option>
+                    <label for="item_id" class="form-label">Pilih Item (Cari Bunga)</label>
+                    <select name="item_id" id="item_id" required class="form-control" data-searchable="true">
+                        <option value="" disabled {{ old('item_id') ? '' : 'selected' }}>-- Pilih Bunga / Item --</option>
                         @foreach ($items as $item)
-                            <option value="{{ $item->id }}" {{ old('item_id') == $item->id ? 'selected' : '' }}>
-                                {{ $item->kode_barang }} — {{ $item->nama_barang }}
+                            @php
+                                $stok = $item->total_stok ?? 0;
+                                $satuan = $item->satuan->nama_satuan ?? 'pcs';
+                            @endphp
+                            <option value="{{ $item->id }}"
+                                data-nama="{{ $item->nama_barang }}"
+                                data-kode="{{ $item->kode_barang }}"
+                                data-stok="{{ $stok }}"
+                                data-satuan="{{ $satuan }}"
+                                {{ old('item_id') == $item->id ? 'selected' : '' }}>
+                                {{ $item->nama_barang }} — Stok: {{ $stok }} {{ $satuan }}
                             </option>
                         @endforeach
                     </select>
@@ -458,7 +467,7 @@
                     <div class="form-group">
                         <label for="harga_satuan" class="form-label">Harga Beli / Satuan</label>
                         <input type="number" id="harga_satuan" name="harga_satuan" min="0" step="0.01"
-                               value="{{ old('harga_satuan') }}" required placeholder="0" class="form-control">
+                               value="{{ old('harga_satuan') }}" required placeholder="Contoh: 15000" class="form-control">
                         @error('harga_satuan')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -503,42 +512,70 @@
                     </div>
                 </div>
 
-                {{-- PEMASOK / LOKASI / KONDISI --}}
+                @php
+                    $defaultPemasokVal = (string) ($defaultPemasokId ?? optional($pemasoks->firstWhere('nama_pemasok', 'Pemasok Umum'))->id ?? 'Pemasok Umum');
+                    $defaultLokasiVal = (string) ($defaultLokasiId ?? optional($lokasis->firstWhere('nama_lokasi', 'Gudang Utama'))->id ?? 'Gudang Utama');
+                    $defaultKondisiVal = (string) ($defaultKondisiId ?? optional($kondisis->firstWhere('nama_kondisi', 'Segar'))->id ?? 'Segar');
+
+                    $selectedPemasok = (string) old('id_pemasok', $defaultPemasokVal);
+                    $selectedLokasi = (string) old('id_lokasi', $defaultLokasiVal);
+                    $selectedKondisi = (string) old('id_kondisi', $defaultKondisiVal);
+                @endphp
+
+                {{-- PEMASOK / LOKASI / KONDISI (Select2 Dinamis tags: true) --}}
                 <div class="grid-3">
                     <div class="form-group">
                         <label for="id_pemasok" class="form-label">Pemasok</label>
-                        <select name="id_pemasok" id="id_pemasok" required class="form-control">
-                            <option value="" disabled {{ old('id_pemasok') ? '' : 'selected' }}>Pilih Pemasok</option>
+                        <select name="id_pemasok" id="id_pemasok" required class="form-control select2-tags" data-placeholder="Ketik atau pilih nama pemasok (misal: Pak Budi / Pemasok Umum)">
+                            <option value=""></option>
                             @foreach ($pemasoks as $pemasok)
-                                <option value="{{ $pemasok->id }}" {{ old('id_pemasok') == $pemasok->id ? 'selected' : '' }}>
+                                <option value="{{ $pemasok->id }}" {{ $selectedPemasok === (string) $pemasok->id || $selectedPemasok === (string) $pemasok->nama_pemasok ? 'selected' : '' }}>
                                     {{ $pemasok->nama_pemasok }}
                                 </option>
                             @endforeach
+                            @if ($selectedPemasok && !$pemasoks->contains('id', $selectedPemasok) && !$pemasoks->contains('nama_pemasok', $selectedPemasok))
+                                <option value="{{ $selectedPemasok }}" selected>{{ $selectedPemasok }}</option>
+                            @endif
                         </select>
+                        @error('id_pemasok')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label for="id_lokasi" class="form-label">Lokasi</label>
-                        <select name="id_lokasi" id="id_lokasi" required class="form-control">
-                            <option value="" disabled {{ old('id_lokasi') ? '' : 'selected' }}>Pilih Lokasi</option>
+                        <select name="id_lokasi" id="id_lokasi" required class="form-control select2-tags" data-placeholder="Pilih dari daftar atau ketik baru (misal: Gudang Utama / Rak Depan)...">
+                            <option value=""></option>
                             @foreach ($lokasis as $lokasi)
-                                <option value="{{ $lokasi->id }}" {{ old('id_lokasi') == $lokasi->id ? 'selected' : '' }}>
+                                <option value="{{ $lokasi->id }}" {{ $selectedLokasi === (string) $lokasi->id || $selectedLokasi === (string) $lokasi->nama_lokasi ? 'selected' : '' }}>
                                     {{ $lokasi->nama_lokasi }}
                                 </option>
                             @endforeach
+                            @if ($selectedLokasi && !$lokasis->contains('id', $selectedLokasi) && !$lokasis->contains('nama_lokasi', $selectedLokasi))
+                                <option value="{{ $selectedLokasi }}" selected>{{ $selectedLokasi }}</option>
+                            @endif
                         </select>
+                        @error('id_lokasi')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label for="id_kondisi" class="form-label">Kondisi</label>
-                        <select name="id_kondisi" id="id_kondisi" required class="form-control">
-                            <option value="" disabled {{ old('id_kondisi') ? '' : 'selected' }}>Pilih Kondisi</option>
+                        <select name="id_kondisi" id="id_kondisi" required class="form-control select2-tags" data-placeholder="Pilih dari daftar atau ketik baru (misal: Segar / Mekar Sempurna)...">
+                            <option value=""></option>
                             @foreach ($kondisis as $kondisi)
-                                <option value="{{ $kondisi->id }}" {{ old('id_kondisi') == $kondisi->id ? 'selected' : '' }}>
+                                <option value="{{ $kondisi->id }}" {{ $selectedKondisi === (string) $kondisi->id || $selectedKondisi === (string) $kondisi->nama_kondisi ? 'selected' : '' }}>
                                     {{ $kondisi->nama_kondisi }}
                                 </option>
                             @endforeach
+                            @if ($selectedKondisi && !$kondisis->contains('id', $selectedKondisi) && !$kondisis->contains('nama_kondisi', $selectedKondisi))
+                                <option value="{{ $selectedKondisi }}" selected>{{ $selectedKondisi }}</option>
+                            @endif
                         </select>
+                        @error('id_kondisi')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -546,7 +583,7 @@
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="catatan" class="form-label">Catatan</label>
                     <textarea name="catatan" id="catatan" rows="3" maxlength="1000"
-                              placeholder="Tambahkan catatan jika diperlukan..." class="form-control">{{ old('catatan') }}</textarea>
+                              placeholder="Contoh: Nota #BM-001 / Bunga segar kiriman pagi dari Pak Budi" class="form-control">{{ old('catatan') }}</textarea>
                     @error('catatan')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
@@ -579,6 +616,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                $('.select2-tags').each(function() {
+                    const ph = $(this).data('placeholder') || 'Ketik atau pilih...';
+                    $(this).select2({
+                        tags: true,
+                        placeholder: ph,
+                        width: '100%',
+                        allowClear: false
+                    });
+                });
+            }
+
             const jumlah = document.getElementById('jumlah');
             const harga = document.getElementById('harga_satuan');
             jumlah.addEventListener('input', updateTotalHarga);

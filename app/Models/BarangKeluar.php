@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class BarangKeluar extends Model
 {
     use HasFactory;
+
     protected $table = 'barang_keluars';
+
     protected $fillable = [
         'user_id',
         'item_id',
@@ -23,6 +25,7 @@ class BarangKeluar extends Model
         'catatan',
         'jenis_transaksi',
     ];
+
     /*
     |--------------------------------------------------------------------------
     | Relasi ke ITEM
@@ -44,6 +47,7 @@ class BarangKeluar extends Model
             'id'
         );
     }
+
     /*
     |--------------------------------------------------------------------------
     | Relasi ke LOKASI
@@ -57,6 +61,7 @@ class BarangKeluar extends Model
             'id'
         );
     }
+
     /*
     |--------------------------------------------------------------------------
     | Relasi ke KONDISI
@@ -70,6 +75,7 @@ class BarangKeluar extends Model
             'id'
         );
     }
+
     /*
     |--------------------------------------------------------------------------
     | Relasi ke USER

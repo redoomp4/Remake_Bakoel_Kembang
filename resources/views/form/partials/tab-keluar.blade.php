@@ -78,7 +78,6 @@
                 <input type="hidden" name="id_lokasi" id="id_lokasi">
                 <input type="hidden" name="id_kondisi" id="id_kondisi">
                 <input type="hidden" name="item_id" id="item_id">
-                <input type="hidden" id="harga_dasar" value="0">
 
                 {{-- INFORMASI BARANG TERPILIH (READONLY) - HARGA DASAR DIHAPUS DARI TAMPILAN SESUAI INSTRUKSI --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -104,7 +103,7 @@
                         </label>
                         <input type="number" name="jumlah_keluar" id="jumlah_keluar" min="1" required
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-slate-900 bg-white"
-                            placeholder="Contoh: 5">
+                            placeholder="Contoh: 10">
                         <p id="jumlah_warning" class="text-xs font-bold text-rose-600 mt-1"></p>
                     </div>
 
@@ -114,7 +113,7 @@
                         </label>
                         <input type="number" name="harga_jual" id="harga_jual" min="0" step="100" required
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-emerald-900 bg-white"
-                            placeholder="0">
+                            placeholder="Contoh: 25000">
                     </div>
                 </div>
 
@@ -138,7 +137,7 @@
                         </label>
                         <input type="text" name="penerima" id="penerima" value="{{ old('penerima', 'Pelanggan Langsung') }}" required
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
-                            placeholder="Contoh: Ibu Rina / Pembeli">
+                            placeholder="Ketik nama pembeli atau tujuan (misal: Ibu Rina / Pelanggan Toko)">
                         @error('penerima')
                             <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -151,6 +150,11 @@
                         <select name="jenis_transaksi" id="jenis_transaksi" required
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white">
                             <option value="Penjualan" {{ old('jenis_transaksi', 'Penjualan') == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
+                            <option value="Eceran" {{ old('jenis_transaksi') == 'Eceran' ? 'selected' : '' }}>Eceran</option>
+                            <option value="Grosir" {{ old('jenis_transaksi') == 'Grosir' ? 'selected' : '' }}>Grosir</option>
+                            <option value="Project Bunga Papan" {{ old('jenis_transaksi') == 'Project Bunga Papan' ? 'selected' : '' }}>Project Bunga Papan</option>
+                            <option value="Event Wedding" {{ old('jenis_transaksi') == 'Event Wedding' ? 'selected' : '' }}>Event Wedding</option>
+                            <option value="Bunga Meja" {{ old('jenis_transaksi') == 'Bunga Meja' ? 'selected' : '' }}>Bunga Meja</option>
                             <option value="Donasi" {{ old('jenis_transaksi') == 'Donasi' ? 'selected' : '' }}>Donasi</option>
                             <option value="Pemakaian Internal" {{ old('jenis_transaksi') == 'Pemakaian Internal' ? 'selected' : '' }}>Pemakaian Internal</option>
                             <option value="Pemindahan Barang" {{ old('jenis_transaksi') == 'Pemindahan Barang' ? 'selected' : '' }}>Pemindahan Barang</option>
@@ -169,7 +173,7 @@
                         </label>
                         <input type="text" name="lokasi_tujuan" id="lokasi_tujuan" value="{{ old('lokasi_tujuan', 'Pelanggan Langsung') }}" required
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
-                            placeholder="Contoh: Toko Cabang / Pelanggan">
+                            placeholder="Contoh: Toko / Meja Kasir / Pelanggan">
                         @error('lokasi_tujuan')
                             <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -182,7 +186,7 @@
                         Catatan Transaksi <span class="text-xs text-slate-400 font-normal lowercase">(opsional)</span>
                     </label>
                     <input type="text" name="catatan" id="catatan" maxlength="255"
-                        placeholder="Catatan kasir, pesanan khusus, atau keterangan..."
+                        placeholder="Contoh: Pesanan buket wisuda / Diberi pita merah"
                         value="{{ old('catatan') }}"
                         class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base text-slate-800 bg-white">
                 </div>
@@ -399,7 +403,6 @@
                         data-lokasi-id="${it.lokasi_id}"
                         data-kondisi-id="${it.kondisi_id}"
                         data-stok="${it.stok}"
-                        data-harga="${it.harga_dasar}"
                         data-nama="${it.nama_barang}"
                         data-satuan="${it.satuan}">
                         ${it.kode} — ${it.nama_barang} (Lokasi: ${it.lokasi} · Kondisi: ${it.kondisi}) — Sisa Stok: ${it.stok} ${it.satuan}
@@ -676,12 +679,7 @@
             }
 
             function pickHarga(data) {
-                return num(
-                    data?.harga_dasar ??
-                    data?.harga ??
-                    data?.harga_satuan ??
-                    data?.item?.harga_dasar
-                );
+                return num(data?.harga_jual ?? data?.harga_satuan ?? 0);
             }
 
             const btnVoice = document.getElementById('btn-voice-keluar');
@@ -879,9 +877,6 @@
                     document.getElementById('nama_barang').value = data.nama_barang ?? '';
                     document.getElementById('satuan').value = data.satuan ?? '';
                     document.getElementById('stok_tersedia').value = num(data.stok);
-                    const hargaDasarEl = document.getElementById('harga_dasar');
-                    if (hargaDasarEl) hargaDasarEl.value = hargaItem;
-
                     const hargaJualInput = document.getElementById('harga_jual');
                     if (hargaJualInput && (!hargaJualInput.value || hargaJualInput.value == 0)) {
                         hargaJualInput.value = hargaItem;
@@ -1002,14 +997,6 @@
                         document.getElementById('satuan').value = option.dataset.satuan ?? '';
                         document.getElementById('stok_tersedia').value = num(option.dataset.stok);
 
-                        const hargaDefault = num(option.dataset.harga);
-                        const hargaDasarEl = document.getElementById('harga_dasar');
-                        if (hargaDasarEl) hargaDasarEl.value = hargaDefault;
-
-                        const hargaJualInput = document.getElementById('harga_jual');
-                        if (hargaJualInput && (!hargaJualInput.value || hargaJualInput.value == 0)) {
-                            hargaJualInput.value = hargaDefault;
-                        }
 
                         await fetchDetail(option.dataset.itemId, lokasi, kondisi);
                         updateTotal();

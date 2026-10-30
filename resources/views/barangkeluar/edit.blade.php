@@ -507,9 +507,9 @@
 
                 {{-- BARANG --}}
                 <div class="form-group">
-                    <label for="kode_lokasi_kondisi" class="form-label">Pilih Barang *</label>
+                    <label for="kode_lokasi_kondisi" class="form-label">Pilih Barang (Cari Bunga) *</label>
                     <div class="select-with-scan">
-                        <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" required class="form-control">
+                        <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" required class="form-control" data-searchable="true">
                             <option value="">-- Memuat data barang --</option>
                         </select>
                     </div>
@@ -541,8 +541,6 @@
                         <input type="text" id="stok_tersedia" readonly class="form-control">
                     </div>
                     <div class="form-group">
-                        <label for="harga_dasar" class="form-label">Harga Rata-Rata</label>
-                        <input type="text" id="harga_dasar" readonly class="form-control">
                     </div>
                 </div>
 
@@ -552,14 +550,14 @@
                         <label for="jumlah_keluar" class="form-label">Jumlah Keluar</label>
                         <input type="number" name="jumlah_keluar" id="jumlah_keluar" min="1" required
                                value="{{ old('jumlah_keluar', $barangKeluar->jumlah_keluar) }}"
-                               placeholder="Contoh: 5" class="form-control">
+                               placeholder="Contoh: 10" class="form-control">
                         <p id="jumlah_warning" class="form-warning"></p>
                     </div>
                     <div class="form-group">
                         <label for="harga_jual" class="form-label">Harga Jual / Unit</label>
                         <input type="number" name="harga_jual" id="harga_jual" min="0" step="0.01" required
                                value="{{ old('harga_jual', $barangKeluar->harga_jual) }}"
-                               placeholder="0" class="form-control">
+                               placeholder="Contoh: 25000" class="form-control">
                     </div>
                 </div>
 
@@ -586,7 +584,7 @@
                         <div class="input-with-mic">
                             <input type="text" name="penerima" id="penerima"
                                    value="{{ old('penerima', $barangKeluar->penerima) }}" required
-                                   placeholder="Nama penerima" class="form-control">
+                                   placeholder="Ketik nama pembeli atau tujuan (misal: Ibu Rina / Pelanggan Toko)" class="form-control">
                         </div>
                         @error('penerima')
                             <p class="form-error">{{ $message }}</p>
@@ -594,14 +592,20 @@
                     </div>
                     <div class="form-group">
                         <label for="jenis_transaksi" class="form-label">Jenis Transaksi</label>
-                        <select name="jenis_transaksi" id="jenis_transaksi" required class="form-control">
-                            <option value="" disabled>-- Pilih Jenis Transaksi --</option>
-                            @foreach (['Penjualan', 'Donasi', 'Pemakaian Internal', 'Pemindahan Barang', 'Retur ke Supplier', 'Penghapusan', 'Lainnya'] as $jenis)
-                                <option value="{{ $jenis }}"
-                                    {{ old('jenis_transaksi', $barangKeluar->jenis_transaksi) == $jenis ? 'selected' : '' }}>
+                        <select name="jenis_transaksi" id="jenis_transaksi" required class="form-control select2-tags" data-placeholder="Ketik atau pilih jenis (misal: Eceran / Papan Duka / Event Weddings)">
+                            <option value=""></option>
+                            @php
+                                $currentJenis = old('jenis_transaksi', $barangKeluar->jenis_transaksi ?? 'Penjualan');
+                                $availableJenis = $jenisTransaksis ?? collect(['Penjualan', 'Eceran', 'Grosir', 'Project Bunga Papan', 'Event Wedding', 'Bunga Meja', 'Donasi', 'Pemakaian Internal', 'Pemindahan Barang', 'Retur ke Supplier', 'Penghapusan', 'Lainnya']);
+                            @endphp
+                            @foreach ($availableJenis as $jenis)
+                                <option value="{{ $jenis }}" {{ $currentJenis == $jenis ? 'selected' : '' }}>
                                     {{ $jenis }}
                                 </option>
                             @endforeach
+                            @if ($currentJenis && !collect($availableJenis)->contains($currentJenis))
+                                <option value="{{ $currentJenis }}" selected>{{ $currentJenis }}</option>
+                            @endif
                         </select>
                         @error('jenis_transaksi')
                             <p class="form-error">{{ $message }}</p>
@@ -614,7 +618,7 @@
                     <label for="lokasi_tujuan" class="form-label">Lokasi Tujuan</label>
                     <input type="text" name="lokasi_tujuan" id="lokasi_tujuan"
                            value="{{ old('lokasi_tujuan', $barangKeluar->lokasi_tujuan) }}" required
-                           placeholder="Contoh: Gudang A / Toko Cabang / Rumah Pelanggan" class="form-control">
+                           placeholder="Contoh: Toko / Meja Kasir / Pelanggan" class="form-control">
                     @error('lokasi_tujuan')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
@@ -624,7 +628,7 @@
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="catatan" class="form-label">Catatan</label>
                     <textarea name="catatan" id="catatan" rows="3" maxlength="1000"
-                              placeholder="Contoh: Penerimaan Penjualan, Penghapusan, Retur..." class="form-control">{{ old('catatan', $barangKeluar->catatan) }}</textarea>
+                              placeholder="Contoh: Pesanan buket wisuda / Diberi pita merah" class="form-control">{{ old('catatan', $barangKeluar->catatan) }}</textarea>
                     @error('catatan')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
@@ -662,18 +666,9 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Ambil harga dasar
+        | Ambil harga referensi
         |--------------------------------------------------------------------------
         */
-        function pickHarga(data) {
-            return num(
-                data?.harga_dasar ??
-                data?.harga ??
-                data?.harga_satuan ??
-                data?.item?.harga_dasar
-            );
-        }
-
         /*
         |--------------------------------------------------------------------------
         | Text to Speech
@@ -714,11 +709,13 @@
                     const option = document.createElement('option');
                     option.dataset.itemId = item.item_id;
                     option.value = `${item.kode}|${item.lokasi_id}|${item.kondisi_id}`;
-                    option.text = `${item.kode} - ${item.nama_barang} - ${item.lokasi} - ${item.kondisi} (Stok: ${item.stok})`;
+                    option.text = `${item.nama_barang} — Stok: ${item.stok} ${item.satuan}`;
                     option.dataset.nama = item.nama_barang ?? '';
+                    option.dataset.kode = item.kode ?? '';
+                    option.dataset.lokasi = item.lokasi ?? '';
+                    option.dataset.kondisi = item.kondisi ?? '';
                     option.dataset.satuan = item.satuan ?? '';
                     option.dataset.stok = item.stok ?? 0;
-                    option.dataset.harga = pickHarga(item);
                     select.appendChild(option);
                 });
 
@@ -764,7 +761,6 @@
             document.getElementById('nama_barang').value = option.dataset.nama ?? '';
             document.getElementById('satuan').value = option.dataset.satuan ?? '';
             document.getElementById('stok_tersedia').value = num(option.dataset.stok);
-            document.getElementById('harga_dasar').value = num(option.dataset.harga);
         }
 
         /*
@@ -784,7 +780,6 @@
                 document.getElementById('nama_barang').value = data.nama_barang ?? '';
                 document.getElementById('satuan').value = data.satuan ?? '';
                 document.getElementById('stok_tersedia').value = num(data.stok);
-                document.getElementById('harga_dasar').value = pickHarga(data);
             } catch (error) {
                 console.error(error);
             }
@@ -849,6 +844,18 @@
             const harga = document.getElementById('harga_jual');
 
             loadPilihanBarang();
+
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                $('.select2-tags').each(function() {
+                    const ph = $(this).data('placeholder') || 'Ketik atau pilih...';
+                    $(this).select2({
+                        tags: true,
+                        placeholder: ph,
+                        width: '100%',
+                        allowClear: false
+                    });
+                });
+            }
 
             select.addEventListener('change', async function() {
                 if (!this.value) return;

@@ -53,19 +53,49 @@
                     </h4>
                 </div>
 
-                <a href="{{ route('barang-masuk.create') }}"
-                    style="
-                        background:#0B4F35;
-                        color:#fff;
-                        padding:.8rem 1.25rem;
-                        border-radius:.85rem;
-                        text-decoration:none;
-                        font-weight:800;
-                        white-space:nowrap;
-                    ">
-                    <i class="fas fa-plus"></i>
-                    Tambah Barang Masuk
-                </a>
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                    <a href="{{ route('item.index') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        ">
+                        <i class="fas fa-boxes-stacked"></i>
+                        Daftar Item
+                    </a>
+                    <a href="{{ route('item.create') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        ">
+                        <i class="fas fa-plus"></i>
+                        Tambah Item
+                    </a>
+                    <a href="{{ route('barang-masuk.create') }}"
+                        style="
+                            background:#0B4F35;
+                            color:#fff;
+                            padding:.8rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        ">
+                        <i class="fas fa-arrow-down"></i>
+                        Catat Barang Masuk
+                    </a>
+                </div>
 
             </div>
 

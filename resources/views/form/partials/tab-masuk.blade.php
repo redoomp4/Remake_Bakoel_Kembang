@@ -1,5 +1,33 @@
 <section id="masuk" class="tab-content" role="tabpanel">
 
+    <style>
+        /* Tampilan ramah lansia: dropdown lebih tinggi & tulisan lebih besar */
+        #form-barang-masuk .select2-container--default .select2-selection--single {
+            min-height: 64px !important;
+            border-radius: 1rem !important;
+            border-color: #94a3b8 !important;
+            padding: 0.5rem 1rem !important;
+        }
+        #form-barang-masuk .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: 1.2rem !important;
+            font-weight: 800 !important;
+        }
+        #form-barang-masuk .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            font-size: 1.1rem !important;
+        }
+        #form-barang-masuk .select2-dropdown {
+            border-radius: 1rem !important;
+        }
+        #form-barang-masuk .select2-results__option {
+            padding: 0.85rem 1rem !important;
+            font-size: 1.05rem !important;
+        }
+        #form-barang-masuk .select2-container--default .select2-search--dropdown .select2-search__field {
+            font-size: 1.1rem !important;
+            padding: 0.75rem !important;
+        }
+    </style>
+
     {{-- SWITCHER MODE INPUT (SATUAN vs MASSAL) --}}
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-emerald-200 bg-white p-3 shadow-sm">
         <div class="flex items-center gap-3">
@@ -46,172 +74,202 @@
             </div>
         </div>
 
+        @php
+            $defaultLokasi = old('lokasi_input', $lokasis->first()?->nama_lokasi ?? 'Gudang Utama');
+            $defaultKondisi = old('kondisi_input', $kondisis->first()?->nama_kondisi ?? 'Segar');
+            $pemasokUmum = $pemasoks->firstWhere('nama_pemasok', 'Pemasok Umum');
+            $pemasokUmumValue = (string) ($pemasokUmum?->id ?? 'Pemasok Umum');
+            $pemasokSelectedValue = (string) old('pemasok_id', $pemasokUmumValue);
+        @endphp
+
         {{-- Form Transaksi Barang Masuk Satuan --}}
-        <form id="form-barang-masuk" action="{{ route('form.barang-masuk.store') }}" method="POST" class="form-card shadow-sm border border-slate-200">
+        <form id="form-barang-masuk" action="{{ route('form.barang-masuk.store') }}" method="POST"
+            data-finish-url="{{ route('barang-masuk.index') }}"
+            class="form-card shadow-sm border-2 border-emerald-200">
             @csrf
 
-            <div class="form-header bg-slate-50 border-b border-slate-200 p-4 sm:p-5 flex items-center gap-3">
-                <div class="icon-box w-10 h-10 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-black">
-                    <i class="fas fa-arrow-down text-lg"></i>
+            {{-- Field sekunder tetap dikirim, tetapi otomatis terisi & disembunyikan --}}
+            <input type="hidden" name="tgl_masuk" id="input-tgl-masuk" value="{{ old('tgl_masuk', now()->format('Y-m-d')) }}">
+            <input type="hidden" name="tgl_kadaluarsa" id="input-tgl-kadaluarsa" value="{{ old('tgl_kadaluarsa') }}">
+            <input type="hidden" name="lokasi_input" id="input-lokasi-masuk" value="{{ $defaultLokasi }}">
+            <input type="hidden" name="kondisi_input" id="input-kondisi-masuk" value="{{ $defaultKondisi }}">
+
+            <div class="form-header bg-emerald-50 border-b-2 border-emerald-200 p-4 sm:p-6 flex items-center gap-3">
+                <div class="icon-box w-12 h-12 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-black flex-shrink-0">
+                    <i class="fas fa-arrow-down text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-lg font-black text-emerald-950">Transaksi Barang Masuk (Satuan)</h2>
-                    <p class="text-xs text-slate-500">Catat penerimaan item barang ke dalam inventori toko.</p>
+                    <h2 class="text-xl sm:text-2xl font-black text-emerald-950">Catat Bunga Masuk</h2>
+                    <p class="text-sm text-slate-600 font-semibold">Cukup isi 3 kolom besar di bawah ini ya Bu/Pak.</p>
                 </div>
             </div>
 
-            <div class="form-body p-5 sm:p-6 space-y-5">
-                {{-- PILIH BARANG MASTER + TOMBOL ITEM BARU --}}
+            <div class="form-body p-5 sm:p-7 space-y-6">
+                {{-- 1. PILIH BUNGA / KETIK BUNGA BARU --}}
                 <div class="form-group">
-                    <div class="flex items-center justify-between mb-2">
-                        <label for="select-item-masuk" class="text-base font-black text-slate-800">
-                            Pilih Bunga / Barang Master <span class="text-rose-500">*</span>
-                        </label>
+                    <label for="select-item-masuk" class="text-lg sm:text-xl font-black text-slate-900 mb-2 block">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700 text-white text-base mr-1">1</span>
+                        Pilih Bunga / Ketik Bunga Baru <span class="text-rose-600">*</span>
+                    </label>
+
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        <div class="min-w-0 flex-1">
+                            <select name="id_item" id="select-item-masuk" class="select2 w-full text-lg font-bold">
+                                <option value=""></option>
+                                @foreach ($items ?? [] as $item)
+                                    <option value="{{ $item->id }}" data-stok="{{ $item->total_stok }}" data-satuan="{{ optional($item->satuan)->nama_satuan ?? 'Pcs' }}" {{ old('id_item') == $item->id ? 'selected' : '' }}>
+                                        {{ $item->kode_barang }} — {{ $item->nama_barang }} (Stok: {{ $item->total_stok }} {{ optional($item->satuan)->nama_satuan ?? 'Pcs' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <button type="button" onclick="openQuickItemModal('single')"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 px-3 py-1.5 text-sm font-black transition shadow-sm border border-emerald-300">
-                            <i class="fas fa-plus-circle text-emerald-700 text-base"></i> + Bunga / Item Baru
+                            class="inline-flex h-16 flex-shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-100 px-5 text-base font-black text-emerald-900 transition hover:bg-emerald-200">
+                            <i class="fas fa-plus-circle text-lg"></i> Tambah Item Baru
                         </button>
                     </div>
 
-                    <select name="id_item" id="select-item-masuk" required class="select2 w-full text-base font-bold">
-                        <option value="">-- Cari atau Ketik Nama Bunga --</option>
-                        @foreach ($items ?? [] as $item)
-                            <option value="{{ $item->id }}" data-harga="{{ $item->harga_dasar }}" data-stok="{{ $item->total_stok }}" data-satuan="{{ optional($item->satuan)->nama_satuan ?? 'Pcs' }}" {{ old('id_item') == $item->id ? 'selected' : '' }}>
-                                {{ $item->kode_barang }} — {{ $item->nama_barang }} (Stok: {{ $item->total_stok }} {{ optional($item->satuan)->nama_satuan ?? 'Pcs' }})
+                    <div id="badge-item-baru"
+                        class="mt-3 hidden items-center gap-2 rounded-xl border-2 border-emerald-400 bg-emerald-100 px-4 py-3 text-base font-black text-emerald-900">
+                        <span class="text-xl">🌸</span>
+                        <span>Bunga Baru (Otomatis Didaftarkan)</span>
+                    </div>
+
+                    @error('id_item')
+                        <p class="form-error mt-2 text-sm font-bold text-rose-600">{{ $message }}</p>
+                    @enderror
+
+                    <p class="mt-2 text-sm font-semibold text-slate-500">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                        Belum ada di daftar? Klik <strong class="text-emerald-700">Tambah Item Baru</strong>, atau ketik namanya lalu tekan Enter.
+                    </p>
+                </div>
+
+                {{-- 2. JUMLAH + 3. HARGA BELI --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label for="input-jumlah-masuk" class="block text-lg sm:text-xl font-black text-slate-900 mb-2">
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700 text-white text-base mr-1">2</span>
+                            Jumlah Masuk <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="number" name="jumlah" id="input-jumlah-masuk" min="1" inputmode="numeric"
+                            class="w-full rounded-2xl border-2 border-slate-400 focus:border-emerald-700 p-4 text-2xl font-black text-slate-900 bg-white"
+                            placeholder="Contoh: 50" value="{{ old('jumlah', 1) }}">
+                        @error('jumlah')
+                            <p class="text-sm font-bold text-rose-600 mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="input-harga-beli-masuk" class="block text-lg sm:text-xl font-black text-slate-900 mb-2">
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700 text-white text-base mr-1">3</span>
+                            Harga Beli Satuan (Rp) <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="number" name="harga_beli" id="input-harga-beli-masuk" min="0" step="100" inputmode="numeric"
+                            class="w-full rounded-2xl border-2 border-slate-400 focus:border-emerald-700 p-4 text-2xl font-black text-emerald-900 bg-white"
+                            placeholder="Contoh: 10000" value="{{ old('harga_beli', 0) }}">
+                        @error('harga_beli')
+                            <p class="text-sm font-bold text-rose-600 mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- PEMASOK: Select2 tags, default Pemasok Umum --}}
+                <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4 sm:p-5">
+                    <label for="select-pemasok-masuk" class="block text-lg font-black text-slate-900 mb-2">
+                        <i class="fas fa-store text-emerald-700"></i> Pemasok / Supplier
+                    </label>
+                    <select name="pemasok_id" id="select-pemasok-masuk" class="select2 w-full text-base font-bold">
+                        <option value="{{ $pemasokUmumValue }}" {{ $pemasokSelectedValue === $pemasokUmumValue ? 'selected' : '' }}>
+                            Pemasok Umum (Default)
+                        </option>
+                        @foreach ($pemasoks ?? [] as $pem)
+                            @continue($pem->nama_pemasok === 'Pemasok Umum')
+                            <option value="{{ $pem->id }}" {{ $pemasokSelectedValue === (string) $pem->id ? 'selected' : '' }}>
+                                {{ $pem->nama_pemasok }}
                             </option>
                         @endforeach
                     </select>
-
-                    @error('id_item')
-                        <p class="form-error mt-1 text-sm font-bold text-rose-600">{{ $message }}</p>
-                    @enderror
+                    <p class="mt-2 text-sm font-semibold text-slate-600">
+                        Sudah terisi <strong>Pemasok Umum</strong>. Kalau pemasok lain, cukup ketik namanya di sini.
+                    </p>
                 </div>
 
-                {{-- JUMLAH + HARGA BELI --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="input-jumlah-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Jumlah Masuk <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="number" name="jumlah" id="input-jumlah-masuk" min="1" required
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-slate-900 bg-white"
-                            placeholder="Contoh: 50" value="{{ old('jumlah', 1) }}">
-                        @error('jumlah')
-                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="input-harga-beli-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Harga Beli Satuan (Rp) <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="number" name="harga_beli" id="input-harga-beli-masuk" min="0" step="100" required
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-lg font-black text-emerald-900 bg-white"
-                            placeholder="0" value="{{ old('harga_beli', 0) }}">
-                        @error('harga_beli')
-                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- TANGGAL MASUK + TANGGAL KADALUARSA --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="input-tgl-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Tanggal Masuk <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" name="tgl_masuk" id="input-tgl-masuk" required
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
-                            value="{{ old('tgl_masuk', date('Y-m-d')) }}">
-                        @error('tgl_masuk')
-                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="input-tgl-kadaluarsa" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Tanggal Kadaluarsa <span class="text-xs text-slate-400 font-normal lowercase">(opsional)</span>
-                        </label>
-                        <input type="date" name="tgl_kadaluarsa" id="input-tgl-kadaluarsa"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
-                            value="{{ old('tgl_kadaluarsa') }}">
-                        @error('tgl_kadaluarsa')
-                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- PEMASOK + LOKASI + KONDISI --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {{-- 1 Inputan Simpel Pemasok --}}
-                    <div>
-                        <label for="input-pemasok-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Pemasok / Supplier <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" name="pemasok_input" id="input-pemasok-masuk" list="datalist-pemasok-single" required
-                            placeholder="Ketik / pilih pemasok"
-                            value="{{ old('pemasok_input', $pemasoks->first()?->nama_pemasok ?? 'Pemasok Umum') }}"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white"
-                            autocomplete="off">
-                        <datalist id="datalist-pemasok-single">
-                            @foreach ($pemasoks ?? [] as $pem)
-                                <option value="{{ $pem->nama_pemasok }}">
-                            @endforeach
-                        </datalist>
-                        @error('pemasok_input')
-                            <p class="text-xs font-bold text-rose-600 mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Lokasi Penyimpanan --}}
-                    <div>
-                        <label for="input-lokasi-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Lokasi Simpan
-                        </label>
-                        <select name="lokasi_input" id="input-lokasi-masuk"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white">
-                            @foreach ($lokasis ?? [] as $lok)
-                                <option value="{{ $lok->nama_lokasi }}" {{ (old('lokasi_input') == $lok->nama_lokasi || $lok->nama_lokasi == 'Gudang Utama') ? 'selected' : '' }}>
-                                    {{ $lok->nama_lokasi }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Kondisi Barang --}}
-                    <div>
-                        <label for="input-kondisi-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                            Kondisi Barang
-                        </label>
-                        <select name="kondisi_input" id="input-kondisi-masuk"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white">
-                            @foreach ($kondisis ?? [] as $kon)
-                                <option value="{{ $kon->nama_kondisi }}" {{ (old('kondisi_input') == $kon->nama_kondisi || $kon->nama_kondisi == 'Segar') ? 'selected' : '' }}>
-                                    {{ $kon->nama_kondisi }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                {{-- CATATAN TRANSAKSI --}}
-                <div>
-                    <label for="input-catatan-masuk" class="block text-sm font-black uppercase text-slate-700 mb-1">
-                        Catatan Transaksi <span class="text-xs text-slate-400 font-normal lowercase">(opsional)</span>
-                    </label>
-                    <input type="text" name="catatan" id="input-catatan-masuk"
-                        placeholder="Catatan tambahan faktur atau surat jalan..."
-                        value="{{ old('catatan') }}"
-                        class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base text-slate-800 bg-white">
+                {{-- INFO OTOMATIS: tanggal, lokasi, kondisi --}}
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">
+                    <span><i class="fas fa-calendar-day text-emerald-700"></i> Tanggal: <span class="text-emerald-900">Hari ini</span></span>
+                    <span><i class="fas fa-warehouse text-emerald-700"></i> Lokasi: <span class="text-emerald-900">{{ $defaultLokasi }}</span></span>
+                    <span><i class="fas fa-leaf text-emerald-700"></i> Kondisi: <span class="text-emerald-900">{{ $defaultKondisi }}</span></span>
+                    <span class="text-xs font-semibold text-slate-400">(otomatis, tidak perlu diisi)</span>
                 </div>
             </div>
 
-            <div class="form-footer bg-slate-50 border-t border-slate-200 p-4 sm:p-5 flex justify-end">
-                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white px-8 py-3.5 text-base font-black shadow-md transition">
-                    <i class="fas fa-save text-lg"></i> Simpan Transaksi Masuk
+            <div class="form-footer bg-emerald-50 border-t-2 border-emerald-200 p-4 sm:p-6 flex flex-col sm:flex-row gap-3">
+                <button type="button" id="btn-simpan-lagi"
+                    class="w-full sm:flex-1 inline-flex items-center justify-center gap-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[.99] text-white px-6 py-4 text-lg sm:text-xl font-black shadow-lg shadow-emerald-900/20 transition">
+                    <i class="fas fa-save text-xl"></i> SIMPAN &amp; TAMBAH LAGI
+                </button>
+                <button type="button" id="btn-simpan-selesai"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-2xl bg-sky-700 hover:bg-sky-800 active:scale-[.99] text-white px-6 py-4 text-lg sm:text-xl font-black shadow-lg shadow-sky-900/20 transition">
+                    <i class="fas fa-stop-circle text-xl"></i> SIMPAN &amp; SELESAI
                 </button>
             </div>
         </form>
+
+        {{-- RINGKASAN RIWAYAT TRANSAKSI MASUK TERAKHIR --}}
+        <div class="mt-6 form-card border-2 border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between gap-3 border-b-2 border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
+                        <i class="fas fa-clock-rotate-left text-lg"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900">Riwayat Masuk Terakhir</h3>
+                        <p class="text-xs font-semibold text-slate-500">Otomatis diperbarui setiap kali menyimpan.</p>
+                    </div>
+                </div>
+                <span id="riwayat-masuk-jumlah" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">
+                    {{ count($riwayatMasuk ?? []) }} transaksi
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[720px] text-left">
+                    <thead>
+                        <tr class="bg-slate-100 text-xs font-black uppercase tracking-wide text-slate-600">
+                            <th class="px-4 py-3">Bunga</th>
+                            <th class="px-3 py-3 text-center">Jumlah</th>
+                            <th class="px-3 py-3 text-right">Harga Satuan</th>
+                            <th class="px-3 py-3 text-right">Total</th>
+                            <th class="px-3 py-3">Pemasok</th>
+                            <th class="px-4 py-3 text-right">Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riwayat-masuk-body" class="divide-y divide-slate-200 text-sm font-semibold text-slate-800">
+                        @forelse ($riwayatMasuk ?? [] as $riwayat)
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <span class="font-black text-slate-900">{{ $riwayat['nama_barang'] }}</span>
+                                    <span class="block text-xs text-slate-500">{{ $riwayat['kode_barang'] }}</span>
+                                </td>
+                                <td class="px-3 py-3 text-center font-black text-emerald-800">{{ $riwayat['jumlah'] }} {{ $riwayat['satuan'] }}</td>
+                                <td class="px-3 py-3 text-right">Rp {{ number_format($riwayat['harga_satuan'], 0, ',', '.') }}</td>
+                                <td class="px-3 py-3 text-right font-black text-slate-900">Rp {{ number_format($riwayat['total_harga'], 0, ',', '.') }}</td>
+                                <td class="px-3 py-3">{{ $riwayat['pemasok'] }}</td>
+                                <td class="px-4 py-3 text-right text-slate-500">{{ $riwayat['tanggal'] }}</td>
+                            </tr>
+                        @empty
+                            <tr id="riwayat-masuk-kosong">
+                                <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                                    <i class="fas fa-inbox text-2xl text-slate-300"></i>
+                                    <p class="mt-2 font-bold">Belum ada transaksi masuk. Yuk catat yang pertama!</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     {{-- ======================================================== --}}
@@ -243,18 +301,16 @@
                             class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
                     </div>
 
-                    {{-- Pemasok (1 inputan simpel) --}}
+                    {{-- Pemasok: default Pemasok Umum, bisa ketik nama baru --}}
                     <div>
-                        <label class="block text-xs font-black uppercase text-slate-700 mb-1">Pemasok / Supplier <span class="text-rose-500">*</span></label>
-                        <input type="text" name="pemasok_input" list="datalist-pemasok-bulk" required
-                            placeholder="-- Pilih / Ketik Pemasok --"
-                            value="{{ $pemasoks->first()?->nama_pemasok ?? 'Pemasok Umum' }}"
-                            class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-2.5 text-base font-bold text-slate-900 bg-white">
-                        <datalist id="datalist-pemasok-bulk">
+                        <label for="select-pemasok-bulk" class="block text-xs font-black uppercase text-slate-700 mb-1">Pemasok / Supplier <span class="text-rose-500">*</span></label>
+                        <select name="pemasok_id" id="select-pemasok-bulk" class="select2 w-full text-base font-bold">
+                            <option value="{{ $pemasokUmumValue }}" {{ $pemasokSelectedValue === $pemasokUmumValue ? 'selected' : '' }}>Pemasok Umum (Default)</option>
                             @foreach ($pemasoks ?? [] as $pem)
-                                <option value="{{ $pem->nama_pemasok }}">
+                                @continue(strtolower($pem->nama_pemasok) === 'pemasok umum')
+                                <option value="{{ $pem->id }}" {{ $pemasokSelectedValue === (string) $pem->id ? 'selected' : '' }}>{{ $pem->nama_pemasok }}</option>
                             @endforeach
-                        </datalist>
+                        </select>
                     </div>
 
                     {{-- Lokasi Penyimpanan --}}
@@ -355,7 +411,7 @@
     {{-- ======================================================== --}}
     {{-- MODAL CEPAT: INPUT ITEM / BUNGA BARU LANGSUNG            --}}
     {{-- ======================================================== --}}
-    <div id="modal-quick-item" class="fixed inset-0 z-[99999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div id="modal-quick-item" data-quick-store-url="{{ route('items.quick-store') }}" class="fixed inset-0 z-[99999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-3xl border-2 border-emerald-200 shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-fadeIn">
             <div class="bg-emerald-900 text-white p-5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -386,15 +442,20 @@
                     <label for="quick-item-satuan" class="block text-sm font-black text-slate-800 uppercase mb-1">
                         Satuan <span class="text-rose-500">*</span>
                     </label>
+                    @php
+                        $quickSatuanOptions = collect(['Tangkai', 'Pot', 'Ikat', 'Pcs', 'Buket', 'Box', 'Lusin', 'Batang'])
+                            ->merge(($satuans ?? collect())->pluck('nama_satuan'))
+                            ->filter()
+                            ->unique()
+                            ->values();
+                        $quickSatuanSelected = ($satuans ?? collect())->first()?->nama_satuan ?? 'Tangkai';
+                    @endphp
                     <select id="quick-item-satuan" class="w-full rounded-xl border-2 border-slate-300 focus:border-emerald-700 p-3 text-base font-bold text-slate-900 bg-white">
-                        <option value="Tangkai" selected>Tangkai</option>
-                        <option value="Pot">Pot</option>
-                        <option value="Ikat">Ikat</option>
-                        <option value="Pcs">Pcs</option>
-                        <option value="Buket">Buket</option>
-                        <option value="Box">Box</option>
-                        <option value="Lusin">Lusin</option>
-                        <option value="Batang">Batang</option>
+                        @foreach ($quickSatuanOptions as $namaSatuan)
+                            <option value="{{ $namaSatuan }}" {{ $namaSatuan === $quickSatuanSelected ? 'selected' : '' }}>
+                                {{ $namaSatuan }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -456,7 +517,8 @@
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             try {
-                const response = await fetch('/items/quick-store', {
+                const quickStoreUrl = document.getElementById('modal-quick-item')?.dataset.quickStoreUrl || '/items/quick-store';
+                const response = await fetch(quickStoreUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -477,6 +539,8 @@
 
                 const newItem = data.item;
 
+                hideNewItemBadge();
+
                 // Tambahkan item ke katalog lokal jika belum ada
                 const exists = ALL_ITEMS_MASUK.find(it => it.id === newItem.id);
                 if (!exists) {
@@ -484,7 +548,6 @@
                         id: newItem.id,
                         kode: newItem.kode_barang,
                         nama: newItem.nama_item,
-                        harga_dasar: 0,
                         stok: 0,
                         satuan: newItem.satuan
                     });
@@ -628,7 +691,6 @@
                 const isSelected = selectedItemId && selectedItemId === it.id ? 'selected' : '';
                 const stokText = it.stok !== undefined ? ` (Stok: ${it.stok} ${it.satuan || ''})` : '';
                 itemOptionsHtml += `<option value="${it.id}" ${isSelected}
-                    data-harga="${it.harga_dasar}"
                     data-stok="${it.stok}"
                     data-nama="${it.nama}"
                     data-satuan="${it.satuan}">
@@ -713,7 +775,6 @@
 
         function onMasukItemChange(idx, selectEl) {
             const selectedOpt = selectEl.options[selectEl.selectedIndex];
-            const defaultHarga = selectedOpt && selectedOpt.dataset.harga ? parseFloat(selectedOpt.dataset.harga) : 0;
             const stok = selectedOpt && selectedOpt.dataset.stok !== undefined ? selectedOpt.dataset.stok : null;
             const satuan = selectedOpt && selectedOpt.dataset.satuan ? selectedOpt.dataset.satuan : '';
 
@@ -731,10 +792,6 @@
                 }
             }
 
-            const hargaInput = row.querySelector(`input[name="rows[${idx}][harga_satuan]"]`);
-            if (hargaInput && (parseFloat(hargaInput.value) === 0 || !hargaInput.value)) {
-                hargaInput.value = defaultHarga;
-            }
             calcMasukRow(idx);
         }
 
@@ -808,43 +865,357 @@
 
         // Inisialisasi saat Document Ready
         $(document).ready(function() {
-            // Select2 untuk Single Mode dengan Tagging Cepat
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+
+            const formatRupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(parseFloat(value) || 0);
+
+            function showBigToast(message, type = 'success') {
+                const palette = type === 'success'
+                    ? 'bg-emerald-500 text-white ring-emerald-200'
+                    : 'bg-rose-500 text-white ring-rose-200';
+
+                const node = document.createElement('div');
+                node.className = `fixed top-5 right-5 z-[999999] max-w-sm rounded-2xl px-6 py-4 text-lg font-black shadow-2xl ring-4 ${palette} transition-all duration-300 -translate-y-2 opacity-0`;
+                node.setAttribute('role', 'status');
+                node.textContent = message;
+                document.body.appendChild(node);
+
+                requestAnimationFrame(() => node.classList.remove('-translate-y-2', 'opacity-0'));
+                setTimeout(() => {
+                    node.classList.add('-translate-y-2', 'opacity-0');
+                    setTimeout(() => node.remove(), 300);
+                }, 3200);
+            }
+
+            function showNewItemBadge(name = '') {
+                const badge = document.getElementById('badge-item-baru');
+                if (!badge) return;
+                badge.innerHTML = `<span class="text-xl">🌸</span><span>Bunga Baru${name ? ': &ldquo;' + escapeHtml(name) + '&rdquo;' : ''} (Otomatis Didaftarkan)</span>`;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            }
+
+            function hideNewItemBadge() {
+                const badge = document.getElementById('badge-item-baru');
+                if (!badge) return;
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+
+            function focusItemSelect(openDropdown = false) {
+                setTimeout(() => {
+                    if (window.jQuery && $.fn.select2) {
+                        if (openDropdown) $('#select-item-masuk').select2('open');
+                        $('#select-item-masuk').trigger('focus');
+                        setTimeout(() => {
+                            document.querySelector('.select2-container--open .select2-search__field')?.focus();
+                        }, 70);
+                    } else {
+                        document.getElementById('select-item-masuk')?.focus();
+                    }
+                }, 80);
+            }
+
+            function addItemToCatalog(item) {
+                if (!item || !item.id) return;
+
+                const itemId = String(item.id);
+                const nama = item.nama || item.nama_item || 'Bunga Baru';
+                const kode = item.kode_barang || '';
+                const satuan = item.satuan || 'Tangkai';
+                const stok = item.stok ?? 0;
+                if (!ALL_ITEMS_MASUK.find((it) => String(it.id) === itemId)) {
+                    ALL_ITEMS_MASUK.push({
+                        id: item.id,
+                        kode: kode,
+                        nama: nama,
+                        stok: stok,
+                        satuan: satuan
+                    });
+                }
+
+                const selects = document.querySelectorAll('#select-item-masuk, select.select-masuk-item');
+                selects.forEach((select) => {
+                    if (select.querySelector(`option[value="${itemId}"]`)) return;
+
+                    const option = new Option(
+                        `${kode}${kode ? ' — ' : ''}${nama} (Stok: ${stok} ${satuan})`,
+                        itemId,
+                        false,
+                        false
+                    );
+                    option.dataset.stok = stok;
+                    option.dataset.satuan = satuan;
+                    option.dataset.nama = nama;
+                    select.appendChild(option);
+                });
+            }
+
+            function renderRiwayat(rows) {
+                const tbody = document.getElementById('riwayat-masuk-body');
+                if (!tbody) return;
+
+                const badge = document.getElementById('riwayat-masuk-jumlah');
+
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    tbody.innerHTML = `
+                        <tr id="riwayat-masuk-kosong">
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                                <i class="fas fa-inbox text-2xl text-slate-300"></i>
+                                <p class="mt-2 font-bold">Belum ada transaksi masuk. Yuk catat yang pertama!</p>
+                            </td>
+                        </tr>`;
+                    if (badge) badge.textContent = '0 transaksi';
+                    return;
+                }
+
+                tbody.innerHTML = rows.map((row) => `
+                    <tr>
+                        <td class="px-4 py-3">
+                            <span class="font-black text-slate-900">${escapeHtml(row.nama_barang)}</span>
+                            <span class="block text-xs text-slate-500">${escapeHtml(row.kode_barang)}</span>
+                        </td>
+                        <td class="px-3 py-3 text-center font-black text-emerald-800">${escapeHtml(row.jumlah)} ${escapeHtml(row.satuan)}</td>
+                        <td class="px-3 py-3 text-right">${formatRupiah(row.harga_satuan)}</td>
+                        <td class="px-3 py-3 text-right font-black text-slate-900">${formatRupiah(row.total_harga)}</td>
+                        <td class="px-3 py-3">${escapeHtml(row.pemasok)}</td>
+                        <td class="px-4 py-3 text-right text-slate-500">${escapeHtml(row.tanggal)}</td>
+                    </tr>
+                `).join('');
+
+                if (badge) badge.textContent = `${rows.length} transaksi`;
+            }
+
+            function resetFormMasuk() {
+                const form = document.getElementById('form-barang-masuk');
+                if (!form) return;
+
+                if (window.jQuery && $.fn.select2) {
+                    $('#select-item-masuk').val(null).trigger('change');
+                } else {
+                    const select = form.querySelector('[name="id_item"]');
+                    if (select) select.value = '';
+                }
+
+                document.getElementById('input-jumlah-masuk').value = '';
+                document.getElementById('input-harga-beli-masuk').value = '';
+                hideNewItemBadge();
+                focusItemSelect(true);
+            }
+
+            const saveButtons = ['btn-simpan-lagi', 'btn-simpan-selesai']
+                .map((id) => document.getElementById(id))
+                .filter(Boolean);
+
+            function setBusy(busy, activeId = null) {
+                saveButtons.forEach((button) => {
+                    button.disabled = busy;
+
+                    if (busy && button.id === activeId) {
+                        button.dataset.originalHtml = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                    } else if (!busy && button.dataset.originalHtml) {
+                        button.innerHTML = button.dataset.originalHtml;
+                        delete button.dataset.originalHtml;
+                    }
+                });
+            }
+
+            async function submitMasuk(finishAfter = false) {
+                const form = document.getElementById('form-barang-masuk');
+                if (!form) return;
+
+                const itemVal = $('#select-item-masuk').val();
+                const jumlahInput = document.getElementById('input-jumlah-masuk');
+                const hargaInput = document.getElementById('input-harga-beli-masuk');
+                const jumlah = parseInt(jumlahInput?.value, 10);
+                const harga = parseFloat(hargaInput?.value);
+
+                if (!itemVal) {
+                    showBigToast('Mohon pilih atau ketik nama bunga terlebih dahulu ya Bu/Pak.', 'error');
+                    focusItemSelect(true);
+                    return;
+                }
+
+                if (!jumlahInput?.value || Number.isNaN(jumlah) || jumlah < 1) {
+                    showBigToast('Harap isi jumlah bunga terlebih dahulu ya Bu/Pak.', 'error');
+                    jumlahInput?.focus();
+                    return;
+                }
+
+                if (hargaInput?.value === '' || Number.isNaN(harga) || harga < 0) {
+                    showBigToast('Harap isi harga beli satuan terlebih dahulu ya Bu/Pak.', 'error');
+                    hargaInput?.focus();
+                    return;
+                }
+
+                const activeId = finishAfter ? 'btn-simpan-selesai' : 'btn-simpan-lagi';
+                setBusy(true, activeId);
+
+                try {
+                    const formData = new FormData(form);
+                    formData.set('id_item', itemVal);
+                    formData.set('jumlah', jumlah);
+                    formData.set('harga_beli', harga);
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json().catch(() => null);
+
+                    if (!response.ok || !(data && (data.status || data.success))) {
+                        const firstError = data?.errors ? Object.values(data.errors)?.[0]?.[0] : null;
+                        throw new Error(data?.message || firstError || 'Maaf, data belum bisa disimpan. Coba lagi ya Bu/Pak.');
+                    }
+
+                    if (data.item) addItemToCatalog(data.item);
+                    if (Array.isArray(data.riwayat)) renderRiwayat(data.riwayat);
+
+                    showBigToast(data.message || '✅ Berhasil ditambahkan!');
+
+                    if (finishAfter) {
+                        setTimeout(() => {
+                            window.location.href = form.dataset.finishUrl;
+                        }, 900);
+                    } else {
+                        resetFormMasuk();
+                    }
+                } catch (error) {
+                    showBigToast(error.message || 'Maaf, data belum bisa disimpan. Coba lagi ya Bu/Pak.', 'error');
+                } finally {
+                    setBusy(false, activeId);
+                }
+            }
+
+            // Select2 Bunga: pencarian + pembuatan bunga baru langsung (inline)
             if ($.fn.select2) {
                 $('#select-item-masuk').select2({
-                    placeholder: '🔍 Cari atau ketik nama bunga...',
+                    placeholder: '🔍 Ketik nama bunga di sini...',
                     allowClear: true,
                     width: '100%',
                     tags: true,
                     createTag: function (params) {
-                        var term = $.trim(params.term);
+                        const term = $.trim(params.term);
                         if (term === '') return null;
                         return {
                             id: 'NEW:' + term,
-                            text: '➕ Tambah Baru: "' + term + '"',
+                            text: term,
                             newTag: true,
                             term: term
                         };
                     },
+                    templateResult: function (data) {
+                        if (data.newTag) {
+                            return $('<span class="font-bold text-emerald-800"><i class="fas fa-plus-circle mr-1"></i> Tambah Baru: <strong>' + escapeHtml(data.term) + '</strong></span>');
+                        }
+                        return data.text;
+                    },
                     language: {
-                        noResults: function() { return 'Bunga tidak ditemukan. Tekan Enter untuk menambah baru.'; },
-                        searching: function() { return 'Mencari...'; }
+                        noResults: function () { return 'Bunga belum ada. Ketik namanya lalu tekan Enter untuk mendaftarkan otomatis.'; },
+                        searching: function () { return 'Mencari...'; }
                     }
-                }).on('select2:select', function(e) {
+                }).on('select2:select', function (e) {
                     const data = e.params.data;
+
                     if (data.newTag || String(data.id).startsWith('NEW:')) {
-                        $('#select-item-masuk').val('').trigger('change');
-                        const flowerName = data.term || data.id.replace('NEW:', '');
-                        openQuickItemModal('single', null, flowerName);
+                        const namaBaru = data.term || String(data.id).replace('NEW:', '');
+                        $(this).val(null).trigger('change');
+                        hideNewItemBadge();
+                        openQuickItemModal('single', null, namaBaru);
                         return;
                     }
 
-                    const opt = this.options[this.selectedIndex];
-                    const hargaBeliInput = document.getElementById('input-harga-beli-masuk');
-                    if (opt && opt.dataset.harga && hargaBeliInput && (!hargaBeliInput.value || parseFloat(hargaBeliInput.value) === 0)) {
-                        hargaBeliInput.value = opt.dataset.harga;
+                    hideNewItemBadge();
+
+                }).on('select2:unselect select2:clear', function () {
+                    hideNewItemBadge();
+                }).on('select2:open', function () {
+                    setTimeout(function () {
+                        document.querySelector('.select2-container--open .select2-search__field')?.focus();
+                    }, 60);
+                });
+
+                // Select2 Pemasok: default Pemasok Umum + bisa ketik nama baru
+                $('#select-pemasok-masuk').select2({
+                    placeholder: 'Pilih atau ketik nama pemasok...',
+                    width: '100%',
+                    tags: true,
+                    allowClear: false,
+                    createTag: function (params) {
+                        const term = $.trim(params.term);
+                        if (term === '') return null;
+                        return {
+                            id: term,
+                            text: term,
+                            newTag: true,
+                            term: term
+                        };
+                    },
+                    templateResult: function (data) {
+                        if (data.newTag) {
+                            return $('<span class="font-bold text-emerald-800"><i class="fas fa-plus-circle mr-1"></i> Pemasok Baru: <strong>' + escapeHtml(data.term) + '</strong></span>');
+                        }
+                        return data.text;
+                    },
+                    language: {
+                        noResults: function () { return 'Pemasok belum ada. Ketik namanya lalu tekan Enter.'; },
+                        searching: function () { return 'Mencari...'; }
+                    }
+                });
+
+                // Pemasok pada mode input massal (nota restock)
+                $('#select-pemasok-bulk').select2({
+                    placeholder: 'Pilih atau ketik nama pemasok...',
+                    width: '100%',
+                    tags: true,
+                    allowClear: false,
+                    createTag: function (params) {
+                        const term = $.trim(params.term);
+                        if (term === '') return null;
+                        return {
+                            id: term,
+                            text: term,
+                            newTag: true,
+                            term: term
+                        };
+                    },
+                    templateResult: function (data) {
+                        if (data.newTag) {
+                            return $('<span class="font-bold text-emerald-800"><i class="fas fa-plus-circle mr-1"></i> Pemasok Baru: <strong>' + escapeHtml(data.term) + '</strong></span>');
+                        }
+                        return data.text;
+                    },
+                    language: {
+                        noResults: function () { return 'Pemasok belum ada. Ketik namanya lalu tekan Enter.'; },
+                        searching: function () { return 'Mencari...'; }
                     }
                 });
             }
+
+            saveButtons.forEach((button) => {
+                button.addEventListener('click', function () {
+                    submitMasuk(button.id === 'btn-simpan-selesai');
+                });
+            });
+
+            document.getElementById('form-barang-masuk')?.addEventListener('submit', function (event) {
+                event.preventDefault();
+                submitMasuk(false);
+            });
 
             // Voice Assistant Handler Satuan
             const btnVoice = document.getElementById('btn-voice-masuk');
@@ -974,20 +1345,53 @@
                 };
 
                 if (data.id_item && $.fn.select2) {
+                    // Item sudah ada di katalog
                     $('#select-item-masuk').val(data.id_item).trigger('change');
+                    hideNewItemBadge();
                 } else if (data.nama_barang && !data.id_item) {
-                    // Jika barang tidak ditemukan di master, buka modal quick-add
-                    openQuickItemModal('single', null, data.nama_barang);
+                    // Item baru: pilih tag "NEW:" agar dibuat otomatis saat disimpan
+                    const select = $('#select-item-masuk');
+                    const value = 'NEW:' + data.nama_barang;
+                    const optionExists = select.find('option').filter(function () {
+                        return this.value === value;
+                    }).length > 0;
+
+                    if (!optionExists) {
+                        select.append(new Option(data.nama_barang, value, true, true));
+                    }
+
+                    select.val(value).trigger('change');
+                    showNewItemBadge(data.nama_barang);
                 }
 
                 setVal('input-jumlah-masuk', data.jumlah);
                 setVal('input-harga-beli-masuk', data.harga_beli);
                 setVal('input-tgl-masuk', data.tgl_masuk || data.tanggal_masuk);
                 setVal('input-tgl-kadaluarsa', data.tgl_kadaluarsa || data.tanggal_kadaluarsa);
-                setVal('input-pemasok-masuk', data.pemasok_input);
                 setVal('input-lokasi-masuk', data.lokasi_input);
                 setVal('input-kondisi-masuk', data.kondisi_input);
-                setVal('input-catatan-masuk', data.catatan);
+
+                if (data.pemasok_input && $.fn.select2) {
+                    const select = $('#select-pemasok-masuk');
+                    const namaPemasok = String(data.pemasok_input).trim();
+                    let value = namaPemasok;
+
+                    select.find('option').each(function () {
+                        if ($(this).text().trim().toLowerCase() === namaPemasok.toLowerCase()) {
+                            value = $(this).val();
+                        }
+                    });
+
+                    const optionExists = select.find('option').filter(function () {
+                        return this.value === value;
+                    }).length > 0;
+
+                    if (!optionExists) {
+                        select.append(new Option(namaPemasok, namaPemasok, true, true));
+                    }
+
+                    select.val(value).trigger('change');
+                }
             }
         });
     </script>

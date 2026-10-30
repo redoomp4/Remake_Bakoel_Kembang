@@ -307,10 +307,26 @@
             </tr>
             <tr>
                 <td class="info-label">
-                    Harga Rata-Rata
+                    Modal Riil (FIFO)
                 </td>
                 <td class="info-value">
-                    Rp {{ number_format($hargaRata, 0, ',', '.') }}
+                    Rp {{ number_format($modalRiil ?? 0, 0, ',', '.') }}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">
+                    Laba Riil
+                </td>
+                <td class="info-value">
+                    Rp {{ number_format($labaRiil ?? 0, 0, ',', '.') }}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">
+                    Batch / Nota
+                </td>
+                <td class="info-value">
+                    {{ collect($batchAllocations ?? [])->map(fn ($row) => $row['batch_code'] . ' x ' . $row['jumlah'])->implode(', ') ?: '-' }}
                 </td>
             </tr>
             <tr>

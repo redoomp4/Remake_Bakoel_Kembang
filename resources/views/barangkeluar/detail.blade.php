@@ -133,13 +133,16 @@
                         </h3>
                         <div class="rounded-2xl border border-[#E4E4D9] overflow-hidden">
                             <div class="grid grid-cols-1 sm:grid-cols-3">
-                                {{-- HARGA RATA RATA --}}
+                                {{-- MODAL RIIL --}}
                                 <div class="p-4 sm:border-r border-b sm:border-b-0 border-[#E4E4D9]">
                                     <p class="text-xs font-bold text-[#8FA882] uppercase tracking-wide">
-                                        Harga Rata-Rata
+                                        Modal Riil (FIFO)
                                     </p>
                                     <p class="mt-1 font-extrabold text-[#475569]">
-                                        Rp {{ number_format($hargaRata ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format($modalRiil ?? 0, 0, ',', '.') }}
+                                    </p>
+                                    <p class="mt-1 text-xs font-bold text-emerald-700">
+                                        Laba: Rp {{ number_format($labaRiil ?? 0, 0, ',', '.') }}
                                     </p>
                                 </div>
 
@@ -163,6 +166,16 @@
                                     </p>
                                 </div>
                             </div>
+                            @if(!empty($batchAllocations))
+                                <div class="border-t border-[#E4E4D9] bg-[#F8FAF7] p-4">
+                                    <p class="text-xs font-bold text-[#8FA882] uppercase tracking-wide mb-2">Batch Terpakai (FIFO)</p>
+                                    @foreach($batchAllocations as $allocation)
+                                        <div class="text-sm font-semibold text-[#475569]">
+                                            {{ $allocation['batch_code'] }} · {{ $allocation['jumlah'] }} unit × Rp {{ number_format($allocation['harga_beli'], 0, ',', '.') }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                     {{-- INFORMASI TRANSAKSI --}}

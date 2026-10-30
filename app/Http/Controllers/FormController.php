@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BarangKeluar;
+use App\Models\BarangMasuk;
 use App\Models\Item;
 use App\Models\Kategori;
-use App\Models\Satuan;
-use App\Models\Pemasok;
-use App\Models\Lokasi;
 use App\Models\Kondisi;
-use App\Models\BarangMasuk;
-use App\Models\BarangKeluar;
-use Illuminate\Support\Facades\DB;
+use App\Models\Lokasi;
+use App\Models\Pemasok;
+use App\Models\Satuan;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
@@ -28,25 +29,24 @@ class FormController extends Controller
         $userId = Auth::id();
 
         $kategories = Kategori::where('user_id', $userId)->orderBy('kategori')->get();
-        $satuans    = Satuan::where('user_id', $userId)->orderBy('nama_satuan')->get();
-        $pemasoks   = Pemasok::where('user_id', $userId)->orderBy('nama_pemasok')->get();
-        $lokasis    = Lokasi::where('user_id', $userId)->orderBy('nama_lokasi')->get();
-        $kondisis   = Kondisi::where('user_id', $userId)->orderBy('nama_kondisi')->get();
-        $items      = Item::with('satuan')->where('user_id', $userId)->orderBy('nama_barang')->get();
+        $satuans = Satuan::where('user_id', $userId)->orderBy('nama_satuan')->get();
+        $pemasoks = Pemasok::where('user_id', $userId)->orderBy('nama_pemasok')->get();
+        $lokasis = Lokasi::where('user_id', $userId)->orderBy('nama_lokasi')->get();
+        $kondisis = Kondisi::where('user_id', $userId)->orderBy('nama_kondisi')->get();
+        $items = Item::with('satuan')->where('user_id', $userId)->orderBy('nama_barang')->get();
 
         $itemsJson = $items->map(function ($item) {
             return [
-                'id'          => $item->id,
-                'kode'        => $item->kode_barang,
-                'nama'        => $item->nama_barang,
-                'harga_dasar' => (float) $item->harga_dasar,
-                'stok'        => (int) $item->total_stok,
-                'satuan'      => optional($item->satuan)->nama_satuan ?? 'Pcs',
+                'id' => $item->id,
+                'kode' => $item->kode_barang,
+                'nama' => $item->nama_barang,
+                'stok' => (int) $item->total_stok,
+                'satuan' => optional($item->satuan)->nama_satuan ?? 'Pcs',
             ];
         })->values()->toArray();
 
         $kategoriesJson = $kategories->pluck('kategori')->values()->toArray();
-        $satuansJson    = $satuans->pluck('nama_satuan')->values()->toArray();
+        $satuansJson = $satuans->pluck('nama_satuan')->values()->toArray();
 
         // Opsi pilihan barang keluar unik dengan stok dinamis dari BarangMasuk
         $barangMasuks = BarangMasuk::with(['item.satuan', 'lokasi', 'kondisi'])
@@ -55,40 +55,41 @@ class FormController extends Controller
 
         $barangKeluars = BarangKeluar::where('user_id', $userId)
             ->get()
-            ->groupBy(fn($row) => $row->item_id . '|' . $row->id_lokasi . '|' . $row->id_kondisi);
+            ->groupBy(fn ($row) => $row->item_id.'|'.$row->id_lokasi.'|'.$row->id_kondisi);
 
         $barangKeluarItemsJson = $barangMasuks
-            ->groupBy(fn($barang) => $barang->item_id . '|' . $barang->id_lokasi . '|' . $barang->id_kondisi)
+            ->groupBy(fn ($barang) => $barang->item_id.'|'.$barang->id_lokasi.'|'.$barang->id_kondisi)
             ->map(function ($group, $key) use ($barangKeluars) {
                 $latest = $group->sortByDesc('tanggal_masuk')->sortByDesc('id')->first();
-                if (!$latest || !$latest->item) return null;
+                if (! $latest || ! $latest->item) {
+                    return null;
+                }
 
                 $masuk = $group->sum('jumlah');
                 $keluar = isset($barangKeluars[$key]) ? $barangKeluars[$key]->sum('jumlah_keluar') : 0;
                 $stok = $masuk - $keluar;
 
-                if ($stok <= 0) return null;
-
-                $totalHarga = $group->sum(fn($row) => $row->harga_satuan * $row->jumlah);
-                $totalJumlah = $group->sum('jumlah');
-                $wac = $totalJumlah > 0 ? ($totalHarga / $totalJumlah) : 0;
+                if ($stok <= 0) {
+                    return null;
+                }
 
                 return [
-                    'item_id'     => $latest->item_id,
-                    'kode'        => $latest->item->kode_barang ?? '-',
+                    'item_id' => $latest->item_id,
+                    'kode' => $latest->item->kode_barang ?? '-',
                     'nama_barang' => $latest->item->nama_barang ?? '-',
-                    'lokasi_id'   => $latest->id_lokasi,
-                    'lokasi'      => $latest->lokasi?->nama_lokasi ?? '-',
-                    'kondisi_id'  => $latest->id_kondisi,
-                    'kondisi'     => $latest->kondisi?->nama_kondisi ?? '-',
-                    'stok'        => $stok,
-                    'satuan'      => optional($latest->item->satuan)->nama_satuan ?? 'Pcs',
-                    'harga_dasar' => (int) round($wac),
+                    'lokasi_id' => $latest->id_lokasi,
+                    'lokasi' => $latest->lokasi?->nama_lokasi ?? '-',
+                    'kondisi_id' => $latest->id_kondisi,
+                    'kondisi' => $latest->kondisi?->nama_kondisi ?? '-',
+                    'stok' => $stok,
+                    'satuan' => optional($latest->item->satuan)->nama_satuan ?? 'Pcs',
                 ];
             })
             ->filter()
             ->values()
             ->toArray();
+
+        $riwayatMasuk = $this->riwayatMasuk($userId, 5);
 
         $data = compact(
             'kategories',
@@ -100,10 +101,249 @@ class FormController extends Controller
             'itemsJson',
             'kategoriesJson',
             'satuansJson',
-            'barangKeluarItemsJson'
+            'barangKeluarItemsJson',
+            'riwayatMasuk'
         );
 
         return view('form.index', $data);
+    }
+
+    /**
+     * Ringkasan transaksi barang masuk terakhir untuk ditampilkan di form.
+     */
+    private function riwayatMasuk(int $userId, int $limit = 5): array
+    {
+        return BarangMasuk::with(['item.satuan', 'pemasok'])
+            ->where('user_id', $userId)
+            ->orderByDesc('tanggal_masuk')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->map(function (BarangMasuk $barangMasuk) {
+                return [
+                    'id' => $barangMasuk->id,
+                    'nama_barang' => $barangMasuk->item?->nama_barang ?? '-',
+                    'kode_barang' => $barangMasuk->item?->kode_barang ?? '-',
+                    'satuan' => optional($barangMasuk->item?->satuan)->nama_satuan ?? 'Pcs',
+                    'jumlah' => (int) $barangMasuk->jumlah,
+                    'harga_satuan' => (float) $barangMasuk->harga_satuan,
+                    'total_harga' => (float) $barangMasuk->total_harga,
+                    'pemasok' => $barangMasuk->pemasok?->nama_pemasok ?? '-',
+                    'tanggal' => optional($barangMasuk->tanggal_masuk)->format('d/m/Y H:i') ?? '-',
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * Kategori: ID numerik yang sudah ada ATAU nama baru (inline create).
+     */
+    private function resolveKategori(int $userId, mixed $input, string $default = 'Bunga & Tanaman'): Kategori
+    {
+        $value = trim((string) $input);
+
+        if ($value === '') {
+            $value = $default;
+        }
+
+        if (ctype_digit($value)) {
+            $kategori = Kategori::where('user_id', $userId)
+                ->where('id', (int) $value)
+                ->first();
+
+            if ($kategori) {
+                return $kategori;
+            }
+        }
+
+        return Kategori::firstOrCreate(
+            ['user_id' => $userId, 'kategori' => $value],
+            ['deskripsi' => 'Dibuat otomatis dari Form Item']
+        );
+    }
+
+    /**
+     * Satuan: ID numerik yang sudah ada ATAU nama baru (inline create).
+     */
+    private function resolveSatuan(int $userId, mixed $input, string $default = 'Tangkai'): Satuan
+    {
+        $value = trim((string) $input);
+
+        if ($value === '') {
+            $value = $default;
+        }
+
+        if (ctype_digit($value)) {
+            $satuan = Satuan::where('user_id', $userId)
+                ->where('id', (int) $value)
+                ->first();
+
+            if ($satuan) {
+                return $satuan;
+            }
+        }
+
+        return Satuan::firstOrCreate([
+            'user_id' => $userId,
+            'nama_satuan' => $value,
+        ]);
+    }
+
+    /**
+     * Cari / buat pemasok dari ID numerik atau nama baru (Select2 tags).
+     */
+    private function resolvePemasok(int $userId, mixed $input): Pemasok
+    {
+        $value = trim((string) $input);
+
+        if ($value === '') {
+            $value = 'Pemasok Umum';
+        }
+
+        if (ctype_digit($value)) {
+            $pemasok = Pemasok::where('user_id', $userId)
+                ->where('id', (int) $value)
+                ->first();
+
+            if ($pemasok) {
+                return $pemasok;
+            }
+        }
+
+        return Pemasok::firstOrCreate([
+            'user_id' => $userId,
+            'nama_pemasok' => $value,
+        ]);
+    }
+
+    /**
+     * Cari lokasi dari nama/ID, atau pakai lokasi pertama sebagai default.
+     */
+    private function resolveLokasi(int $userId, mixed $input): Lokasi
+    {
+        $value = trim((string) $input);
+
+        if ($value === '') {
+            $lokasi = Lokasi::where('user_id', $userId)->orderBy('id')->first();
+
+            if ($lokasi) {
+                return $lokasi;
+            }
+
+            $value = 'Gudang Utama';
+        }
+
+        if (ctype_digit($value)) {
+            $lokasi = Lokasi::where('user_id', $userId)
+                ->where('id', (int) $value)
+                ->first();
+
+            if ($lokasi) {
+                return $lokasi;
+            }
+        }
+
+        return Lokasi::firstOrCreate([
+            'user_id' => $userId,
+            'nama_lokasi' => $value,
+        ]);
+    }
+
+    /**
+     * Cari kondisi dari nama/ID, atau pakai kondisi pertama sebagai default.
+     */
+    private function resolveKondisi(int $userId, mixed $input): Kondisi
+    {
+        $value = trim((string) $input);
+
+        if ($value === '') {
+            $kondisi = Kondisi::where('user_id', $userId)->orderBy('id')->first();
+
+            if ($kondisi) {
+                return $kondisi;
+            }
+
+            $value = 'Segar';
+        }
+
+        if (ctype_digit($value)) {
+            $kondisi = Kondisi::where('user_id', $userId)
+                ->where('id', (int) $value)
+                ->first();
+
+            if ($kondisi) {
+                return $kondisi;
+            }
+        }
+
+        return Kondisi::firstOrCreate([
+            'user_id' => $userId,
+            'nama_kondisi' => $value,
+        ]);
+    }
+
+    /**
+     * Cari item berdasarkan ID / nama, atau buat item baru secara otomatis.
+     * Dipakai oleh alur Inline Item Creation pada form barang masuk.
+     */
+    private function resolveItem(int $userId, mixed $input): Item
+    {
+        $raw = trim((string) $input);
+        $namaBaru = '';
+
+        if (str_starts_with($raw, 'NEW:')) {
+            $namaBaru = trim(substr($raw, 4));
+        } elseif ($raw !== '' && ! ctype_digit($raw)) {
+            $namaBaru = $raw;
+        }
+
+        if ($raw !== '' && ctype_digit($raw)) {
+            $item = Item::with('satuan')
+                ->where('user_id', $userId)
+                ->where('id', (int) $raw)
+                ->first();
+
+            if ($item) {
+                return $item;
+            }
+        }
+
+        if ($namaBaru === '') {
+            throw ValidationException::withMessages([
+                'id_item' => 'Mohon pilih atau ketik nama bunga terlebih dahulu ya Bu/Pak.',
+            ]);
+        }
+
+        $existing = Item::with('satuan')
+            ->where('user_id', $userId)
+            ->whereRaw('LOWER(nama_barang) = ?', [mb_strtolower($namaBaru)])
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $kategori = Kategori::firstOrCreate(
+            ['user_id' => $userId, 'kategori' => 'Bunga & Tanaman'],
+            ['deskripsi' => 'Dibuat otomatis dari Form Barang Masuk']
+        );
+
+        $satuan = Satuan::firstOrCreate([
+            'user_id' => $userId,
+            'nama_satuan' => 'Tangkai',
+        ]);
+
+        $item = new Item;
+        $item->user_id = $userId;
+        $item->kode_barang = Item::generateKodeBarang();
+        $item->public_token = (string) Str::uuid();
+        $item->nama_barang = $namaBaru;
+        $item->id_kategori = $kategori->id;
+        $item->id_satuan = $satuan->id;
+        $item->stok_minimum = 0;
+        $item->save();
+
+        return $item->load('satuan');
     }
 
     public function getOptions()
@@ -111,19 +351,18 @@ class FormController extends Controller
         $userId = Auth::id();
 
         return response()->json([
-            'success'    => true,
+            'success' => true,
             'kategories' => Kategori::where('user_id', $userId)->orderBy('kategori')->select('id', 'kategori as nama')->get(),
-            'satuans'    => Satuan::where('user_id', $userId)->orderBy('nama_satuan')->select('id', 'nama_satuan as nama')->get(),
-            'pemasoks'   => Pemasok::where('user_id', $userId)->orderBy('nama_pemasok')->select('id', 'nama_pemasok as nama')->get(),
-            'lokasis'    => Lokasi::where('user_id', $userId)->orderBy('nama_lokasi')->select('id', 'nama_lokasi as nama')->get(),
-            'kondisis'   => Kondisi::where('user_id', $userId)->orderBy('nama_kondisi')->select('id', 'nama_kondisi as nama')->get(),
-            'items'      => Item::where('user_id', $userId)->orderBy('nama_barang')->get()->map(function ($item) {
+            'satuans' => Satuan::where('user_id', $userId)->orderBy('nama_satuan')->select('id', 'nama_satuan as nama')->get(),
+            'pemasoks' => Pemasok::where('user_id', $userId)->orderBy('nama_pemasok')->select('id', 'nama_pemasok as nama')->get(),
+            'lokasis' => Lokasi::where('user_id', $userId)->orderBy('nama_lokasi')->select('id', 'nama_lokasi as nama')->get(),
+            'kondisis' => Kondisi::where('user_id', $userId)->orderBy('nama_kondisi')->select('id', 'nama_kondisi as nama')->get(),
+            'items' => Item::where('user_id', $userId)->orderBy('nama_barang')->get()->map(function ($item) {
                 return [
-                    'id'          => $item->id,
+                    'id' => $item->id,
                     'kode_barang' => $item->kode_barang,
                     'nama_barang' => $item->nama_barang,
-                    'harga_dasar' => $item->harga_dasar,
-                    'stok'        => $item->total_stok,
+                    'stok' => $item->total_stok,
                 ];
             }),
         ]);
@@ -135,67 +374,62 @@ class FormController extends Controller
             ->where('kode_barang', $kode)
             ->first();
 
-        if (!$item) {
+        if (! $item) {
             return response()->json(['success' => false, 'message' => 'Barang tidak ditemukan'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => array_merge($item->toArray(), [
+            'data' => array_merge($item->toArray(), [
                 'stok' => $item->total_stok,
-            ])
+            ]),
         ]);
     }
 
     public function store(Request $request)
     {
+        $request->merge([
+            'kategori_input' => trim((string) $request->input('kategori_input')),
+            'satuan_input' => trim((string) $request->input('satuan_input')),
+        ]);
+
         $request->validate([
             'nama_barang' => [
                 'required',
                 'string',
                 'max:150',
-                Rule::unique('items', 'nama_barang')->where(fn($q) => $q->where('user_id', Auth::id())),
+                Rule::unique('items', 'nama_barang')->where(fn ($q) => $q->where('user_id', Auth::id())),
             ],
             'kategori_input' => ['required', 'string', 'max:100'],
-            'satuan_input'   => ['required', 'string', 'max:100'],
-            'stok_minimum'   => ['required', 'integer', 'min:0'],
-            'harga_dasar'    => ['required', 'numeric', 'min:0'],
-            'deskripsi'      => ['nullable', 'string', 'max:500'],
-            'foto'           => ['nullable', 'image', 'max:5120'],
+            'satuan_input' => ['required', 'string', 'max:100'],
+            'stok_minimum' => ['required', 'integer', 'min:0'],
+            'deskripsi' => ['nullable', 'string', 'max:500'],
+            'foto' => ['nullable', 'image', 'max:5120'],
         ], [
-            'nama_barang.required'    => 'Nama barang wajib diisi.',
-            'nama_barang.unique'      => 'Nama barang sudah digunakan.',
+            'nama_barang.required' => 'Nama barang wajib diisi.',
+            'nama_barang.unique' => 'Nama barang sudah digunakan.',
             'kategori_input.required' => 'Kategori wajib diisi atau dipilih.',
-            'satuan_input.required'   => 'Satuan wajib diisi atau dipilih.',
-            'foto.image'              => 'File foto harus berupa gambar.',
-            'foto.max'                => 'Ukuran foto maksimal 5MB.',
+            'satuan_input.required' => 'Satuan wajib diisi atau dipilih.',
+            'foto.image' => 'File foto harus berupa gambar.',
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
         ]);
 
         try {
             $userId = Auth::id();
 
-            $namaKategori = trim((string) $request->kategori_input);
-            $kategori = Kategori::firstOrCreate(
-                ['user_id' => $userId, 'kategori' => $namaKategori],
-                ['deskripsi' => 'Dibuat otomatis dari Form Item']
-            );
-
-            $namaSatuan = trim((string) $request->satuan_input);
-            $satuan = Satuan::firstOrCreate(
-                ['user_id' => $userId, 'nama_satuan' => $namaSatuan]
-            );
+            $kategori = $this->resolveKategori($userId, $request->kategori_input);
+            $satuan = $this->resolveSatuan($userId, $request->satuan_input);
 
             // 3. Simpan Item Utama
-            $item = new Item();
-            $item->user_id      = $userId;
-            $item->kode_barang  = Item::generateKodeBarang();
+            $item = new Item;
+            $item->user_id = $userId;
+            $item->kode_barang = Item::generateKodeBarang();
             $item->public_token = (string) Str::uuid();
-            $item->nama_barang  = trim((string) $request->nama_barang);
-            $item->id_kategori  = $kategori->id;
-            $item->id_satuan    = $satuan->id;
+            $item->nama_barang = trim((string) $request->nama_barang);
+            $item->id_kategori = $kategori->id;
+            $item->id_satuan = $satuan->id;
             $item->stok_minimum = (int) $request->stok_minimum;
-            $item->harga_dasar  = (float) $request->harga_dasar;
-            $item->deskripsi    = $request->deskripsi;
+            $item->deskripsi = $request->deskripsi;
 
             if ($request->hasFile('foto')) {
                 $item->foto = $request->file('foto')->store('foto_barang', 'public');
@@ -208,11 +442,11 @@ class FormController extends Controller
                 Storage::disk('public')->makeDirectory('qrcodes/items');
 
                 $qrLink = route('item.public', [
-                    'public_token' => $item->public_token
+                    'public_token' => $item->public_token,
                 ]);
 
-                $filename = 'qr_item_' . $item->public_token . '.svg';
-                $relativePath = 'qrcodes/items/' . $filename;
+                $filename = 'qr_item_'.$item->public_token.'.svg';
+                $relativePath = 'qrcodes/items/'.$filename;
 
                 $qr = QrCode::format('svg')
                     ->size(300)
@@ -222,7 +456,7 @@ class FormController extends Controller
                 Storage::disk('public')->put($relativePath, $qr);
 
                 $item->update([
-                    'qr_code' => $relativePath
+                    'qr_code' => $relativePath,
                 ]);
             } catch (\Throwable $qrException) {
                 report($qrException);
@@ -244,14 +478,14 @@ class FormController extends Controller
             // DITAMPILKAN PESAN ERROR ASLI DARI DATABASE UNTUK DEBUGGING
             return back()
                 ->withInput()
-                ->with('error', 'DB Error: ' . $e->getMessage());
+                ->with('error', 'DB Error: '.$e->getMessage());
         } catch (\Throwable $e) {
             report($e);
 
             // DITAMPILKAN PESAN ERROR ASLI PHP UNTUK DEBUGGING
             return back()
                 ->withInput()
-                ->with('error', 'System Error: ' . $e->getMessage());
+                ->with('error', 'System Error: '.$e->getMessage());
         }
     }
 
@@ -265,8 +499,15 @@ class FormController extends Controller
 
         if (empty($namaItem)) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Nama bunga / item barang wajib diisi.'
+                'status' => false,
+                'message' => 'Nama bunga / item barang wajib diisi.',
+            ], 422);
+        }
+
+        if (mb_strlen($namaItem) > 150) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Nama bunga terlalu panjang. Maksimal 150 huruf ya Bu/Pak.',
             ], 422);
         }
 
@@ -279,80 +520,85 @@ class FormController extends Controller
 
             if ($existing) {
                 return response()->json([
-                    'status'  => true,
+                    'status' => true,
                     'message' => 'Barang sudah ada di katalog, langsung dipilih.',
-                    'item'    => [
-                        'id'          => $existing->id,
-                        'nama_item'   => $existing->nama_barang,
+                    'item' => [
+                        'id' => $existing->id,
+                        'nama_item' => $existing->nama_barang,
                         'kode_barang' => $existing->kode_barang,
-                        'satuan'      => optional($existing->satuan)->nama_satuan ?? 'Pcs',
-                        'harga_dasar' => (float) $existing->harga_dasar,
-                        'stok'        => (int) $existing->total_stok,
-                    ]
+                        'satuan' => optional($existing->satuan)->nama_satuan ?? 'Pcs',
+                        'stok' => (int) $existing->total_stok,
+                    ],
                 ]);
             }
 
-            // Kategori default jika tidak dikirim
-            $kategoriInput = trim((string) ($request->kategori_input ?? $request->kategori ?? 'Bunga & Tanaman'));
-            if (empty($kategoriInput)) {
-                $kategoriInput = 'Bunga & Tanaman';
-            }
-            $kategori = Kategori::firstOrCreate(
-                ['user_id' => $userId, 'kategori' => $kategoriInput],
-                ['deskripsi' => 'Dibuat otomatis dari Form Barang Masuk']
-            );
+            $result = DB::transaction(function () use ($request, $userId, $namaItem) {
+                // Kategori default jika tidak dikirim
+                $kategoriInput = trim((string) ($request->kategori_input ?? $request->kategori ?? 'Bunga & Tanaman'));
+                if (empty($kategoriInput)) {
+                    $kategoriInput = 'Bunga & Tanaman';
+                }
+                $kategori = Kategori::firstOrCreate(
+                    ['user_id' => $userId, 'kategori' => $kategoriInput],
+                    ['deskripsi' => 'Dibuat otomatis dari Form Barang Masuk']
+                );
 
-            // Satuan (Tangkai, Pot, Pcs, dll)
-            $satuanInput = trim((string) ($request->satuan_input ?? $request->satuan ?? $request->nama_satuan ?? 'Tangkai'));
-            if (empty($satuanInput)) {
-                $satuanInput = 'Tangkai';
-            }
-            $satuan = Satuan::firstOrCreate(
-                ['user_id' => $userId, 'nama_satuan' => $satuanInput]
-            );
+                // Satuan (Tangkai, Pot, Pcs, dll)
+                $satuanInput = trim((string) ($request->satuan_input ?? $request->satuan ?? $request->nama_satuan ?? 'Tangkai'));
+                if (empty($satuanInput)) {
+                    $satuanInput = 'Tangkai';
+                }
+                $satuan = Satuan::firstOrCreate(
+                    ['user_id' => $userId, 'nama_satuan' => $satuanInput]
+                );
 
-            // Simpan Item Baru
-            $item = new Item();
-            $item->user_id      = $userId;
-            $item->kode_barang  = Item::generateKodeBarang();
-            $item->public_token = (string) Str::uuid();
-            $item->nama_barang  = $namaItem;
-            $item->id_kategori  = $kategori->id;
-            $item->id_satuan    = $satuan->id;
-            $item->stok_minimum = 0;
-            $item->harga_dasar  = 0;
-            $item->save();
+                // Simpan Item Baru
+                $item = new Item;
+                $item->user_id = $userId;
+                $item->kode_barang = Item::generateKodeBarang();
+                $item->public_token = (string) Str::uuid();
+                $item->nama_barang = $namaItem;
+                $item->id_kategori = $kategori->id;
+                $item->id_satuan = $satuan->id;
+                $item->stok_minimum = 0;
+                $item->save();
 
-            // Generate QR Code Item
-            try {
-                Storage::disk('public')->makeDirectory('qrcodes/items');
-                $qrLink = route('item.public', ['public_token' => $item->public_token]);
-                $filename = 'qr_item_' . $item->public_token . '.svg';
-                $relativePath = 'qrcodes/items/' . $filename;
-                $qr = QrCode::format('svg')->size(300)->margin(2)->generate($qrLink);
-                Storage::disk('public')->put($relativePath, $qr);
-                $item->update(['qr_code' => $relativePath]);
-            } catch (\Throwable $qrEx) {
-                Log::warning('QuickStoreItem QR Code warning: ' . $qrEx->getMessage());
-            }
+                // Generate QR Code Item
+                try {
+                    Storage::disk('public')->makeDirectory('qrcodes/items');
+                    $qrLink = route('item.public', ['public_token' => $item->public_token]);
+                    $filename = 'qr_item_'.$item->public_token.'.svg';
+                    $relativePath = 'qrcodes/items/'.$filename;
+                    $qr = QrCode::format('svg')->size(300)->margin(2)->generate($qrLink);
+                    Storage::disk('public')->put($relativePath, $qr);
+                    $item->update(['qr_code' => $relativePath]);
+                } catch (\Throwable $qrEx) {
+                    Log::warning('QuickStoreItem QR Code warning: '.$qrEx->getMessage());
+                }
+
+                return ['item' => $item->fresh('satuan'), 'satuan' => $satuan];
+            });
+
+            $item = $result['item'];
+            $satuan = $result['satuan'];
 
             return response()->json([
-                'status'  => true,
-                'message' => 'Item ' . $item->nama_barang . ' berhasil didaftarkan!',
-                'item'    => [
-                    'id'          => $item->id,
-                    'nama_item'   => $item->nama_barang,
+                'status' => true,
+                'message' => 'Item '.$item->nama_barang.' berhasil didaftarkan!',
+                'item' => [
+                    'id' => $item->id,
+                    'nama_item' => $item->nama_barang,
                     'kode_barang' => $item->kode_barang,
-                    'satuan'      => $satuan->nama_satuan,
-                    'harga_dasar' => 0,
-                    'stok'        => 0,
-                ]
+                    'satuan' => $satuan->nama_satuan,
+                    'stok' => 0,
+                ],
             ]);
         } catch (\Throwable $e) {
-            Log::error('QuickStoreItem Error: ' . $e->getMessage());
+            Log::error('QuickStoreItem Error: '.$e->getMessage());
+
             return response()->json([
-                'status'  => false,
-                'message' => 'Gagal mendaftarkan item: ' . $e->getMessage()
+                'status' => false,
+                'message' => 'Gagal mendaftarkan item: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -368,7 +614,7 @@ class FormController extends Controller
         if (empty($groqKey)) {
             return response()->json([
                 'success' => false,
-                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.'
+                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.',
             ], 500);
         }
 
@@ -378,7 +624,7 @@ class FormController extends Controller
             // STEP 1: Transkripsi Audio ke Teks (Groq Whisper) ~ 0.3 Detik
             $sttResponse = Http::timeout(15)
                 ->withHeaders([
-                    'Authorization' => 'Bearer ' . $groqKey,
+                    'Authorization' => 'Bearer '.$groqKey,
                 ])
                 ->attach(
                     'file',
@@ -391,8 +637,9 @@ class FormController extends Controller
                     'response_format' => 'json',
                 ]);
 
-            if (!$sttResponse->successful()) {
+            if (! $sttResponse->successful()) {
                 Log::error('Groq STT Error', ['body' => $sttResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal menguraikan suara ke teks.'], 500);
             }
 
@@ -415,7 +662,6 @@ Skema JSON:
   "kategori_input": string|null,
   "satuan_input": string|null,
   "stok_minimum": integer,
-  "harga_dasar": number,
   "deskripsi": string|null
 }
 
@@ -427,7 +673,6 @@ Aturan Ekstraksi:
    - Format wajib Title Case / Capital Case (Contoh: "Anggrek Cattleya", "Bunga Lily").
 
 2. HARGA & STOK:
-   - "harga_dasar": Konversi sebutan nominal angka ke angka murni ("15rb" -> 15000, "seratus ribu" -> 100000). Default: 0.
    - "stok_minimum": Ekstrak angka stok minimal. Default: 0.
 
 3. KATEGORI & SATUAN (Inferensi Otomatis jika tidak disebutkan):
@@ -439,20 +684,21 @@ PROMPT;
 
             $llamaResponse = Http::timeout(15)
                 ->withHeaders([
-                    'Authorization' => 'Bearer ' . $groqKey,
+                    'Authorization' => 'Bearer '.$groqKey,
                     'Content-Type' => 'application/json',
                 ])
                 ->post('https://api.groq.com/openai/v1/chat/completions', [
                     'model' => 'groq/compound',
                     'response_format' => ['type' => 'json_object'],
                     'messages' => [
-                        ['role' => 'user', 'content' => $prompt]
+                        ['role' => 'user', 'content' => $prompt],
                     ],
                     'temperature' => 0.1,
                 ]);
 
-            if (!$llamaResponse->successful()) {
+            if (! $llamaResponse->successful()) {
                 Log::error('Groq Llama Error', ['body' => $llamaResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal memproses parsing teks.'], 500);
             }
 
@@ -463,16 +709,16 @@ PROMPT;
                 'success' => true,
                 'transcript_raw' => $rawTranscript,
                 'data' => [
-                    'nama_barang'    => isset($parsedData['nama_barang']) ? (string)$parsedData['nama_barang'] : null,
-                    'kategori_input' => isset($parsedData['kategori_input']) ? (string)$parsedData['kategori_input'] : null,
-                    'satuan_input'   => isset($parsedData['satuan_input']) ? (string)$parsedData['satuan_input'] : null,
-                    'stok_minimum'   => isset($parsedData['stok_minimum']) ? (int)$parsedData['stok_minimum'] : 0,
-                    'harga_dasar'    => isset($parsedData['harga_dasar']) ? (float)$parsedData['harga_dasar'] : 0,
-                    'deskripsi'      => isset($parsedData['deskripsi']) ? (string)$parsedData['deskripsi'] : null,
+                    'nama_barang' => isset($parsedData['nama_barang']) ? (string) $parsedData['nama_barang'] : null,
+                    'kategori_input' => isset($parsedData['kategori_input']) ? (string) $parsedData['kategori_input'] : null,
+                    'satuan_input' => isset($parsedData['satuan_input']) ? (string) $parsedData['satuan_input'] : null,
+                    'stok_minimum' => isset($parsedData['stok_minimum']) ? (int) $parsedData['stok_minimum'] : 0,
+                    'deskripsi' => isset($parsedData['deskripsi']) ? (string) $parsedData['deskripsi'] : null,
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Voice Parsing Exception: ' . $e->getMessage());
+            Log::error('Voice Parsing Exception: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -491,7 +737,7 @@ PROMPT;
         if (empty($groqKey)) {
             return response()->json([
                 'success' => false,
-                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.'
+                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.',
             ], 500);
         }
 
@@ -500,16 +746,17 @@ PROMPT;
 
             // STEP 1: Transkripsi Audio ke Teks via Whisper
             $sttResponse = Http::timeout(15)
-                ->withHeaders(['Authorization' => 'Bearer ' . $groqKey])
+                ->withHeaders(['Authorization' => 'Bearer '.$groqKey])
                 ->attach('file', file_get_contents($audioFile->getRealPath()), $audioFile->getClientOriginalName())
                 ->post('https://api.groq.com/openai/v1/audio/transcriptions', [
-                    'model'           => 'whisper-large-v3-turbo',
-                    'language'        => 'id',
+                    'model' => 'whisper-large-v3-turbo',
+                    'language' => 'id',
                     'response_format' => 'json',
                 ]);
 
-            if (!$sttResponse->successful()) {
+            if (! $sttResponse->successful()) {
                 Log::error('Groq STT Error (Barang Masuk)', ['body' => $sttResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal menguraikan suara ke teks.'], 500);
             }
 
@@ -553,36 +800,38 @@ PROMPT;
 
             $llamaResponse = Http::timeout(15)
                 ->withHeaders([
-                    'Authorization' => 'Bearer ' . $groqKey,
-                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer '.$groqKey,
+                    'Content-Type' => 'application/json',
                 ])
                 ->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model'           => 'groq/compound',
+                    'model' => 'groq/compound',
                     'response_format' => ['type' => 'json_object'],
-                    'messages'        => [['role' => 'user', 'content' => $prompt]],
-                    'temperature'     => 0.1,
+                    'messages' => [['role' => 'user', 'content' => $prompt]],
+                    'temperature' => 0.1,
                 ]);
 
-            if (!$llamaResponse->successful()) {
+            if (! $llamaResponse->successful()) {
                 Log::error('Groq Llama Error (Barang Masuk)', ['body' => $llamaResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal memproses parsing teks.'], 500);
             }
 
-            $rawText    = $llamaResponse->json('choices.0.message.content');
+            $rawText = $llamaResponse->json('choices.0.message.content');
             $parsedData = json_decode($rawText, true);
 
             // STEP 3: Pencocokan ke Database Item milik User
-            $userId       = Auth::id();
+            $userId = Auth::id();
             $namaBarangAi = $parsedData['nama_barang'] ?? null;
-            $matchedItem  = null;
+            $matchedItem = null;
 
-            if (!empty($namaBarangAi)) {
+            if (! empty($namaBarangAi)) {
                 $searchLower = mb_strtolower(trim($namaBarangAi));
 
                 $matchedItem = Item::where('user_id', $userId)
                     ->get()
                     ->first(function ($item) use ($searchLower) {
                         $itemNameLower = mb_strtolower($item->nama_barang);
+
                         return $itemNameLower === $searchLower
                             || str_contains($itemNameLower, $searchLower)
                             || str_contains($searchLower, $itemNameLower);
@@ -590,24 +839,25 @@ PROMPT;
             }
 
             return response()->json([
-                'success'        => true,
+                'success' => true,
                 'transcript_raw' => $rawTranscript,
-                'data'           => [
-                    'id_item'        => $matchedItem ? $matchedItem->id : null,
-                    'nama_barang'    => $namaBarangAi,
-                    'item_found'     => $matchedItem ? true : false,
-                    'jumlah'         => isset($parsedData['jumlah']) ? (int)$parsedData['jumlah'] : 1,
-                    'harga_beli'     => isset($parsedData['harga_beli']) ? (float)$parsedData['harga_beli'] : ($matchedItem ? $matchedItem->harga_dasar : 0),
-                    'tgl_masuk'      => $parsedData['tgl_masuk'] ?? $today,
+                'data' => [
+                    'id_item' => $matchedItem ? $matchedItem->id : null,
+                    'nama_barang' => $namaBarangAi,
+                    'item_found' => $matchedItem ? true : false,
+                    'jumlah' => isset($parsedData['jumlah']) ? (int) $parsedData['jumlah'] : 1,
+                    'harga_beli' => isset($parsedData['harga_beli']) ? (float) $parsedData['harga_beli'] : 0,
+                    'tgl_masuk' => $parsedData['tgl_masuk'] ?? $today,
                     'tgl_kadaluarsa' => $parsedData['tgl_kadaluarsa'] ?? null,
-                    'pemasok_input'  => isset($parsedData['pemasok_input']) ? (string)$parsedData['pemasok_input'] : null,
-                    'lokasi_input'   => isset($parsedData['lokasi_input']) ? (string)$parsedData['lokasi_input'] : 'Gudang Utama',
-                    'kondisi_input'  => isset($parsedData['kondisi_input']) ? (string)$parsedData['kondisi_input'] : 'Segar',
-                    'catatan'        => isset($parsedData['catatan']) ? (string)$parsedData['catatan'] : null,
+                    'pemasok_input' => isset($parsedData['pemasok_input']) ? (string) $parsedData['pemasok_input'] : null,
+                    'lokasi_input' => isset($parsedData['lokasi_input']) ? (string) $parsedData['lokasi_input'] : 'Gudang Utama',
+                    'kondisi_input' => isset($parsedData['kondisi_input']) ? (string) $parsedData['kondisi_input'] : 'Segar',
+                    'catatan' => isset($parsedData['catatan']) ? (string) $parsedData['catatan'] : null,
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Voice Parsing Barang Masuk Exception: ' . $e->getMessage());
+            Log::error('Voice Parsing Barang Masuk Exception: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -617,81 +867,160 @@ PROMPT;
      */
     public function barangMasukStore(Request $request)
     {
-        $request->validate([
-            'id_item'        => ['required', 'exists:items,id'],
-            'jumlah'         => ['required', 'integer', 'min:1'],
-            'harga_beli'     => ['required', 'numeric', 'min:0'],
-            'pemasok_input'  => ['required', 'string', 'max:150'],
-            'lokasi_input'   => ['nullable', 'string', 'max:100'],
-            'kondisi_input'  => ['nullable', 'string', 'max:100'],
-            'tgl_masuk'      => ['required', 'date'],
-            'tgl_kadaluarsa' => ['nullable', 'date', 'after_or_equal:tgl_masuk'],
-            'catatan'        => ['nullable', 'string', 'max:500'],
-        ], [
-            'id_item.required'           => 'Barang wajib dipilih dari database master.',
-            'id_item.exists'             => 'Barang yang dipilih tidak valid atau tidak terdaftar.',
-            'jumlah.required'            => 'Jumlah barang wajib diisi.',
-            'jumlah.min'                 => 'Jumlah barang minimal 1.',
-            'harga_beli.required'        => 'Harga beli wajib diisi.',
-            'pemasok_input.required'     => 'Nama pemasok wajib diisi.',
-            'tgl_masuk.required'         => 'Tanggal masuk wajib diisi.',
-            'tgl_kadaluarsa.after_or_equal' => 'Tanggal kadaluarsa tidak boleh sebelum tanggal masuk.',
-        ]);
+        $wantsJson = $request->expectsJson() || $request->ajax();
 
         try {
-            return DB::transaction(function () use ($request) {
+            $request->validate([
+                'id_item' => ['required', 'string', 'max:180'],
+                'jumlah' => ['required', 'integer', 'min:1'],
+                'harga_beli' => ['required', 'numeric', 'min:0'],
+                'pemasok_id' => ['nullable', 'string', 'max:150'],
+                'pemasok_input' => ['nullable', 'string', 'max:150'],
+                'lokasi_input' => ['nullable', 'string', 'max:100'],
+                'kondisi_input' => ['nullable', 'string', 'max:100'],
+                'tgl_masuk' => ['nullable', 'date'],
+                'tgl_kadaluarsa' => ['nullable', 'date', 'after_or_equal:tgl_masuk'],
+                'catatan' => ['nullable', 'string', 'max:500'],
+            ], [
+                'id_item.required' => 'Mohon pilih atau ketik nama bunga terlebih dahulu ya Bu/Pak.',
+                'jumlah.required' => 'Harap isi jumlah bunga terlebih dahulu ya Bu/Pak.',
+                'jumlah.integer' => 'Jumlah bunga harus berupa angka ya Bu/Pak.',
+                'jumlah.min' => 'Jumlah bunga minimal 1 ya Bu/Pak.',
+                'harga_beli.required' => 'Harap isi harga beli satuan terlebih dahulu ya Bu/Pak.',
+                'harga_beli.numeric' => 'Harga beli harus berupa angka ya Bu/Pak.',
+                'harga_beli.min' => 'Harga beli tidak boleh kurang dari 0 ya Bu/Pak.',
+                'tgl_kadaluarsa.after_or_equal' => 'Tanggal kadaluarsa tidak boleh sebelum tanggal masuk ya Bu/Pak.',
+            ]);
+        } catch (ValidationException $e) {
+            if ($wantsJson) {
+                return response()->json([
+                    'status' => false,
+                    'success' => false,
+                    'message' => collect($e->errors())->flatten()->first() ?? 'Data belum lengkap.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            throw $e;
+        }
+
+        try {
+            $result = DB::transaction(function () use ($request) {
                 $userId = Auth::id();
 
-                // 1. PASTIKAN ITEM DITEMUKAN
-                $item = Item::where('user_id', $userId)
-                    ->where('id', $request->id_item)
-                    ->firstOrFail();
+                // 1. Item lama ATAU item baru otomatis (Inline Item Creation)
+                $item = $this->resolveItem($userId, $request->input('id_item'));
 
-                // 2. AUTO-CREATE PEMASOK (Jika Belum Ada)
-                $pemasok = Pemasok::firstOrCreate(
-                    ['user_id' => $userId, 'nama_pemasok' => trim((string) $request->pemasok_input)]
+                // 2. Pemasok: ID numerik atau nama baru dari Select2 tags
+                $pemasok = $this->resolvePemasok(
+                    $userId,
+                    $request->input('pemasok_id', $request->input('pemasok_input'))
                 );
 
-                // 3. AUTO-CREATE LOKASI
-                $lokasiName = !empty($request->lokasi_input) ? trim((string) $request->lokasi_input) : 'Gudang Utama';
-                $lokasi     = Lokasi::firstOrCreate(
-                    ['user_id' => $userId, 'nama_lokasi' => $lokasiName]
-                );
+                // 3. Lokasi & kondisi: default ke data pertama milik user
+                $lokasi = $this->resolveLokasi($userId, $request->input('lokasi_input'));
+                $kondisi = $this->resolveKondisi($userId, $request->input('kondisi_input'));
 
-                // 4. AUTO-CREATE KONDISI
-                $kondisiName = !empty($request->kondisi_input) ? trim((string) $request->kondisi_input) : 'Segar';
-                $kondisi     = Kondisi::firstOrCreate(
-                    ['user_id' => $userId, 'nama_kondisi' => $kondisiName]
-                );
+                // 4. Tanggal masuk: otomatis hari ini jika tidak dikirim
+                $tanggalMasuk = $request->filled('tgl_masuk')
+                    ? $request->input('tgl_masuk')
+                    : now()->format('Y-m-d');
 
-                // 5. SIMPAN TRANSAKSI BARANG MASUK
-                $totalHarga                  = ((int) $request->jumlah) * ((float) $request->harga_beli);
-                $barangMasuk                 = new BarangMasuk();
-                $barangMasuk->user_id        = $userId;
-                $barangMasuk->item_id        = $item->id;
-                $barangMasuk->id_pemasok     = $pemasok->id;
-                $barangMasuk->id_lokasi      = $lokasi->id;
-                $barangMasuk->id_kondisi     = $kondisi->id;
-                $barangMasuk->jumlah         = (int) $request->jumlah;
-                $barangMasuk->harga_satuan   = (float) $request->harga_beli;
-                $barangMasuk->total_harga    = $totalHarga;
-                $barangMasuk->tanggal_masuk  = $request->tgl_masuk;
-                $barangMasuk->tanggal_kadaluarsa = $request->tgl_kadaluarsa;
-                $barangMasuk->catatan        = $request->catatan;
+                // 5. Simpan transaksi barang masuk
+                $jumlah = (int) $request->jumlah;
+                $hargaBeli = (float) $request->harga_beli;
+                $totalHarga = $jumlah * $hargaBeli;
+
+                $barangMasuk = new BarangMasuk;
+                $barangMasuk->user_id = $userId;
+                $barangMasuk->item_id = $item->id;
+                $barangMasuk->id_pemasok = $pemasok->id;
+                $barangMasuk->id_lokasi = $lokasi->id;
+                $barangMasuk->id_kondisi = $kondisi->id;
+                $barangMasuk->jumlah = $jumlah;
+                $barangMasuk->harga_satuan = $hargaBeli;
+                $barangMasuk->total_harga = $totalHarga;
+                $barangMasuk->tanggal_masuk = $tanggalMasuk;
+                $barangMasuk->tanggal_kadaluarsa = $request->filled('tgl_kadaluarsa')
+                    ? $request->input('tgl_kadaluarsa')
+                    : null;
+                $barangMasuk->catatan = $request->filled('catatan')
+                    ? $request->input('catatan')
+                    : null;
                 $barangMasuk->save();
 
-                return redirect()
-                    ->route('barang-masuk.index')
-                    ->with('success', 'Transaksi barang masuk berhasil dicatat!');
+                return compact('item', 'pemasok', 'lokasi', 'kondisi', 'barangMasuk');
             });
+
+            $message = '✅ '.$result['item']->nama_barang.' Berhasil Ditambahkan!';
+
+            if ($wantsJson) {
+                return response()->json([
+                    'status' => true,
+                    'success' => true,
+                    'message' => $message,
+                    'item' => [
+                        'id' => $result['item']->id,
+                        'nama' => $result['item']->nama_barang,
+                        'nama_item' => $result['item']->nama_barang,
+                        'kode_barang' => $result['item']->kode_barang,
+                        'satuan' => optional($result['item']->satuan)->nama_satuan ?? 'Pcs',
+                        'stok' => (int) $result['item']->total_stok,
+                    ],
+                    'transaksi' => [
+                        'id' => $result['barangMasuk']->id,
+                        'jumlah' => (int) $result['barangMasuk']->jumlah,
+                        'harga_satuan' => (float) $result['barangMasuk']->harga_satuan,
+                        'total_harga' => (float) $result['barangMasuk']->total_harga,
+                        'pemasok' => $result['pemasok']->nama_pemasok,
+                        'lokasi' => $result['lokasi']->nama_lokasi,
+                        'kondisi' => $result['kondisi']->nama_kondisi,
+                    ],
+                    'riwayat' => $this->riwayatMasuk(Auth::id(), 5),
+                ]);
+            }
+
+            return redirect()
+                ->route('barang-masuk.index')
+                ->with('success', $message);
+        } catch (ValidationException $e) {
+            if ($wantsJson) {
+                return response()->json([
+                    'status' => false,
+                    'success' => false,
+                    'message' => collect($e->errors())->flatten()->first() ?? 'Data belum lengkap.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            throw $e;
         } catch (QueryException $e) {
-            Log::error('DB Error Barang Masuk: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'DB Error: ' . $e->getMessage());
+            Log::error('DB Error Barang Masuk: '.$e->getMessage());
+
+            if ($wantsJson) {
+                return response()->json([
+                    'status' => false,
+                    'success' => false,
+                    'message' => 'Maaf, data belum bisa disimpan. Silakan coba lagi ya Bu/Pak.',
+                ], 500);
+            }
+
+            return back()->withInput()->with('error', 'Data belum bisa disimpan. Silakan coba lagi ya Bu/Pak.');
         } catch (\Throwable $e) {
-            Log::error('System Error Barang Masuk: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'System Error: ' . $e->getMessage());
+            Log::error('System Error Barang Masuk: '.$e->getMessage());
+
+            if ($wantsJson) {
+                return response()->json([
+                    'status' => false,
+                    'success' => false,
+                    'message' => 'Maaf, terjadi kendala saat menyimpan. Silakan coba lagi ya Bu/Pak.',
+                ], 500);
+            }
+
+            return back()->withInput()->with('error', 'Terjadi kendala saat menyimpan. Silakan coba lagi ya Bu/Pak.');
         }
     }
+
     /**
      * Parsing voice khusus Tab Barang Keluar (Groq Whisper + Llama 3)
      */
@@ -706,7 +1035,7 @@ PROMPT;
         if (empty($groqKey)) {
             return response()->json([
                 'success' => false,
-                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.'
+                'message' => 'GROQ_API_KEY belum dikonfigurasi di file .env.',
             ], 500);
         }
 
@@ -715,16 +1044,17 @@ PROMPT;
 
             // STEP 1: Transkripsi Audio ke Teks via Groq Whisper
             $sttResponse = Http::timeout(15)
-                ->withHeaders(['Authorization' => 'Bearer ' . $groqKey])
+                ->withHeaders(['Authorization' => 'Bearer '.$groqKey])
                 ->attach('file', file_get_contents($audioFile->getRealPath()), $audioFile->getClientOriginalName())
                 ->post('https://api.groq.com/openai/v1/audio/transcriptions', [
-                    'model'           => 'whisper-large-v3-turbo',
-                    'language'        => 'id',
+                    'model' => 'whisper-large-v3-turbo',
+                    'language' => 'id',
                     'response_format' => 'json',
                 ]);
 
-            if (!$sttResponse->successful()) {
+            if (! $sttResponse->successful()) {
                 Log::error('Groq STT Error (Barang Keluar)', ['body' => $sttResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal menguraikan suara ke teks.'], 500);
             }
 
@@ -765,36 +1095,38 @@ PROMPT;
 
             $llamaResponse = Http::timeout(15)
                 ->withHeaders([
-                    'Authorization' => 'Bearer ' . $groqKey,
-                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer '.$groqKey,
+                    'Content-Type' => 'application/json',
                 ])
                 ->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model'           => 'groq/compound',
+                    'model' => 'groq/compound',
                     'response_format' => ['type' => 'json_object'],
-                    'messages'        => [['role' => 'user', 'content' => $prompt]],
-                    'temperature'     => 0.1,
+                    'messages' => [['role' => 'user', 'content' => $prompt]],
+                    'temperature' => 0.1,
                 ]);
 
-            if (!$llamaResponse->successful()) {
+            if (! $llamaResponse->successful()) {
                 Log::error('Groq Llama Error (Barang Keluar)', ['body' => $llamaResponse->body()]);
+
                 return response()->json(['success' => false, 'message' => 'Gagal memproses parsing teks.'], 500);
             }
 
-            $rawText    = $llamaResponse->json('choices.0.message.content');
+            $rawText = $llamaResponse->json('choices.0.message.content');
             $parsedData = json_decode($rawText, true);
 
             // STEP 3: Pencocokan ke Database Item milik User
-            $userId       = Auth::id();
+            $userId = Auth::id();
             $namaBarangAi = $parsedData['nama_barang'] ?? null;
-            $matchedItem  = null;
+            $matchedItem = null;
 
-            if (!empty($namaBarangAi)) {
+            if (! empty($namaBarangAi)) {
                 $searchLower = mb_strtolower(trim($namaBarangAi));
 
                 $matchedItem = Item::where('user_id', $userId)
                     ->get()
                     ->first(function ($item) use ($searchLower) {
                         $itemNameLower = mb_strtolower($item->nama_barang);
+
                         return $itemNameLower === $searchLower
                             || str_contains($itemNameLower, $searchLower)
                             || str_contains($searchLower, $itemNameLower);
@@ -802,25 +1134,26 @@ PROMPT;
             }
 
             return response()->json([
-                'success'        => true,
+                'success' => true,
                 'transcript_raw' => $rawTranscript,
-                'data'           => [
-                    'item_id'         => $matchedItem ? $matchedItem->id : null,
-                    'nama_barang'     => $namaBarangAi,
-                    'item_found'      => (bool) $matchedItem,
-                    'jumlah_keluar'   => isset($parsedData['jumlah_keluar']) ? max(1, (int)$parsedData['jumlah_keluar']) : 1,
-                    'harga_jual'      => isset($parsedData['harga_jual']) && $parsedData['harga_jual'] > 0
-                        ? (float)$parsedData['harga_jual']
-                        : ($matchedItem ? (float)$matchedItem->harga_dasar : 0),
-                    'penerima'        => $parsedData['penerima'] ?? null,
+                'data' => [
+                    'item_id' => $matchedItem ? $matchedItem->id : null,
+                    'nama_barang' => $namaBarangAi,
+                    'item_found' => (bool) $matchedItem,
+                    'jumlah_keluar' => isset($parsedData['jumlah_keluar']) ? max(1, (int) $parsedData['jumlah_keluar']) : 1,
+                    'harga_jual' => isset($parsedData['harga_jual']) && $parsedData['harga_jual'] > 0
+                        ? (float) $parsedData['harga_jual']
+                        : 0,
+                    'penerima' => $parsedData['penerima'] ?? null,
                     'jenis_transaksi' => $parsedData['jenis_transaksi'] ?? 'Penjualan',
-                    'lokasi_tujuan'   => $parsedData['lokasi_tujuan'] ?? null,
-                    'catatan'         => $parsedData['catatan'] ?? null,
-                    'stok_tersedia'   => $matchedItem ? $matchedItem->total_stok : 0,
+                    'lokasi_tujuan' => $parsedData['lokasi_tujuan'] ?? null,
+                    'catatan' => $parsedData['catatan'] ?? null,
+                    'stok_tersedia' => $matchedItem ? $matchedItem->total_stok : 0,
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Voice Parsing Barang Keluar Exception: ' . $e->getMessage());
+            Log::error('Voice Parsing Barang Keluar Exception: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -839,41 +1172,36 @@ PROMPT;
         // Query semua barang keluar sekaligus untuk mencegah N+1 Query Problem
         $barangKeluars = BarangKeluar::where('user_id', $userId)
             ->get()
-            ->groupBy(fn($row) => $row->item_id . '|' . $row->id_lokasi . '|' . $row->id_kondisi);
+            ->groupBy(fn ($row) => $row->item_id.'|'.$row->id_lokasi.'|'.$row->id_kondisi);
 
         $grouped = $barangMasuks
-            ->groupBy(fn($barang) => $barang->item_id . '|' . $barang->id_lokasi . '|' . $barang->id_kondisi)
+            ->groupBy(fn ($barang) => $barang->item_id.'|'.$barang->id_lokasi.'|'.$barang->id_kondisi)
             ->map(function ($group, $key) use ($barangKeluars) {
 
                 $latest = $group->sortByDesc('tanggal_masuk')->sortByDesc('id')->first();
 
-                if (!$latest || !$latest->item) {
+                if (! $latest || ! $latest->item) {
                     return null;
                 }
 
-                $masuk  = $group->sum('jumlah');
+                $masuk = $group->sum('jumlah');
                 $keluar = isset($barangKeluars[$key]) ? $barangKeluars[$key]->sum('jumlah_keluar') : 0;
-                $stok   = $masuk - $keluar;
+                $stok = $masuk - $keluar;
 
                 if ($stok <= 0) {
                     return null;
                 }
 
-                $totalHarga  = $group->sum(fn($row) => $row->harga_satuan * $row->jumlah);
-                $totalJumlah = $group->sum('jumlah');
-                $wac         = $totalJumlah > 0 ? ($totalHarga / $totalJumlah) : 0;
-
                 return [
-                    'item_id'     => $latest->item_id,
-                    'kode'        => $latest->item->kode_barang ?? ('BRG-' . $latest->item_id),
+                    'item_id' => $latest->item_id,
+                    'kode' => $latest->item->kode_barang ?? ('BRG-'.$latest->item_id),
                     'nama_barang' => $latest->item->nama_barang ?? '-',
-                    'lokasi_id'   => $latest->id_lokasi,
-                    'lokasi'      => $latest->lokasi?->nama_lokasi ?? '-',
-                    'kondisi_id'  => $latest->id_kondisi,
-                    'kondisi'     => $latest->kondisi?->nama_kondisi ?? '-',
-                    'stok'        => (int) $stok,
-                    'satuan'      => optional($latest->item->satuan)->nama_satuan ?? 'Pcs',
-                    'harga_dasar' => (int) round($wac),
+                    'lokasi_id' => $latest->id_lokasi,
+                    'lokasi' => $latest->lokasi?->nama_lokasi ?? '-',
+                    'kondisi_id' => $latest->id_kondisi,
+                    'kondisi' => $latest->kondisi?->nama_kondisi ?? '-',
+                    'stok' => (int) $stok,
+                    'satuan' => optional($latest->item->satuan)->nama_satuan ?? 'Pcs',
                 ];
             })
             ->filter()
@@ -881,24 +1209,24 @@ PROMPT;
 
         return response()->json($grouped);
     }
+
     /**
      * API DETAIL BARANG (Diperbaiki Validasi Parameter)
      */
     public function getDetailBarang(Request $request)
     {
-        $userId    = Auth::id();
-        $itemId    = $request->input('item_id');
-        $idLokasi  = $request->input('id_lokasi');
+        $userId = Auth::id();
+        $itemId = $request->input('item_id');
+        $idLokasi = $request->input('id_lokasi');
         $idKondisi = $request->input('id_kondisi');
 
-        if (!$itemId) {
+        if (! $itemId) {
             return response()->json([
-                'stok'        => 0,
+                'stok' => 0,
                 'nama_barang' => '-',
-                'satuan'      => '-',
-                'lokasi'      => '-',
-                'kondisi'     => '-',
-                'harga_dasar' => 0,
+                'satuan' => '-',
+                'lokasi' => '-',
+                'kondisi' => '-',
             ]);
         }
 
@@ -907,62 +1235,53 @@ PROMPT;
             ->where('user_id', $userId)
             ->first();
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
-                'stok'        => 0,
+                'stok' => 0,
                 'nama_barang' => '-',
-                'satuan'      => '-',
-                'lokasi'      => '-',
-                'kondisi'     => '-',
-                'harga_dasar' => 0,
+                'satuan' => '-',
+                'lokasi' => '-',
+                'kondisi' => '-',
             ]);
         }
 
-        $lokasi  = Lokasi::where('id', $idLokasi)->where('user_id', $userId)->first();
+        $lokasi = Lokasi::where('id', $idLokasi)->where('user_id', $userId)->first();
         $kondisi = Kondisi::where('id', $idKondisi)->where('user_id', $userId)->first();
 
         $masuk = BarangMasuk::where('user_id', $userId)
             ->where('item_id', $item->id)
-            ->when($idLokasi, fn($q) => $q->where('id_lokasi', $idLokasi))
-            ->when($idKondisi, fn($q) => $q->where('id_kondisi', $idKondisi))
+            ->when($idLokasi, fn ($q) => $q->where('id_lokasi', $idLokasi))
+            ->when($idKondisi, fn ($q) => $q->where('id_kondisi', $idKondisi))
             ->sum('jumlah');
 
         $keluar = BarangKeluar::where('user_id', $userId)
             ->where('item_id', $item->id)
-            ->when($idLokasi, fn($q) => $q->where('id_lokasi', $idLokasi))
-            ->when($idKondisi, fn($q) => $q->where('id_kondisi', $idKondisi))
+            ->when($idLokasi, fn ($q) => $q->where('id_lokasi', $idLokasi))
+            ->when($idKondisi, fn ($q) => $q->where('id_kondisi', $idKondisi))
             ->sum('jumlah_keluar');
 
-        // WAC via Query SQL
-        $wac = (float) BarangMasuk::where('user_id', $userId)
-            ->where('item_id', $item->id)
-            ->when($idLokasi, fn($q) => $q->where('id_lokasi', $idLokasi))
-            ->when($idKondisi, fn($q) => $q->where('id_kondisi', $idKondisi))
-            ->selectRaw('COALESCE(SUM(harga_satuan * jumlah) / NULLIF(SUM(jumlah), 0), 0) as wac')
-            ->value('wac');
-
         return response()->json([
-            'stok'        => max(0, $masuk - $keluar),
+            'stok' => max(0, $masuk - $keluar),
             'nama_barang' => $item->nama_barang ?? '-',
-            'satuan'      => $item->satuan?->nama_satuan ?? '-',
-            'lokasi'      => $lokasi?->nama_lokasi ?? '-',
-            'kondisi'     => $kondisi?->nama_kondisi ?? '-',
-            'id_lokasi'   => $idLokasi,
-            'id_kondisi'  => $idKondisi,
-            'harga_dasar' => (int) round($wac > 0 ? $wac : $item->harga_dasar),
+            'satuan' => $item->satuan?->nama_satuan ?? '-',
+            'lokasi' => $lokasi?->nama_lokasi ?? '-',
+            'kondisi' => $kondisi?->nama_kondisi ?? '-',
+            'id_lokasi' => $idLokasi,
+            'id_kondisi' => $idKondisi,
         ]);
     }
+
     /**
      * Menyimpan Transaksi Barang Keluar
      */
     public function barangKeluarStore(Request $request)
     {
         // 1. Parsing gabungan value 'kode_lokasi_kondisi' (KODE|LOKASI_ID|KONDISI_ID)
-        if ($request->filled('kode_lokasi_kondisi') && (!$request->filled('id_lokasi') || !$request->filled('id_kondisi'))) {
+        if ($request->filled('kode_lokasi_kondisi') && (! $request->filled('id_lokasi') || ! $request->filled('id_kondisi'))) {
             $parts = explode('|', $request->kode_lokasi_kondisi);
             if (count($parts) === 3) {
                 $request->merge([
-                    'id_lokasi'  => $parts[1],
+                    'id_lokasi' => $parts[1],
                     'id_kondisi' => $parts[2],
                 ]);
             }
@@ -970,26 +1289,26 @@ PROMPT;
 
         // 2. Validasi Form
         $request->validate([
-            'item_id'         => ['required', 'exists:items,id'],
-            'id_lokasi'       => ['required', 'exists:lokasis,id'],
-            'id_kondisi'      => ['required', 'exists:kondisis,id'],
-            'jumlah_keluar'   => ['required', 'integer', 'min:1'],
-            'harga_jual'      => ['required', 'numeric', 'min:0'],
-            'penerima'        => ['required', 'string', 'max:150'],
+            'item_id' => ['required', 'exists:items,id'],
+            'id_lokasi' => ['required', 'exists:lokasis,id'],
+            'id_kondisi' => ['required', 'exists:kondisis,id'],
+            'jumlah_keluar' => ['required', 'integer', 'min:1'],
+            'harga_jual' => ['required', 'numeric', 'min:0'],
+            'penerima' => ['required', 'string', 'max:150'],
             'jenis_transaksi' => ['required', 'string', 'max:100'],
-            'lokasi_tujuan'   => ['required', 'string', 'max:150'],
-            'catatan'         => ['nullable', 'string', 'max:500'],
+            'lokasi_tujuan' => ['required', 'string', 'max:150'],
+            'catatan' => ['nullable', 'string', 'max:500'],
         ], [
-            'item_id.required'         => 'Pilihan barang wajib diisi.',
-            'item_id.exists'           => 'Barang tidak ditemukan di database.',
-            'id_lokasi.required'       => 'Lokasi asal wajib diisi.',
-            'id_kondisi.required'      => 'Kondisi barang wajib diisi.',
-            'jumlah_keluar.required'   => 'Jumlah barang keluar wajib diisi.',
-            'jumlah_keluar.min'        => 'Jumlah barang keluar minimal 1.',
-            'harga_jual.required'      => 'Harga jual wajib diisi.',
-            'penerima.required'        => 'Nama penerima wajib diisi.',
+            'item_id.required' => 'Pilihan barang wajib diisi.',
+            'item_id.exists' => 'Barang tidak ditemukan di database.',
+            'id_lokasi.required' => 'Lokasi asal wajib diisi.',
+            'id_kondisi.required' => 'Kondisi barang wajib diisi.',
+            'jumlah_keluar.required' => 'Jumlah barang keluar wajib diisi.',
+            'jumlah_keluar.min' => 'Jumlah barang keluar minimal 1.',
+            'harga_jual.required' => 'Harga jual wajib diisi.',
+            'penerima.required' => 'Nama penerima wajib diisi.',
             'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
-            'lokasi_tujuan.required'   => 'Lokasi tujuan wajib diisi.',
+            'lokasi_tujuan.required' => 'Lokasi tujuan wajib diisi.',
         ]);
 
         try {
@@ -1031,22 +1350,22 @@ PROMPT;
                 }
 
                 // 4. Hitung Total Nilai Jual
-                $totalHargaJual = (float)$request->jumlah_keluar * (float)$request->harga_jual;
+                $totalHargaJual = (float) $request->jumlah_keluar * (float) $request->harga_jual;
 
                 // 5. Simpan Record Barang Keluar
-                $barangKeluar                   = new BarangKeluar();
-                $barangKeluar->user_id          = $userId;
-                $barangKeluar->item_id          = $item->id;
-                $barangKeluar->id_lokasi        = $lokasi->id;
-                $barangKeluar->id_kondisi       = $kondisi->id;
-                $barangKeluar->jumlah_keluar    = (int) $request->jumlah_keluar;
-                $barangKeluar->harga_jual       = (float) $request->harga_jual;
+                $barangKeluar = new BarangKeluar;
+                $barangKeluar->user_id = $userId;
+                $barangKeluar->item_id = $item->id;
+                $barangKeluar->id_lokasi = $lokasi->id;
+                $barangKeluar->id_kondisi = $kondisi->id;
+                $barangKeluar->jumlah_keluar = (int) $request->jumlah_keluar;
+                $barangKeluar->harga_jual = (float) $request->harga_jual;
                 $barangKeluar->total_harga_jual = $totalHargaJual;
-                $barangKeluar->tanggal_keluar   = now();
-                $barangKeluar->penerima         = trim((string) $request->penerima);
-                $barangKeluar->jenis_transaksi  = $request->jenis_transaksi;
-                $barangKeluar->lokasi_tujuan    = trim((string) $request->lokasi_tujuan);
-                $barangKeluar->catatan          = $request->catatan;
+                $barangKeluar->tanggal_keluar = now();
+                $barangKeluar->penerima = trim((string) $request->penerima);
+                $barangKeluar->jenis_transaksi = $request->jenis_transaksi;
+                $barangKeluar->lokasi_tujuan = trim((string) $request->lokasi_tujuan);
+                $barangKeluar->catatan = $request->catatan;
                 $barangKeluar->save();
 
                 return redirect()
@@ -1054,7 +1373,8 @@ PROMPT;
                     ->with('success', 'Transaksi barang keluar berhasil dicatat!');
             });
         } catch (\Throwable $e) {
-            Log::error('Error Barang Keluar: ' . $e->getMessage());
+            Log::error('Error Barang Keluar: '.$e->getMessage());
+
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -1066,17 +1386,16 @@ PROMPT;
     {
         $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.nama_barang'    => ['nullable', 'string', 'max:150'],
+            'items.*.nama_barang' => ['nullable', 'string', 'max:150'],
             'items.*.kategori_input' => ['nullable', 'string', 'max:100'],
-            'items.*.satuan_input'   => ['nullable', 'string', 'max:100'],
-            'items.*.stok_minimum'   => ['nullable', 'integer', 'min:0'],
-            'items.*.harga_dasar'    => ['nullable', 'numeric', 'min:0'],
-            'items.*.deskripsi'      => ['nullable', 'string', 'max:500'],
+            'items.*.satuan_input' => ['nullable', 'string', 'max:100'],
+            'items.*.stok_minimum' => ['nullable', 'integer', 'min:0'],
+            'items.*.deskripsi' => ['nullable', 'string', 'max:500'],
         ]);
 
         $userId = Auth::id();
         $rawRows = collect($request->items)
-            ->filter(fn($row) => !empty(trim((string)($row['nama_barang'] ?? ''))))
+            ->filter(fn ($row) => ! empty(trim((string) ($row['nama_barang'] ?? ''))))
             ->values();
 
         if ($rawRows->isEmpty()) {
@@ -1084,8 +1403,8 @@ PROMPT;
         }
 
         // Cek duplikasi nama barang di dalam form itu sendiri
-        $inputNames = $rawRows->pluck('nama_barang')->map(fn($n) => trim((string)$n));
-        if ($inputNames->count() !== $inputNames->unique(fn($n) => mb_strtolower($n))->count()) {
+        $inputNames = $rawRows->pluck('nama_barang')->map(fn ($n) => trim((string) $n));
+        if ($inputNames->count() !== $inputNames->unique(fn ($n) => mb_strtolower($n))->count()) {
             return back()->withInput()->with('error', 'Terdapat nama barang yang sama/duplikat pada baris tabel yang Anda masukkan.');
         }
 
@@ -1095,8 +1414,8 @@ PROMPT;
             ->pluck('nama_barang')
             ->toArray();
 
-        if (!empty($existingItems)) {
-            return back()->withInput()->with('error', 'Nama barang berikut sudah terdaftar di inventori Anda: ' . implode(', ', $existingItems));
+        if (! empty($existingItems)) {
+            return back()->withInput()->with('error', 'Nama barang berikut sudah terdaftar di inventori Anda: '.implode(', ', $existingItems));
         }
 
         try {
@@ -1104,15 +1423,15 @@ PROMPT;
                 // Ambil counter kode barang terakhir user untuk penomoran berurutan
                 $latest = Item::where('user_id', $userId)->orderByDesc('id')->first();
                 $currentNumber = 0;
-                if ($latest && !empty($latest->kode_barang)) {
+                if ($latest && ! empty($latest->kode_barang)) {
                     $currentNumber = (int) str_replace('BRG-', '', $latest->kode_barang);
                 }
 
                 $count = 0;
                 foreach ($rawRows as $row) {
-                    $namaBarang   = trim((string) $row['nama_barang']);
-                    $kategoriName = !empty($row['kategori_input']) ? trim((string) $row['kategori_input']) : 'Bunga & Tanaman';
-                    $satuanName   = !empty($row['satuan_input']) ? trim((string) $row['satuan_input']) : 'Pcs';
+                    $namaBarang = trim((string) $row['nama_barang']);
+                    $kategoriName = ! empty($row['kategori_input']) ? trim((string) $row['kategori_input']) : 'Bunga & Tanaman';
+                    $satuanName = ! empty($row['satuan_input']) ? trim((string) $row['satuan_input']) : 'Pcs';
 
                     $kategori = Kategori::firstOrCreate(
                         ['user_id' => $userId, 'kategori' => $kategoriName],
@@ -1124,26 +1443,25 @@ PROMPT;
                     );
 
                     $currentNumber++;
-                    $kodeBarang = 'BRG-' . str_pad($currentNumber, 3, '0', STR_PAD_LEFT);
+                    $kodeBarang = 'BRG-'.str_pad($currentNumber, 3, '0', STR_PAD_LEFT);
 
-                    $item = new Item();
-                    $item->user_id      = $userId;
-                    $item->kode_barang  = $kodeBarang;
+                    $item = new Item;
+                    $item->user_id = $userId;
+                    $item->kode_barang = $kodeBarang;
                     $item->public_token = (string) Str::uuid();
-                    $item->nama_barang  = $namaBarang;
-                    $item->id_kategori  = $kategori->id;
-                    $item->id_satuan    = $satuan->id;
-                    $item->stok_minimum = isset($row['stok_minimum']) ? max(0, (int)$row['stok_minimum']) : 0;
-                    $item->harga_dasar  = isset($row['harga_dasar']) ? max(0, (float)$row['harga_dasar']) : 0;
-                    $item->deskripsi    = $row['deskripsi'] ?? null;
+                    $item->nama_barang = $namaBarang;
+                    $item->id_kategori = $kategori->id;
+                    $item->id_satuan = $satuan->id;
+                    $item->stok_minimum = isset($row['stok_minimum']) ? max(0, (int) $row['stok_minimum']) : 0;
+                    $item->deskripsi = $row['deskripsi'] ?? null;
                     $item->save();
 
                     // Generate QR Code
                     try {
                         Storage::disk('public')->makeDirectory('qrcodes/items');
                         $qrLink = route('item.public', ['public_token' => $item->public_token]);
-                        $filename = 'qr_item_' . $item->public_token . '.svg';
-                        $relativePath = 'qrcodes/items/' . $filename;
+                        $filename = 'qr_item_'.$item->public_token.'.svg';
+                        $relativePath = 'qrcodes/items/'.$filename;
                         $qr = QrCode::format('svg')->size(300)->margin(2)->generate($qrLink);
                         Storage::disk('public')->put($relativePath, $qr);
                         $item->update(['qr_code' => $relativePath]);
@@ -1161,8 +1479,9 @@ PROMPT;
                 ->route('item.index')
                 ->with('success', "Alhamdulillah! Berhasil menambahkan {$savedCount} item bunga baru ke katalog inventori.");
         } catch (\Throwable $e) {
-            Log::error('Error Bulk Item: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Gagal menyimpan data massal: ' . $e->getMessage());
+            Log::error('Error Bulk Item: '.$e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal menyimpan data massal: '.$e->getMessage());
         }
     }
 
@@ -1173,26 +1492,27 @@ PROMPT;
     {
         $request->validate([
             'tanggal_masuk' => ['required', 'date'],
+            'pemasok_id' => ['nullable', 'string', 'max:150'],
             'pemasok_input' => ['nullable', 'string', 'max:150'],
-            'id_pemasok'    => ['nullable', 'exists:pemasoks,id'],
-            'lokasi_input'  => ['nullable', 'string', 'max:100'],
-            'id_lokasi'     => ['nullable', 'exists:lokasis,id'],
+            'id_pemasok' => ['nullable', 'exists:pemasoks,id'],
+            'lokasi_input' => ['nullable', 'string', 'max:100'],
+            'id_lokasi' => ['nullable', 'exists:lokasis,id'],
             'kondisi_input' => ['nullable', 'string', 'max:100'],
-            'id_kondisi'    => ['nullable', 'exists:kondisis,id'],
-            'catatan'       => ['nullable', 'string', 'max:500'],
-            'rows'          => ['required', 'array', 'min:1'],
-            'rows.*.item_id'      => ['nullable', 'exists:items,id'],
-            'rows.*.jumlah'       => ['nullable', 'integer', 'min:1'],
+            'id_kondisi' => ['nullable', 'exists:kondisis,id'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+            'rows' => ['required', 'array', 'min:1'],
+            'rows.*.item_id' => ['nullable', 'exists:items,id'],
+            'rows.*.jumlah' => ['nullable', 'integer', 'min:1'],
             'rows.*.harga_satuan' => ['nullable', 'numeric', 'min:0'],
-            'rows.*.catatan'      => ['nullable', 'string', 'max:500'],
+            'rows.*.catatan' => ['nullable', 'string', 'max:500'],
         ], [
             'tanggal_masuk.required' => 'Tanggal masuk wajib diisi.',
-            'rows.required'          => 'Tabel transaksi tidak boleh kosong.',
+            'rows.required' => 'Tabel transaksi tidak boleh kosong.',
         ]);
 
         $userId = Auth::id();
         $validRows = collect($request->rows)
-            ->filter(fn($row) => !empty($row['item_id']) && (int)($row['jumlah'] ?? 0) > 0)
+            ->filter(fn ($row) => ! empty($row['item_id']) && (int) ($row['jumlah'] ?? 0) > 0)
             ->values();
 
         if ($validRows->isEmpty()) {
@@ -1201,22 +1521,18 @@ PROMPT;
 
         try {
             $savedCount = DB::transaction(function () use ($request, $validRows, $userId) {
-                // 1. Resolve Pemasok (Header)
-                if ($request->filled('id_pemasok')) {
-                    $pemasok = Pemasok::where('user_id', $userId)->where('id', $request->id_pemasok)->firstOrFail();
-                } else {
-                    $pemasokName = !empty($request->pemasok_input) ? trim((string) $request->pemasok_input) : 'Pemasok Umum';
-                    $pemasok     = Pemasok::firstOrCreate(
-                        ['user_id' => $userId, 'nama_pemasok' => $pemasokName]
-                    );
-                }
+                // 1. Resolve Pemasok (Header): ID numerik atau nama baru
+                $pemasok = $this->resolvePemasok(
+                    $userId,
+                    $request->input('pemasok_id', $request->input('pemasok_input', $request->input('id_pemasok')))
+                );
 
                 // 2. Resolve Lokasi (Header)
                 if ($request->filled('id_lokasi')) {
                     $lokasi = Lokasi::where('user_id', $userId)->where('id', $request->id_lokasi)->firstOrFail();
                 } else {
-                    $lokasiName = !empty($request->lokasi_input) ? trim((string) $request->lokasi_input) : 'Gudang Utama';
-                    $lokasi     = Lokasi::firstOrCreate(
+                    $lokasiName = ! empty($request->lokasi_input) ? trim((string) $request->lokasi_input) : 'Gudang Utama';
+                    $lokasi = Lokasi::firstOrCreate(
                         ['user_id' => $userId, 'nama_lokasi' => $lokasiName]
                     );
                 }
@@ -1225,34 +1541,34 @@ PROMPT;
                 if ($request->filled('id_kondisi')) {
                     $kondisi = Kondisi::where('user_id', $userId)->where('id', $request->id_kondisi)->firstOrFail();
                 } else {
-                    $kondisiName = !empty($request->kondisi_input) ? trim((string) $request->kondisi_input) : 'Segar';
-                    $kondisi     = Kondisi::firstOrCreate(
+                    $kondisiName = ! empty($request->kondisi_input) ? trim((string) $request->kondisi_input) : 'Segar';
+                    $kondisi = Kondisi::firstOrCreate(
                         ['user_id' => $userId, 'nama_kondisi' => $kondisiName]
                     );
                 }
 
-                $tanggalMasuk  = $request->tanggal_masuk;
+                $tanggalMasuk = $request->tanggal_masuk;
                 $catatanGlobal = $request->catatan;
                 $count = 0;
 
                 foreach ($validRows as $row) {
                     $item = Item::where('user_id', $userId)->where('id', $row['item_id'])->firstOrFail();
                     $jumlah = (int) $row['jumlah'];
-                    $hargaSatuan = isset($row['harga_satuan']) ? (float) $row['harga_satuan'] : (float) $item->harga_dasar;
+                    $hargaSatuan = isset($row['harga_satuan']) ? (float) $row['harga_satuan'] : 0;
                     $totalHarga = $jumlah * $hargaSatuan;
 
-                    $barangMasuk                 = new BarangMasuk();
-                    $barangMasuk->user_id        = $userId;
-                    $barangMasuk->item_id        = $item->id;
-                    $barangMasuk->id_pemasok     = $pemasok->id;
-                    $barangMasuk->id_lokasi      = $lokasi->id;
-                    $barangMasuk->id_kondisi     = $kondisi->id;
-                    $barangMasuk->jumlah         = $jumlah;
-                    $barangMasuk->harga_satuan   = $hargaSatuan;
-                    $barangMasuk->total_harga    = $totalHarga;
-                    $barangMasuk->tanggal_masuk  = $tanggalMasuk;
+                    $barangMasuk = new BarangMasuk;
+                    $barangMasuk->user_id = $userId;
+                    $barangMasuk->item_id = $item->id;
+                    $barangMasuk->id_pemasok = $pemasok->id;
+                    $barangMasuk->id_lokasi = $lokasi->id;
+                    $barangMasuk->id_kondisi = $kondisi->id;
+                    $barangMasuk->jumlah = $jumlah;
+                    $barangMasuk->harga_satuan = $hargaSatuan;
+                    $barangMasuk->total_harga = $totalHarga;
+                    $barangMasuk->tanggal_masuk = $tanggalMasuk;
                     $barangMasuk->tanggal_kadaluarsa = $row['tanggal_kadaluarsa'] ?? null;
-                    $barangMasuk->catatan        = !empty($row['catatan']) ? $row['catatan'] : $catatanGlobal;
+                    $barangMasuk->catatan = ! empty($row['catatan']) ? $row['catatan'] : $catatanGlobal;
                     $barangMasuk->save();
 
                     $count++;
@@ -1265,8 +1581,9 @@ PROMPT;
                 ->route('barang-masuk.index')
                 ->with('success', "Alhamdulillah! Berhasil mencatat {$savedCount} transaksi barang masuk (Restock Nota).");
         } catch (\Throwable $e) {
-            Log::error('Error Bulk Barang Masuk: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Gagal mencatat transaksi masuk massal: ' . $e->getMessage());
+            Log::error('Error Bulk Barang Masuk: '.$e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal mencatat transaksi masuk massal: '.$e->getMessage());
         }
     }
 
@@ -1276,49 +1593,50 @@ PROMPT;
     public function barangKeluarStoreBulk(Request $request)
     {
         $request->validate([
-            'tanggal_keluar'  => ['required', 'date'],
-            'penerima'        => ['required', 'string', 'max:150'],
+            'tanggal_keluar' => ['required', 'date'],
+            'penerima' => ['required', 'string', 'max:150'],
             'jenis_transaksi' => ['required', 'string', 'max:100'],
-            'lokasi_tujuan'   => ['required', 'string', 'max:150'],
-            'lokasi_input'    => ['nullable', 'string', 'max:100'],
-            'id_lokasi'       => ['nullable'],
-            'kondisi_input'   => ['nullable', 'string', 'max:100'],
-            'id_kondisi'      => ['nullable'],
-            'catatan'         => ['nullable', 'string', 'max:500'],
-            'rows'            => ['required', 'array', 'min:1'],
-            'rows.*.item_id'       => ['nullable'],
+            'lokasi_tujuan' => ['required', 'string', 'max:150'],
+            'lokasi_input' => ['nullable', 'string', 'max:100'],
+            'id_lokasi' => ['nullable'],
+            'kondisi_input' => ['nullable', 'string', 'max:100'],
+            'id_kondisi' => ['nullable'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+            'rows' => ['required', 'array', 'min:1'],
+            'rows.*.item_id' => ['nullable'],
             'rows.*.kode_lokasi_kondisi' => ['nullable'],
-            'rows.*.id_lokasi'     => ['nullable'],
-            'rows.*.id_kondisi'    => ['nullable'],
+            'rows.*.id_lokasi' => ['nullable'],
+            'rows.*.id_kondisi' => ['nullable'],
             'rows.*.jumlah_keluar' => ['nullable', 'integer', 'min:1'],
-            'rows.*.harga_jual'    => ['nullable', 'numeric', 'min:0'],
-            'rows.*.catatan'       => ['nullable', 'string', 'max:500'],
+            'rows.*.harga_jual' => ['nullable', 'numeric', 'min:0'],
+            'rows.*.catatan' => ['nullable', 'string', 'max:500'],
         ], [
-            'tanggal_keluar.required'  => 'Tanggal transaksi keluar wajib diisi.',
-            'penerima.required'        => 'Nama pembeli / penerima wajib diisi.',
+            'tanggal_keluar.required' => 'Tanggal transaksi keluar wajib diisi.',
+            'penerima.required' => 'Nama pembeli / penerima wajib diisi.',
             'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
-            'lokasi_tujuan.required'   => 'Tujuan pengeluaran wajib diisi.',
-            'rows.required'            => 'Tabel barang keluar tidak boleh kosong.',
+            'lokasi_tujuan.required' => 'Tujuan pengeluaran wajib diisi.',
+            'rows.required' => 'Tabel barang keluar tidak boleh kosong.',
         ]);
 
         $userId = Auth::id();
         $validRows = collect($request->rows)
-            ->filter(fn($row) => (!empty($row['item_id']) || !empty($row['kode_lokasi_kondisi'])) && (int)($row['jumlah_keluar'] ?? 0) > 0)
+            ->filter(fn ($row) => (! empty($row['item_id']) || ! empty($row['kode_lokasi_kondisi'])) && (int) ($row['jumlah_keluar'] ?? 0) > 0)
             ->map(function ($row) {
-                if (empty($row['item_id']) && !empty($row['kode_lokasi_kondisi'])) {
+                if (empty($row['item_id']) && ! empty($row['kode_lokasi_kondisi'])) {
                     $parts = explode('|', $row['kode_lokasi_kondisi']);
-                    $row['item_id']    = $parts[0] ?? null;
-                    $row['id_lokasi']  = $parts[1] ?? ($row['id_lokasi'] ?? null);
+                    $row['item_id'] = $parts[0] ?? null;
+                    $row['id_lokasi'] = $parts[1] ?? ($row['id_lokasi'] ?? null);
                     $row['id_kondisi'] = $parts[2] ?? ($row['id_kondisi'] ?? null);
-                } elseif (!empty($row['item_id']) && str_contains((string)$row['item_id'], '|')) {
+                } elseif (! empty($row['item_id']) && str_contains((string) $row['item_id'], '|')) {
                     $parts = explode('|', $row['item_id']);
-                    $row['item_id']    = $parts[0] ?? null;
-                    $row['id_lokasi']  = $row['id_lokasi'] ?? ($parts[1] ?? null);
+                    $row['item_id'] = $parts[0] ?? null;
+                    $row['id_lokasi'] = $row['id_lokasi'] ?? ($parts[1] ?? null);
                     $row['id_kondisi'] = $row['id_kondisi'] ?? ($parts[2] ?? null);
                 }
+
                 return $row;
             })
-            ->filter(fn($row) => !empty($row['item_id']) && (int)($row['jumlah_keluar'] ?? 0) > 0)
+            ->filter(fn ($row) => ! empty($row['item_id']) && (int) ($row['jumlah_keluar'] ?? 0) > 0)
             ->values();
 
         if ($validRows->isEmpty()) {
@@ -1329,13 +1647,13 @@ PROMPT;
             $savedCount = DB::transaction(function () use ($request, $validRows, $userId) {
                 // 1. Akumulasi dan Validasi Ketersediaan Stok Real-Time per kombinasi (Item + Lokasi + Kondisi)
                 $groupedQuantities = $validRows->groupBy(function ($r) {
-                    return $r['item_id'] . '|' . $r['id_lokasi'] . '|' . $r['id_kondisi'];
-                })->map(fn($items) => $items->sum(fn($r) => (int)$r['jumlah_keluar']));
+                    return $r['item_id'].'|'.$r['id_lokasi'].'|'.$r['id_kondisi'];
+                })->map(fn ($items) => $items->sum(fn ($r) => (int) $r['jumlah_keluar']));
 
                 foreach ($groupedQuantities as $key => $totalDiminta) {
                     [$itemId, $lokId, $konId] = explode('|', $key);
                     if (empty($lokId) || empty($konId)) {
-                        throw new \Exception("Lokasi atau kondisi barang tidak valid pada daftar pilihan.");
+                        throw new \Exception('Lokasi atau kondisi barang tidak valid pada daftar pilihan.');
                     }
 
                     $item = Item::where('user_id', $userId)->where('id', $itemId)->firstOrFail();
@@ -1362,35 +1680,35 @@ PROMPT;
                 }
 
                 // 2. Simpan Transaksi Barang Keluar
-                $tanggalKeluar  = $request->tanggal_keluar;
-                $penerima       = trim((string) $request->penerima);
+                $tanggalKeluar = $request->tanggal_keluar;
+                $penerima = trim((string) $request->penerima);
                 $jenisTransaksi = $request->jenis_transaksi;
-                $lokasiTujuan   = trim((string) $request->lokasi_tujuan);
-                $catatanGlobal  = $request->catatan;
-                $count          = 0;
+                $lokasiTujuan = trim((string) $request->lokasi_tujuan);
+                $catatanGlobal = $request->catatan;
+                $count = 0;
 
                 foreach ($validRows as $row) {
                     $item = Item::where('user_id', $userId)->where('id', $row['item_id'])->firstOrFail();
-                    $targetLokasiId  = $row['id_lokasi'];
+                    $targetLokasiId = $row['id_lokasi'];
                     $targetKondisiId = $row['id_kondisi'];
 
-                    $jumlahKeluar   = (int) $row['jumlah_keluar'];
-                    $hargaJual      = isset($row['harga_jual']) ? (float) $row['harga_jual'] : (float) $item->harga_dasar;
+                    $jumlahKeluar = (int) $row['jumlah_keluar'];
+                    $hargaJual = isset($row['harga_jual']) ? (float) $row['harga_jual'] : 0;
                     $totalHargaJual = $jumlahKeluar * $hargaJual;
 
-                    $barangKeluar                   = new BarangKeluar();
-                    $barangKeluar->user_id          = $userId;
-                    $barangKeluar->item_id          = $item->id;
-                    $barangKeluar->id_lokasi        = $targetLokasiId;
-                    $barangKeluar->id_kondisi       = $targetKondisiId;
-                    $barangKeluar->jumlah_keluar    = $jumlahKeluar;
-                    $barangKeluar->harga_jual       = $hargaJual;
+                    $barangKeluar = new BarangKeluar;
+                    $barangKeluar->user_id = $userId;
+                    $barangKeluar->item_id = $item->id;
+                    $barangKeluar->id_lokasi = $targetLokasiId;
+                    $barangKeluar->id_kondisi = $targetKondisiId;
+                    $barangKeluar->jumlah_keluar = $jumlahKeluar;
+                    $barangKeluar->harga_jual = $hargaJual;
                     $barangKeluar->total_harga_jual = $totalHargaJual;
-                    $barangKeluar->tanggal_keluar   = $tanggalKeluar;
-                    $barangKeluar->penerima         = $penerima;
-                    $barangKeluar->jenis_transaksi  = $jenisTransaksi;
-                    $barangKeluar->lokasi_tujuan    = $lokasiTujuan;
-                    $barangKeluar->catatan          = !empty($row['catatan']) ? $row['catatan'] : $catatanGlobal;
+                    $barangKeluar->tanggal_keluar = $tanggalKeluar;
+                    $barangKeluar->penerima = $penerima;
+                    $barangKeluar->jenis_transaksi = $jenisTransaksi;
+                    $barangKeluar->lokasi_tujuan = $lokasiTujuan;
+                    $barangKeluar->catatan = ! empty($row['catatan']) ? $row['catatan'] : $catatanGlobal;
                     $barangKeluar->save();
 
                     $count++;
@@ -1403,7 +1721,8 @@ PROMPT;
                 ->route('barang-keluar.index')
                 ->with('success', "Alhamdulillah! Berhasil mencatat {$savedCount} transaksi barang keluar (Nota Penjualan).");
         } catch (\Throwable $e) {
-            Log::error('Error Bulk Barang Keluar: ' . $e->getMessage());
+            Log::error('Error Bulk Barang Keluar: '.$e->getMessage());
+
             return back()->withInput()->with('error', $e->getMessage());
         }
     }

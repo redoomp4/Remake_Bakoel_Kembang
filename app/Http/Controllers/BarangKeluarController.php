@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
+use App\Models\BarangMasuk;
 use App\Models\Item;
-use App\Models\Lokasi;
 use App\Models\Kondisi;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Lokasi;
+use App\Services\BatchInventoryService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BarangKeluarController extends Controller
 {
@@ -20,11 +22,10 @@ class BarangKeluarController extends Controller
             'item',
             'lokasi',
             'kondisi',
-            'user'
+            'user',
         ])
             ->where('user_id', $userId);    // Search
-        if ($request->filled('search')) 
-        {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->whereHas('item', function ($q2) use ($search) {
@@ -40,8 +41,7 @@ class BarangKeluarController extends Controller
                     ->orWhere('jenis_transaksi', 'like', "%{$search}%");
             });
         }    // Filter lokasi
-        if ($request->filled('lokasi')) 
-        {
+        if ($request->filled('lokasi')) {
             $query->where('id_lokasi', $request->lokasi);
         }
 
@@ -57,7 +57,7 @@ class BarangKeluarController extends Controller
             ->whereIn('id', $lokasiIds)
             ->orderBy('nama_lokasi')
             ->get();
-            
+
         return view('barangkeluar.index', compact(
             'barangKeluars',
             'lokasis'
@@ -79,10 +79,32 @@ class BarangKeluarController extends Controller
         $kondisis = Kondisi::where('user_id', $userId)
             ->orderBy('nama_kondisi')
             ->get();
+
+        $defaultJenis = collect([
+            'Penjualan',
+            'Eceran',
+            'Grosir',
+            'Project Bunga Papan',
+            'Event Wedding',
+            'Bunga Meja',
+            'Donasi',
+            'Pemakaian Internal',
+            'Pemindahan Barang',
+            'Retur ke Supplier',
+            'Penghapusan',
+            'Lainnya',
+        ]);
+        $customJenis = BarangKeluar::where('user_id', $userId)
+            ->pluck('jenis_transaksi')
+            ->filter()
+            ->unique();
+        $jenisTransaksis = $defaultJenis->merge($customJenis)->unique()->values();
+
         return view('barangkeluar.create', compact(
             'items',
             'lokasis',
-            'kondisis'
+            'kondisis',
+            'jenisTransaksis'
         ));
     }
 
@@ -136,7 +158,7 @@ class BarangKeluarController extends Controller
                 'required',
                 'string',
                 'max:50',
-            ]
+            ],
         ]);
 
         try {
@@ -201,7 +223,7 @@ class BarangKeluarController extends Controller
                     ->withInput()
                     ->with(
                         'error',
-                        'Jumlah barang keluar melebihi stok tersedia. Sisa stok: ' . $stok
+                        'Jumlah barang keluar melebihi stok tersedia. Sisa stok: '.$stok
                     );
             }
             /*
@@ -235,7 +257,7 @@ class BarangKeluarController extends Controller
                 ->withInput()
                 ->with(
                     'error',
-                    'Gagal menyimpan data: ' . $e->getMessage()
+                    'Gagal menyimpan data: '.$e->getMessage()
                 );
         }
     }
@@ -243,7 +265,7 @@ class BarangKeluarController extends Controller
     /**
      * SHOW
      */
-    public function show($id)
+    public function show($id, BatchInventoryService $inventory)
     {
         $userId = Auth::id();
 
@@ -251,25 +273,19 @@ class BarangKeluarController extends Controller
             'item.satuan',
             'lokasi',
             'kondisi',
-            'user'
+            'user',
         ])
             ->where('user_id', $userId)
             ->findOrFail($id);
 
-        // Hitung harga rata-rata / WAC dari barang masuk
-        $hargaRata = BarangMasuk::where('user_id', $userId)
-            ->where('item_id', $barangKeluar->item_id)
-            ->where('id_lokasi', $barangKeluar->id_lokasi)
-            ->where('id_kondisi', $barangKeluar->id_kondisi)
-            ->selectRaw(
-                'COALESCE(SUM(harga_satuan * jumlah) / NULLIF(SUM(jumlah), 0), 0) as wac'
-            )
-            ->value('wac');
+        $ledger = $inventory->outgoing($userId, $barangKeluar->id);
 
-        return view('barangkeluar.detail', compact(
-            'barangKeluar',
-            'hargaRata'
-        ));
+        return view('barangkeluar.detail', [
+            'barangKeluar' => $barangKeluar,
+            'modalRiil' => (float) ($ledger['modal_riil'] ?? 0),
+            'labaRiil' => (float) ($ledger['laba_riil'] ?? 0),
+            'batchAllocations' => $ledger['allocations'] ?? [],
+        ]);
     }
 
     public function edit($id)
@@ -279,10 +295,30 @@ class BarangKeluarController extends Controller
         $barangKeluar = BarangKeluar::with([
             'item',
             'lokasi',
-            'kondisi'
+            'kondisi',
         ])
             ->where('user_id', $userId)
             ->findOrFail($id);
+
+        $defaultJenis = collect([
+            'Penjualan',
+            'Eceran',
+            'Grosir',
+            'Project Bunga Papan',
+            'Event Wedding',
+            'Bunga Meja',
+            'Donasi',
+            'Pemakaian Internal',
+            'Pemindahan Barang',
+            'Retur ke Supplier',
+            'Penghapusan',
+            'Lainnya',
+        ]);
+        $customJenis = BarangKeluar::where('user_id', $userId)
+            ->pluck('jenis_transaksi')
+            ->filter()
+            ->unique();
+        $jenisTransaksis = $defaultJenis->merge($customJenis)->unique()->values();
 
         return view('barangkeluar.edit', [
             'barangKeluar' => $barangKeluar,
@@ -298,11 +334,13 @@ class BarangKeluarController extends Controller
             'kondisis' => Kondisi::where('user_id', $userId)
                 ->orderBy('nama_kondisi')
                 ->get(),
+
+            'jenisTransaksis' => $jenisTransaksis,
         ]);
     }
 
     /**
-     * UPDATE  
+     * UPDATE
      */
     public function update(Request $request, $id)
     {
@@ -396,7 +434,7 @@ class BarangKeluarController extends Controller
                     ->withInput()
                     ->with(
                         'error',
-                        'Jumlah barang keluar melebihi stok tersedia. Sisa stok: ' . $stok
+                        'Jumlah barang keluar melebihi stok tersedia. Sisa stok: '.$stok
                     );
             }
             $barangKeluar->update([
@@ -405,8 +443,7 @@ class BarangKeluarController extends Controller
                 'id_kondisi' => $kondisi->id,
                 'jumlah_keluar' => $validated['jumlah_keluar'],
                 'harga_jual' => $validated['harga_jual'],
-                'total_harga_jual' =>
-                $validated['jumlah_keluar']
+                'total_harga_jual' => $validated['jumlah_keluar']
                     * $validated['harga_jual'],
 
                 'penerima' => $validated['penerima'],
@@ -416,7 +453,6 @@ class BarangKeluarController extends Controller
                 'catatan' => $validated['catatan'] ?? null,
                 'jenis_transaksi' => $validated['jenis_transaksi'],
             ]);
-
 
             return redirect()
                 ->route('barang-keluar.index')
@@ -430,7 +466,7 @@ class BarangKeluarController extends Controller
                 ->withInput()
                 ->with(
                     'error',
-                    'Gagal memperbarui data: ' . $e->getMessage()
+                    'Gagal memperbarui data: '.$e->getMessage()
                 );
         }
     }
@@ -465,17 +501,17 @@ class BarangKeluarController extends Controller
     }
 
     /**
-     * CETAK BERITA ACARA  
+     * CETAK BERITA ACARA
      */
     public function cetakBA($id)
     {
-        \Carbon\Carbon::setLocale('id');
+        Carbon::setLocale('id');
 
         $barangKeluar = BarangKeluar::with([
             'item',
             'lokasi',
             'kondisi',
-            'user'
+            'user',
         ])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
@@ -493,9 +529,9 @@ class BarangKeluarController extends Controller
     /**
      * CETAK DETAIL BARANG KELUAR
      */
-    public function cetakDetail($id)
+    public function cetakDetail($id, BatchInventoryService $inventory)
     {
-        \Carbon\Carbon::setLocale('id');
+        Carbon::setLocale('id');
 
         $userId = Auth::id();
 
@@ -503,45 +539,25 @@ class BarangKeluarController extends Controller
             'item.satuan',
             'lokasi',
             'kondisi',
-            'user'
+            'user',
         ])
             ->where('user_id', $userId)
             ->findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Weighted Average Cost (WAC)
-        |--------------------------------------------------------------------------
-        |
-        | Harga rata-rata dihitung berdasarkan seluruh transaksi
-        | barang masuk dengan kombinasi:
-        | user + item + lokasi + kondisi
-        |
-        */
-
-        $hargaRata = (float) BarangMasuk::where('user_id', $userId)
-            ->where('item_id', $barangKeluar->item_id)
-            ->where('id_lokasi', $barangKeluar->id_lokasi)
-            ->where('id_kondisi', $barangKeluar->id_kondisi)
-            ->selectRaw(
-                'COALESCE(
-                SUM(harga_satuan * jumlah) /
-                NULLIF(SUM(jumlah), 0),
-                0
-            ) as wac'
-            )
-            ->value('wac');
+        $ledger = $inventory->outgoing($userId, $barangKeluar->id);
 
         $pdf = Pdf::loadView(
             'barangkeluar.cetak_detail',
-            compact(
-                'barangKeluar',
-                'hargaRata'
-            )
+            [
+                'barangKeluar' => $barangKeluar,
+                'modalRiil' => (float) ($ledger['modal_riil'] ?? 0),
+                'labaRiil' => (float) ($ledger['laba_riil'] ?? 0),
+                'batchAllocations' => $ledger['allocations'] ?? [],
+            ]
         )->setPaper('a4', 'portrait');
 
         return $pdf->stream(
-            'detail-barang-keluar-' . $barangKeluar->id . '.pdf'
+            'detail-barang-keluar-'.$barangKeluar->id.'.pdf'
         );
     }
 
@@ -571,7 +587,7 @@ class BarangKeluarController extends Controller
             ->sum('jumlah_keluar');
 
         return response()->json([
-            'stok' => max(0, $masuk - $keluar)
+            'stok' => max(0, $masuk - $keluar),
         ]);
     }
 
@@ -593,17 +609,15 @@ class BarangKeluarController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
                 'stok' => 0,
                 'nama_barang' => '-',
                 'satuan' => '-',
                 'lokasi' => '-',
                 'kondisi' => '-',
-                'harga_dasar' => 0,
             ]);
         }
-
 
         $lokasi = Lokasi::where('id', $request->id_lokasi)
             ->where('user_id', $userId)
@@ -612,7 +626,6 @@ class BarangKeluarController extends Controller
         $kondisi = Kondisi::where('id', $request->id_kondisi)
             ->where('user_id', $userId)
             ->first();
-
 
         $masuk = BarangMasuk::where('user_id', $userId)
             ->where('item_id', $item->id)
@@ -625,22 +638,6 @@ class BarangKeluarController extends Controller
             ->where('id_lokasi', $request->id_lokasi)
             ->where('id_kondisi', $request->id_kondisi)
             ->sum('jumlah_keluar');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Weighted Average Cost
-        |--------------------------------------------------------------------------
-        */
-        $wac = (float) BarangMasuk::where('user_id', $userId)
-            ->where('item_id', $item->id)
-            ->where('id_lokasi', $request->id_lokasi)
-            ->where('id_kondisi', $request->id_kondisi)
-            ->selectRaw(
-                'COALESCE(SUM(harga_satuan * jumlah) / NULLIF(SUM(jumlah), 0), 0) as wac'
-            )
-            ->value('wac');
-
 
         return response()->json([
 
@@ -657,8 +654,6 @@ class BarangKeluarController extends Controller
             'id_lokasi' => $request->id_lokasi,
 
             'id_kondisi' => $request->id_kondisi,
-
-            'harga_dasar' => (int) round($wac),
         ]);
     }
 
@@ -672,7 +667,7 @@ class BarangKeluarController extends Controller
         $barangMasuks = BarangMasuk::with([
             'item.satuan',
             'lokasi',
-            'kondisi'
+            'kondisi',
         ])
             ->where('user_id', $userId)
             ->get();
@@ -680,9 +675,9 @@ class BarangKeluarController extends Controller
         $grouped = $barangMasuks
             ->groupBy(function ($barang) {
                 return $barang->item_id
-                    . '|' .
+                    .'|'.
                     $barang->id_lokasi
-                    . '|' .
+                    .'|'.
                     $barang->id_kondisi;
             })
             ->map(function ($group) use ($userId) {
@@ -696,7 +691,6 @@ class BarangKeluarController extends Controller
                 $lokasiId = $latest->id_lokasi;
                 $kondisiId = $latest->id_kondisi;
 
-
                 $masuk = $group->sum('jumlah');
 
                 $keluar = BarangKeluar::where('user_id', $userId)
@@ -705,52 +699,32 @@ class BarangKeluarController extends Controller
                     ->where('id_kondisi', $kondisiId)
                     ->sum('jumlah_keluar');
 
-
                 $stok = $masuk - $keluar;
 
                 if ($stok <= 0) {
                     return null;
                 }
 
-
-                $wac = (float) $group
-                    ->sum(function ($row) {
-                        return $row->harga_satuan * $row->jumlah;
-                    });
-
-                $totalJumlah = $group->sum('jumlah');
-
-                $wac = $totalJumlah > 0
-                    ? $wac / $totalJumlah
-                    : 0;
-
-
                 return [
 
-                    'item_id'     => $latest->item_id,
+                    'item_id' => $latest->item_id,
 
                     'kode' => $latest->item->kode_barang ?? '-',
 
-                    'nama_barang' =>
-                    $latest->item->nama_barang ?? '-',
+                    'nama_barang' => $latest->item->nama_barang ?? '-',
 
                     'lokasi_id' => $lokasiId,
 
-                    'lokasi' =>
-                    $latest->lokasi->nama_lokasi ?? '-',
+                    'lokasi' => $latest->lokasi->nama_lokasi ?? '-',
 
                     'kondisi_id' => $kondisiId,
 
-                    'kondisi' =>
-                    $latest->kondisi->nama_kondisi ?? '-',
+                    'kondisi' => $latest->kondisi->nama_kondisi ?? '-',
 
                     'stok' => $stok,
 
-                    'satuan' =>
-                    optional($latest->item->satuan)->nama_satuan
+                    'satuan' => optional($latest->item->satuan)->nama_satuan
                         ?? '-',
-
-                    'harga_dasar' => (int) round($wac),
                 ];
             })
             ->filter()
