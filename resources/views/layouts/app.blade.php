@@ -40,7 +40,6 @@
         }
     </script>
     <style>
-        @stack('styles')
         :root {
             --emerald: #0B4F35;
             --sage: #8FA882;
@@ -657,6 +656,7 @@
             min-width: 240px;
         }
     </style>
+    @stack('styles')
 
 </head>
 @if (Auth::check())
@@ -705,6 +705,25 @@
     @include('partials.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @include('partials.image-compressor')
+    @include('partials.custom-search-select')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                jQuery('.select2-tags').each(function() {
+                    var $el = jQuery(this);
+                    if (!$el.hasClass('select2-hidden-accessible')) {
+                        var ph = $el.data('placeholder') || 'Pilih atau ketik baru...';
+                        $el.select2({
+                            tags: true,
+                            placeholder: ph,
+                            allowClear: false,
+                            width: '100%'
+                        });
+                    }
+                });
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 
