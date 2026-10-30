@@ -34,7 +34,8 @@
             <label for="kategori" class="form-label">Nama Kategori <span class="text-danger">*</span></label>
             <input type="text" name="kategori"
                    class="form-control @error('kategori') is-invalid @enderror"
-                   value="{{ old('kategori', $kategori->kategori) }}" required>
+                   value="{{ old('kategori', $kategori->kategori) }}"
+                   placeholder="Contoh: Bunga Potong / Bunga Meja / Daun Hias" required>
             @error('kategori')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -46,7 +47,7 @@
             <textarea name="deskripsi"
                       class="form-control @error('deskripsi') is-invalid @enderror"
                       rows="3"
-                      placeholder="Deskripsi kategori (opsional)">{{ old('deskripsi', $kategori->deskripsi) }}</textarea>
+                      placeholder="Contoh: Aneka jenis bunga potong segar siap rangkai">{{ old('deskripsi', $kategori->deskripsi) }}</textarea>
             @error('deskripsi')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

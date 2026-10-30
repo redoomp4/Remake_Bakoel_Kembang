@@ -34,7 +34,8 @@
             <label for="nama_kondisi" class="form-label">Nama Kondisi <span class="text-danger">*</span></label>
             <input type="text" name="nama_kondisi"
                    class="form-control @error('nama_kondisi') is-invalid @enderror"
-                   value="{{ old('nama_kondisi', $kondisi->nama_kondisi) }}" required>
+                   value="{{ old('nama_kondisi', $kondisi->nama_kondisi) }}"
+                   placeholder="Contoh: Segar / Mekar Sempurna / Layu / Rusak" required>
             @error('nama_kondisi')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -46,7 +47,7 @@
             <textarea name="deskripsi"
                       class="form-control @error('deskripsi') is-invalid @enderror"
                       rows="3"
-                      placeholder="Tambahkan deskripsi (opsional)">{{ old('deskripsi', $kondisi->deskripsi) }}</textarea>
+                      placeholder="Contoh: Bunga baru dipetik, kelopak segar dan batang kokoh">{{ old('deskripsi', $kondisi->deskripsi) }}</textarea>
             @error('deskripsi')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

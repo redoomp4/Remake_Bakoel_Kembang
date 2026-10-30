@@ -30,7 +30,7 @@
         <div class="mb-3">
             <label for="nama_satuan" class="form-label">Nama Satuan <span class="text-danger">*</span></label>
             <input type="text" name="nama_satuan" class="form-control @error('nama_satuan') is-invalid @enderror"
-                   value="{{ old('nama_satuan') }}" required>
+                   value="{{ old('nama_satuan') }}" placeholder="Contoh: Tangkai / Ikat / Pot / Pcs" required>
             @error('nama_satuan')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

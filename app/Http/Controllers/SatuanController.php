@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Satuan;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
 
 class SatuanController extends Controller
 {
@@ -44,12 +44,12 @@ class SatuanController extends Controller
             ],
         ], [
             'nama_satuan.required' => 'Nama satuan wajib diisi.',
-            'nama_satuan.unique'   => 'Nama satuan ini sudah ada.',
+            'nama_satuan.unique' => 'Nama satuan ini sudah ada.',
         ]);
 
         try {
             Satuan::create([
-                'user_id'     => Auth::id(),
+                'user_id' => Auth::id(),
                 'nama_satuan' => $nama,
             ]);
 
@@ -63,6 +63,7 @@ class SatuanController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama satuan ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         } catch (\Throwable $e) {
@@ -99,7 +100,7 @@ class SatuanController extends Controller
             ],
         ], [
             'nama_satuan.required' => 'Nama satuan wajib diisi.',
-            'nama_satuan.unique'   => 'Nama satuan ini sudah ada.',
+            'nama_satuan.unique' => 'Nama satuan ini sudah ada.',
         ]);
 
         try {
@@ -116,6 +117,7 @@ class SatuanController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama satuan ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat memperbarui data.');
         } catch (\Throwable $e) {
@@ -143,11 +145,12 @@ class SatuanController extends Controller
                 ->with('success', 'Satuan berhasil dihapus.');
         } catch (QueryException $e) {
             $mysqlCode = $e->errorInfo[1] ?? null;   // 1451 (MySQL FK)
-            $sqlState  = $e->errorInfo[0] ?? null;   // 23000
-            $pgCode    = $e->getCode();              // 23503 (Postgres)
+            $sqlState = $e->errorInfo[0] ?? null;   // 23000
+            $pgCode = $e->getCode();              // 23503 (Postgres)
             if ($sqlState === '23000' || $mysqlCode == 1451 || $pgCode == '23503') {
                 return back()->with('error', 'Tidak dapat menghapus karena sudah dipakai oleh data lain.');
             }
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
     }

@@ -34,7 +34,8 @@
             <label for="nama_pemasok" class="form-label">Nama Pemasok</label>
             <input type="text" name="nama_pemasok"
                    class="form-control @error('nama_pemasok') is-invalid @enderror"
-                   value="{{ old('nama_pemasok', $pemasok->nama_pemasok) }}" required>
+                   value="{{ old('nama_pemasok', $pemasok->nama_pemasok) }}"
+                   placeholder="Contoh: Toko Bunga Melati / Pak Budi" required>
             @error('nama_pemasok')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -45,7 +46,8 @@
             <label for="nama_pic" class="form-label">Nama PIC</label>
             <input type="text" name="nama_pic"
                    class="form-control @error('nama_pic') is-invalid @enderror"
-                   value="{{ old('nama_pic', $pemasok->nama_pic) }}" required>
+                   value="{{ old('nama_pic', $pemasok->nama_pic) }}"
+                   placeholder="Nama penanggung jawab" required>
             @error('nama_pic')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -56,7 +58,8 @@
             <label for="email" class="form-label">Email</label>
             <input type="email" name="email"
                    class="form-control @error('email') is-invalid @enderror"
-                   value="{{ old('email', $pemasok->email) }}" required>
+                   value="{{ old('email', $pemasok->email) }}"
+                   placeholder="nama@email.com" required>
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -67,7 +70,8 @@
             <label for="no_telepon" class="form-label">Nomor Telepon</label>
             <input type="text" name="no_telepon"
                    class="form-control @error('no_telepon') is-invalid @enderror"
-                   value="{{ old('no_telepon', $pemasok->no_telepon) }}">
+                   value="{{ old('no_telepon', $pemasok->no_telepon) }}"
+                   placeholder="Contoh: 0812 3456 7890">
             @error('no_telepon')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -78,7 +82,8 @@
             <label for="jenis" class="form-label">Jenis</label>
             <input type="text" name="jenis"
                    class="form-control @error('jenis') is-invalid @enderror"
-                   value="{{ old('jenis', $pemasok->jenis) }}">
+                   value="{{ old('jenis', $pemasok->jenis) }}"
+                   placeholder="Contoh: Toko Bunga / Petani Bunga / Grosir">
             @error('jenis')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -89,7 +94,8 @@
             <label for="alamat" class="form-label">Alamat</label>
             <textarea name="alamat"
                       class="form-control @error('alamat') is-invalid @enderror"
-                      rows="3">{{ old('alamat', $pemasok->alamat) }}</textarea>
+                      rows="3"
+                      placeholder="Alamat lengkap (opsional)">{{ old('alamat', $pemasok->alamat) }}</textarea>
             @error('alamat')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

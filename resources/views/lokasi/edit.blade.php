@@ -34,7 +34,8 @@
             <label for="nama_lokasi" class="form-label">Nama Lokasi <span class="text-danger">*</span></label>
             <input type="text" name="nama_lokasi"
                    class="form-control @error('nama_lokasi') is-invalid @enderror"
-                   value="{{ old('nama_lokasi', $lokasi->nama_lokasi) }}" required>
+                   value="{{ old('nama_lokasi', $lokasi->nama_lokasi) }}"
+                   placeholder="Contoh: Gudang Utama / Rak Bunga Depan / Showcase Pendingin" required>
             @error('nama_lokasi')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -46,7 +47,7 @@
             <textarea name="deskripsi"
                       class="form-control @error('deskripsi') is-invalid @enderror"
                       rows="3"
-                      placeholder="Deskripsi lokasi (opsional)">{{ old('deskripsi', $lokasi->deskripsi) }}</textarea>
+                      placeholder="Contoh: Ruang ber-AC untuk penyimpanan bunga segar">{{ old('deskripsi', $lokasi->deskripsi) }}</textarea>
             @error('deskripsi')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kategori;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
 
 class KategoriController extends Controller
 {
@@ -20,7 +20,7 @@ class KategoriController extends Controller
             // Grouping agar orWhere tidak menabrak filter user_id
             $query->where(function ($q) use ($search) {
                 $q->where('kategori', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%");
+                    ->orWhere('deskripsi', 'like', "%{$search}%");
             });
         }
 
@@ -41,7 +41,7 @@ class KategoriController extends Controller
         $kategoriValue = trim((string) $request->input('kategori'));
 
         $request->validate([
-            'kategori'  => [
+            'kategori' => [
                 'required', 'string', 'max:100',
                 Rule::unique('kategoris', 'kategori')
                     ->where(fn ($q) => $q->where('user_id', Auth::id())),
@@ -49,13 +49,13 @@ class KategoriController extends Controller
             'deskripsi' => ['nullable', 'string'],
         ], [
             'kategori.required' => 'Field kategori wajib diisi.',
-            'kategori.unique'   => 'Field kategori sudah ada.',
+            'kategori.unique' => 'Field kategori sudah ada.',
         ]);
 
         try {
             Kategori::create([
-                'user_id'   => Auth::id(),
-                'kategori'  => $kategoriValue,
+                'user_id' => Auth::id(),
+                'kategori' => $kategoriValue,
                 'deskripsi' => $request->input('deskripsi'),
             ]);
 
@@ -70,6 +70,7 @@ class KategoriController extends Controller
                 return back()->withInput()
                     ->with('error', 'Field kategori sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         } catch (\Throwable $e) {
@@ -100,7 +101,7 @@ class KategoriController extends Controller
         $kategoriValue = trim((string) $request->input('kategori'));
 
         $request->validate([
-            'kategori'  => [
+            'kategori' => [
                 'required', 'string', 'max:100',
                 Rule::unique('kategoris', 'kategori')
                     ->where(fn ($q) => $q->where('user_id', Auth::id()))
@@ -109,12 +110,12 @@ class KategoriController extends Controller
             'deskripsi' => ['nullable', 'string'],
         ], [
             'kategori.required' => 'Field kategori wajib diisi.',
-            'kategori.unique'   => 'Field kategori sudah ada.',
+            'kategori.unique' => 'Field kategori sudah ada.',
         ]);
 
         try {
             $kategori->update([
-                'kategori'  => $kategoriValue,
+                'kategori' => $kategoriValue,
                 'deskripsi' => $request->input('deskripsi'),
             ]);
 
@@ -128,6 +129,7 @@ class KategoriController extends Controller
                 return back()->withInput()
                     ->with('error', 'Field kategori sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat mengubah data.');
         } catch (\Throwable $e) {
@@ -158,13 +160,14 @@ class KategoriController extends Controller
         } catch (QueryException $e) {
             // FK violation (MySQL 1451 / SQLSTATE 23000 / Postgres 23503)
             $mysqlCode = $e->errorInfo[1] ?? null; // 1451
-            $sqlState  = $e->errorInfo[0] ?? null; // 23000
-            $pgCode    = $e->getCode();           // 23503
+            $sqlState = $e->errorInfo[0] ?? null; // 23000
+            $pgCode = $e->getCode();           // 23503
             if ($sqlState === '23000' || $mysqlCode == 1451 || $pgCode == '23503') {
                 return back()->with('error', 'Tidak dapat menghapus data karena sudah digunakan untuk pencatatan item.');
             }
 
             report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
     }
