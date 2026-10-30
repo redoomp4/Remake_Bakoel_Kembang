@@ -65,7 +65,7 @@
                 {{-- NAMA BARANG --}}
                 <div class="form-group">
                     <label for="input-nama-barang" class="form-label">Nama Barang / Bunga <span class="required">*</span></label>
-                    <input type="text" name="nama_barang" id="input-nama-barang" required class="form-control text-base" placeholder="Contoh: Mawar Merah Holland Super">
+                    <input type="text" name="nama_barang" id="input-nama-barang" required class="form-control text-base" placeholder="Contoh: Bunga Anggrek Bulan / Mawar Merah">
                     @error('nama_barang')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
@@ -77,7 +77,7 @@
                         <label for="kategori_input" class="form-label">Kategori <span class="required">*</span></label>
                         <div class="hybrid-select" id="hybrid-kategori">
                             <input type="text" name="kategori_input" id="kategori_input" value="{{ old('kategori_input') }}"
-                                   required class="hybrid-input" placeholder="-- Pilih / Ketik Kategori --" autocomplete="off">
+                                   required class="hybrid-input" placeholder="Pilih dari daftar atau ketik baru..." autocomplete="off">
                             <button type="button" class="hybrid-toggle">
                                 <i class="fas fa-chevron-down"></i>
                             </button>
@@ -96,7 +96,7 @@
                         <label for="satuan_input" class="form-label">Satuan <span class="required">*</span></label>
                         <div class="hybrid-select" id="hybrid-satuan">
                             <input type="text" name="satuan_input" id="satuan_input" value="{{ old('satuan_input') }}"
-                                   required class="hybrid-input" placeholder="-- Pilih / Ketik Satuan --" autocomplete="off">
+                                   required class="hybrid-input" placeholder="Pilih dari daftar atau ketik baru..." autocomplete="off">
                             <button type="button" class="hybrid-toggle">
                                 <i class="fas fa-chevron-down"></i>
                             </button>
@@ -116,19 +116,12 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="input-stok-minimum" class="form-label">Stok Minimum <span class="required">*</span></label>
-                        <input type="number" name="stok_minimum" id="input-stok-minimum" min="0" required class="form-control" value="{{ old('stok_minimum', 0) }}">
+                        <input type="number" name="stok_minimum" id="input-stok-minimum" min="0" required class="form-control" placeholder="Contoh: 5" value="{{ old('stok_minimum', 0) }}">
                         @error('stok_minimum')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label for="input-harga-dasar" class="form-label">Estimasi Harga Dasar (Rp) <span class="required">*</span></label>
-                        <input type="number" name="harga_dasar" id="input-harga-dasar" min="0" step="0.01" required class="form-control" placeholder="0" value="{{ old('harga_dasar', 0) }}">
-                        @error('harga_dasar')
-                            <p class="form-error">{{ $message }}</p>
-                        @enderror
-                    </div>
                 </div>
 
                 {{-- FOTO --}}
@@ -144,7 +137,7 @@
                 {{-- DESKRIPSI --}}
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="input-deskripsi" class="form-label">Deskripsi / Catatan Tambahan</label>
-                    <textarea name="deskripsi" id="input-deskripsi" rows="2" class="form-control" placeholder="Catatan opsional">{{ old('deskripsi') }}</textarea>
+                    <textarea name="deskripsi" id="input-deskripsi" rows="2" class="form-control" placeholder="Tuliskan catatan atau deskripsi singkat bunga...">{{ old('deskripsi') }}</textarea>
                     @error('deskripsi')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
@@ -456,7 +449,6 @@
                         setVal('kategori_input', d.kategori_input);
                         setVal('satuan_input', d.satuan_input);
                         setVal('input-stok-minimum', d.stok_minimum);
-                        setVal('input-harga-dasar', d.harga_dasar);
                         setVal('input-deskripsi', d.deskripsi);
 
                         if (transcriptText) transcriptText.textContent = 'Form berhasil diisi oleh AI!';

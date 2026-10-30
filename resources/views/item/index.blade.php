@@ -53,20 +53,52 @@
                         Daftar Item
                     </h4>
                 </div>
-                <a href="{{ route('item.create') }}"
-                    style="
-                        background:#0B4F35;
-                        color:#fff;
-                        padding:.8rem 1.25rem;
-                        border-radius:.85rem;
-                        text-decoration:none;
-                        font-weight:800;
-                        white-space:nowrap;
-                    "
-                >
-                    <i class="fas fa-plus"></i>
-                    Tambah Item Baru
-                </a>
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                    <a href="{{ route('barang-masuk.index') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-boxes-stacked"></i>
+                        Barang Masuk
+                    </a>
+                    <a href="{{ route('barang-masuk.create') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-arrow-down"></i>
+                        Catat Barang Masuk
+                    </a>
+                    <a href="{{ route('item.create') }}"
+                        style="
+                            background:#0B4F35;
+                            color:#fff;
+                            padding:.8rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-plus"></i>
+                        Tambah Item Baru
+                    </a>
+                </div>
             </div>
 
             {{-- FILTER --}}
@@ -216,6 +248,8 @@
                             <th style="padding:.75rem;text-align:left;">Nama Barang</th>
                             <th style="padding:.75rem;text-align:left;white-space:nowrap;">Kategori</th>
                             <th style="padding:.75rem;text-align:left;white-space:nowrap;">Satuan</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Total Stok</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Status Stok</th>
                             <th style="padding:.75rem;text-align:center;white-space:nowrap;">Stok Minimum</th>
                             <th style="padding:.75rem;text-align:center;white-space:nowrap;">Aksi</th>
                         </tr>
@@ -284,6 +318,24 @@
                                 {{-- SATUAN --}}
                                 <td style="padding:.75rem;white-space:nowrap;">
                                     {{ $item->satuan->nama_satuan ?? '-' }}
+                                </td>
+
+                                {{-- TOTAL STOK --}}
+                                @php
+                                    $stokItem = max(0, ($item->total_masuk ?? $item->total_stok ?? 0) - ($item->total_keluar ?? 0));
+                                    $statusStok = $stokItem <= 0 ? 'Habis' : ($stokItem <= ($item->stok_minimum ?? 0) ? 'Menipis' : 'Stok Aman');
+                                    $badgeBg = $statusStok === 'Stok Aman' ? '#ecfdf5' : ($statusStok === 'Menipis' ? '#fef3c7' : '#fee2e2');
+                                    $badgeColor = $statusStok === 'Stok Aman' ? '#047857' : ($statusStok === 'Menipis' ? '#b45309' : '#b91c1c');
+                                @endphp
+                                <td style="padding:.75rem;text-align:center;font-weight:800;white-space:nowrap;color:#0B4F35;">
+                                    {{ number_format($stokItem, 0, ',', '.') }} {{ $item->satuan->nama_satuan ?? '' }}
+                                </td>
+
+                                {{-- STATUS STOK --}}
+                                <td style="padding:.75rem;text-align:center;white-space:nowrap;">
+                                    <span style="display:inline-block;padding:.3rem .65rem;border-radius:999px;font-size:.72rem;font-weight:800;background:{{ $badgeBg }};color:{{ $badgeColor }};">
+                                        {{ $statusStok }}
+                                    </span>
                                 </td>
 
                                 {{-- STOK MINIMUM --}}
@@ -398,7 +450,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8"
+                                <td colspan="10"
                                     style="
                                         padding:3rem 1rem;
                                         text-align:center;

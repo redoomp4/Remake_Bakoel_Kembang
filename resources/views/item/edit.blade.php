@@ -407,6 +407,7 @@
                     <label for="nama_barang" class="form-label">Nama Barang *</label>
                     <div class="input-with-mic">
                         <input type="text" id="nama_barang" name="nama_barang"
+                               placeholder="Contoh: Bunga Anggrek Bulan / Mawar Merah"
                                value="{{ old('nama_barang', $item->nama_barang) }}" required class="form-control">
                     </div>
                     @error('nama_barang')
@@ -414,18 +415,11 @@
                     @enderror
                 </div>
 
-                {{-- HARGA + STOK MINIMUM --}}
-                    <!-- <div class="form-group">
-                        <label for="harga_dasar" class="form-label">Harga Dasar *</label>
-                        <input type="number" id="harga_dasar" name="harga_dasar"
-                               value="{{ old('harga_dasar', $item->harga_dasar) }}" required class="form-control">
-                        @error('harga_dasar')
-                            <p class="form-error">{{ $message }}</p>
-                        @enderror
-                    </div> -->
+                {{-- STOK MINIMUM --}}
                     <div class="form-group">
                         <label for="stok_minimum" class="form-label">Stok Minimum *</label>
                         <input type="number" id="stok_minimum" name="stok_minimum"
+                               placeholder="Contoh: 5"
                                value="{{ old('stok_minimum', $item->stok_minimum ?? '') }}" required class="form-control">
                         @error('stok_minimum')
                             <p class="form-error">{{ $message }}</p>
@@ -467,7 +461,9 @@
                 {{-- DESKRIPSI --}}
                 <div class="form-group">
                     <label for="deskripsi" class="form-label">Deskripsi</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="3" class="form-control">{{ old('deskripsi', $item->deskripsi) }}</textarea>
+                    <textarea id="deskripsi" name="deskripsi" rows="3"
+                              placeholder="Tuliskan catatan atau deskripsi singkat bunga (misal: warna kelopak, cara perawatan, atau ketahanan bunga)..."
+                              class="form-control">{{ old('deskripsi', $item->deskripsi) }}</textarea>
                     @error('deskripsi')
                         <p class="form-error">{{ $message }}</p>
                     @enderror

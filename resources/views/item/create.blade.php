@@ -1,350 +1,130 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $stokAwalAktif = (bool) old('buat_stok_awal', false);
+        $pemasokUmum = $pemasoks->firstWhere('nama_pemasok', 'Pemasok Umum');
+        $pemasokUmumValue = (string) ($pemasokUmum?->id ?? 'Pemasok Umum');
+        $pemasokTerpilih = (string) old('stok_awal_pemasok', $pemasokUmumValue);
+
+        $oldKategori = (string) old('id_kategori');
+        $oldSatuan = (string) old('id_satuan');
+
+        $lokasiDefault = (string) old(
+            'stok_awal_lokasi',
+            $lokasis->firstWhere('nama_lokasi', 'Gudang Utama')?->nama_lokasi
+                ?? $lokasis->first()?->nama_lokasi
+                ?? 'Gudang Utama'
+        );
+
+        $kondisiDefault = (string) old(
+            'stok_awal_kondisi',
+            $kondisis->firstWhere('nama_kondisi', 'Segar')?->nama_kondisi
+                ?? $kondisis->first()?->nama_kondisi
+                ?? 'Segar'
+        );
+
+        $kategoriBaru = $oldKategori !== '' && !$kategori->contains(
+            fn ($k) => (string) $k->kategori === $oldKategori || (string) $k->id === $oldKategori
+        );
+        $satuanBaru = $oldSatuan !== '' && !$satuan->contains(
+            fn ($s) => (string) $s->nama_satuan === $oldSatuan || (string) $s->id === $oldSatuan
+        );
+        $lokasiBaru = $lokasiDefault !== '' && !$lokasis->contains(
+            fn ($l) => (string) $l->nama_lokasi === $lokasiDefault || (string) $l->id === $lokasiDefault
+        );
+        $kondisiBaru = $kondisiDefault !== '' && !$kondisis->contains(
+            fn ($k) => (string) $k->nama_kondisi === $kondisiDefault || (string) $k->id === $kondisiDefault
+        );
+        $pemasokBaru = $pemasokTerpilih !== ''
+            && $pemasokTerpilih !== $pemasokUmumValue
+            && !$pemasoks->contains(
+                fn ($p) => (string) $p->id === $pemasokTerpilih || (string) $p->nama_pemasok === $pemasokTerpilih
+            );
+    @endphp
+
     <style>
-        /* ============================================================
-           CONTAINER
-           ============================================================ */
-        main>.container {
-            width: 100%;
-            max-width: 1280px !important;
-            min-width: 0;
-            padding: 2rem 1.25rem 3rem;
-            margin: 0 auto;
+        #item-create-form .select2-container--default .select2-selection--single {
+            min-height: 64px !important;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            background: #fff !important;
         }
-
-        /* ============================================================
-           HEADER
-           ============================================================ */
-        .page-header {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 1.25rem;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        #item-create-form .select2-container--default .select2-selection--single:focus,
+        #item-create-form .select2-container--default.select2-container--focus .select2-selection--single,
+        #item-create-form .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #047857 !important;
+            box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.12) !important;
         }
-
-        .page-header .eyebrow {
-            color: #059669;
-            font-size: .7rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .06em;
+        #item-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 60px !important;
+            padding-left: 1rem !important;
+            padding-right: 2.75rem !important;
+            font-size: 1rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
         }
-
-        .page-header h1 {
-            margin: .2rem 0 .25rem;
-            color: #0f172a;
-            font-size: 1.75rem;
-            font-weight: 900;
+        #item-create-form .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #94a3b8 !important;
+            font-weight: 600 !important;
         }
-
-        .page-header p {
-            margin: 0;
-            color: #64748b;
-            font-size: .9rem;
+        #item-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 62px !important;
+            right: 0.75rem !important;
         }
-
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .7rem 1.25rem;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: .75rem;
-            color: #475569;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-            transition: .2s;
+        #item-create-form .select2-container--default .select2-selection--single .select2-selection__clear {
+            margin-right: 1.25rem !important;
+            font-size: 1.25rem !important;
         }
-        .btn-back:hover {
-            background: #f8fafc;
-            transform: translateY(-1px);
+        #item-create-form .select2-dropdown {
+            border: 2px solid #047857 !important;
+            border-radius: 0.9rem !important;
+            overflow: hidden !important;
         }
-
-        /* ============================================================
-           ALERT
-           ============================================================ */
-        .alert-box {
-            padding: .9rem 1rem;
-            border-radius: .9rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
+        #item-create-form .select2-container--default .select2-search--dropdown .select2-search__field {
+            min-height: 48px !important;
+            padding: 0.7rem 1rem !important;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 0.65rem !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
         }
-        .alert-danger-box {
-            background: #fff1f2;
-            border: 1px solid #fecdd3;
-            color: #9f1239;
+        #item-create-form .select2-results__option {
+            padding: 0.85rem 1rem !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
         }
-
-        /* ============================================================
-           FORM CARD
-           ============================================================ */
-        .form-card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 1.25rem;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
-        }
-
-        .form-header {
-            padding: 1.25rem 1.5rem;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-        }
-
-        .form-header .icon-box {
-            width: 40px;
-            height: 40px;
-            background: #0B4F35;
-            color: #fff;
-            border-radius: .75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .form-header h2 {
-            color: #0B4F35;
-            font-weight: 900;
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        .form-header p {
-            color: #475569;
-            font-size: .75rem;
-            margin: 0;
-        }
-
-        .form-body {
-            padding: 1.5rem;
-        }
-
-        .form-footer {
-            padding: 1.25rem 1.5rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column-reverse;
-            gap: .75rem;
-        }
-
-        @media (min-width: 640px) {
-            .form-footer {
-                flex-direction: row;
-                justify-content: flex-end;
-            }
-        }
-
-        /* ============================================================
-           FORM ELEMENTS
-           ============================================================ */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .form-label {
-            display: block;
-            color: #475569;
-            font-size: .8rem;
-            font-weight: 800;
-            margin-bottom: .5rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: .75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: .75rem;
-            font-size: .9rem;
-            font-weight: 600;
-            transition: .2s;
-            background: #fff;
-        }
-
-        .form-control:focus {
-            outline: 0;
-            border-color: #0B4F35;
-            box-shadow: 0 0 0 4px rgba(11, 79, 53, .12);
-        }
-
-        select.form-control {
-            appearance: auto;
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
-            font-weight: 400;
-        }
-
-        input[type="file"].form-control {
-            padding: .65rem;
-            font-weight: 400;
-        }
-
-        .form-error {
-            color: #dc2626;
-            font-size: .75rem;
-            font-weight: 700;
-            margin-top: .25rem;
-        }
-
-        /* ============================================================
-           GRID
-           ============================================================ */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr 1fr;
-            }
-            .grid-3 {
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-        }
-
-        /* ============================================================
-           BUTTONS
-           ============================================================ */
-        .btn-submit {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .5rem;
-            padding: .75rem 1.5rem;
-            background: #0B4F35;
-            color: #fff;
-            border: 0;
-            border-radius: .75rem;
-            font-size: .85rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: .2s;
-        }
-        .btn-submit:hover {
-            background: #065f46;
-            transform: translateY(-1px);
-        }
-
-        .btn-cancel {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: .5rem;
-            padding: .75rem 1.25rem;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: .75rem;
-            color: #475569;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-            transition: .2s;
-        }
-        .btn-cancel:hover {
-            background: #f8fafc;
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 768px) {
-            main>.container {
-                padding: 1rem .75rem 2rem;
-            }
-            .page-header {
-                padding: 1rem;
-                border-radius: 1rem;
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .page-header h1 {
-                font-size: 1.35rem;
-            }
-            .btn-back {
-                width: 100%;
-                justify-content: center;
-            }
-            .form-header {
-                padding: 1rem;
-                flex-wrap: wrap;
-            }
-            .form-body {
-                padding: 1rem;
-            }
-            .form-footer {
-                padding: 1rem;
-                flex-direction: column;
-            }
-            .btn-submit, .btn-cancel {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            main>.container {
-                padding-left: .6rem;
-                padding-right: .6rem;
-            }
-            .page-header h1 {
-                font-size: 1.2rem;
-            }
-            .form-body {
-                padding: .75rem;
-            }
+        #item-create-form .select2-results__option--highlighted[aria-selected] {
+            background: #047857 !important;
+            color: #fff !important;
         }
     </style>
 
-    <div class="container">
+    <div class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:py-8">
 
-        {{-- HEADER --}}
-        <div class="page-header">
-            <div>
-                <div class="eyebrow">Master Data</div>
-                <h1>Tambah Item</h1>
-                <p>Tambahkan item baru ke dalam inventori.</p>
+        <header class="mb-6">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Inventori · Master Barang</p>
+            <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight text-emerald-950 sm:text-4xl">Tambah Item Baru</h1>
+                    <p class="mt-2 max-w-2xl text-base font-semibold leading-7 text-slate-600">
+                        Isi nama dan kategori barang. Kalau barang sudah datang, centang stok awal agar langsung tercatat.
+                    </p>
+                </div>
+                <a href="{{ route('item.index') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
             </div>
-            <a href="{{ route('item.index') }}" class="btn-back">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-        </div>
+        </header>
 
-        {{-- ALERT ERROR --}}
         @if ($errors->any())
-            <div class="alert-box alert-danger-box">
-                <div style="display:flex;align-items:flex-start;gap:.75rem;">
-                    <i class="fas fa-circle-exclamation" style="margin-top:.15rem;"></i>
+            <div class="mb-5 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4 sm:p-5">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-circle-exclamation mt-1 text-xl text-rose-600"></i>
                     <div>
-                        <p style="font-weight:800;margin:0 0 .25rem;">Terdapat kesalahan pada form</p>
-                        <ul style="margin:0;padding-left:1.25rem;font-weight:500;list-style:disc;">
+                        <p class="text-base font-black text-rose-800">Ada data yang belum lengkap</p>
+                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm font-semibold text-rose-700">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -354,115 +134,360 @@
             </div>
         @endif
 
-        {{-- FORM --}}
-        <form action="{{ route('item.store') }}" method="POST" enctype="multipart/form-data" class="form-card">
+        <form id="item-create-form" action="{{ route('item.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
 
-            {{-- FORM HEADER --}}
-            <div class="form-header">
-                <div class="icon-box">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div>
-                    <h2>Informasi Item</h2>
-                    <p>Masukkan detail item yang akan ditambahkan.</p>
-                </div>
-            </div>
-
-            {{-- FORM BODY --}}
-            <div class="form-body">
-
-                {{-- NAMA BARANG --}}
-                <div class="form-group">
-                    <label for="nama_barang" class="form-label">Nama Barang *</label>
-                    <input type="text" id="nama_barang" name="nama_barang"
-                           value="{{ old('nama_barang') }}" required class="form-control">
-                    @error('nama_barang')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
+            <section class="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center gap-3 border-b-2 border-slate-100 bg-slate-50 p-4 sm:p-5">
+                    <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-800 text-white">
+                        <i class="fas fa-box"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-lg font-black text-emerald-950 sm:text-xl">Data Item</h2>
+                        <p class="text-sm font-semibold text-slate-500">Bagian ini wajib diisi.</p>
+                    </div>
                 </div>
 
-                {{-- HARGA + STOK MINIMUM --}}
-                    <!-- <div class="form-group">
-                        <label for="harga_dasar" class="form-label">Harga Dasar *</label>
-                        <input type="number" id="harga_dasar" name="harga_dasar"
-                               value="{{ old('harga_dasar') }}" required class="form-control">
-                        @error('harga_dasar')
-                            <p class="form-error">{{ $message }}</p>
+                <div class="space-y-5 p-4 sm:p-6">
+                    <div>
+                        <label for="nama_barang" class="mb-1.5 block text-base font-black text-slate-900">
+                            Nama Item / Bunga <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="text" id="nama_barang" name="nama_barang" value="{{ old('nama_barang') }}"
+                            required autofocus placeholder="Contoh: Bunga Anggrek Bulan / Mawar Merah"
+                            class="h-14 w-full rounded-xl border-2 border-slate-300 bg-white px-4 text-lg font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                        @error('nama_barang')
+                            <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
                         @enderror
-                    </div> -->
-                    <div class="form-group">
-                        <label for="stok_minimum" class="form-label">Stok Minimum *</label>
-                        <input type="number" id="stok_minimum" name="stok_minimum"
-                               value="{{ old('stok_minimum') }}" required class="form-control">
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="id_kategori" class="mb-1.5 block text-base font-black text-slate-900">
+                                Kategori <span class="text-rose-600">*</span>
+                            </label>
+                            <select id="id_kategori" name="id_kategori" required
+                                class="select2-dynamic w-full" data-placeholder="Pilih atau ketik kategori baru...">
+                                <option value=""></option>
+                                @foreach ($kategori as $k)
+                                    <option value="{{ $k->kategori }}" @selected($oldKategori === (string) $k->kategori || $oldKategori === (string) $k->id)>
+                                        {{ $k->kategori }}
+                                    </option>
+                                @endforeach
+                                @if ($kategoriBaru)
+                                    <option value="{{ $oldKategori }}" selected>{{ $oldKategori }}</option>
+                                @endif
+                            </select>
+                            <p class="mt-1.5 text-sm font-semibold text-slate-500">
+                                <i class="fas fa-lightbulb text-amber-500"></i> Ketik nama baru lalu tekan Enter untuk membuat kategori.
+                            </p>
+                            @error('id_kategori')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="id_satuan" class="mb-1.5 block text-base font-black text-slate-900">
+                                Satuan <span class="text-rose-600">*</span>
+                            </label>
+                            <select id="id_satuan" name="id_satuan" required
+                                class="select2-dynamic w-full" data-placeholder="Pilih atau ketik satuan baru...">
+                                <option value=""></option>
+                                @foreach ($satuan as $s)
+                                    <option value="{{ $s->nama_satuan }}" @selected($oldSatuan === (string) $s->nama_satuan || $oldSatuan === (string) $s->id)>
+                                        {{ $s->nama_satuan }}
+                                    </option>
+                                @endforeach
+                                @if ($satuanBaru)
+                                    <option value="{{ $oldSatuan }}" selected>{{ $oldSatuan }}</option>
+                                @endif
+                            </select>
+                            <p class="mt-1.5 text-sm font-semibold text-slate-500">
+                                <i class="fas fa-lightbulb text-amber-500"></i> Ketik nama baru lalu tekan Enter untuk membuat satuan.
+                            </p>
+                            @error('id_satuan')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="sm:max-w-xs">
+                        <label for="stok_minimum" class="mb-1.5 block text-base font-black text-slate-900">
+                            Stok Minimum <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="number" id="stok_minimum" name="stok_minimum" min="0" inputmode="numeric"
+                            value="{{ old('stok_minimum', 0) }}" required placeholder="Contoh: 5"
+                            class="h-14 w-full rounded-xl border-2 border-slate-300 bg-white px-4 text-lg font-black text-slate-900 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                        <p class="mt-1.5 text-sm font-semibold text-slate-500">Batas peringatan saat stok mulai menipis.</p>
                         @error('stok_minimum')
-                            <p class="form-error">{{ $message }}</p>
+                            <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
+            </section>
 
-                {{-- KATEGORI + SATUAN --}}
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="id_kategori" class="form-label">Kategori *</label>
-                        <select id="id_kategori" name="id_kategori" required class="form-control">
-                            <option value="">-- Pilih Kategori --</option>
-                            @foreach ($kategori as $k)
-                                <option value="{{ $k->id }}" {{ old('id_kategori') == $k->id ? 'selected' : '' }}>
-                                    {{ $k->kategori }}
+            <section class="overflow-hidden rounded-2xl border-2 border-emerald-300 bg-white shadow-sm">
+                <label for="buat_stok_awal"
+                    class="flex cursor-pointer items-start gap-4 bg-emerald-50 p-4 transition hover:bg-emerald-100/70 sm:p-6">
+                    <input type="checkbox" id="buat_stok_awal" name="buat_stok_awal" value="1"
+                        class="mt-0.5 h-7 w-7 flex-shrink-0 rounded border-2 border-emerald-400 text-emerald-700 focus:ring-4 focus:ring-emerald-200"
+                        @checked($stokAwalAktif)>
+                    <span>
+                        <span class="block text-lg font-black text-emerald-950 sm:text-xl">
+                            Masukkan Sebagai Stok Awal (Barang Masuk)
+                        </span>
+                        <span class="mt-1 block text-sm font-semibold leading-6 text-emerald-800">
+                            Centang kalau barang ini sudah diterima. Sistem akan mencatat item dan transaksi masuk sekaligus.
+                        </span>
+                    </span>
+                </label>
+
+                <div id="stok-awal-panel" class="{{ $stokAwalAktif ? '' : 'hidden' }} border-t-2 border-emerald-200 p-4 sm:p-6">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="stok_awal_jumlah" class="mb-1.5 block text-base font-black text-slate-900">
+                                Jumlah Stok Masuk <span class="text-rose-600">*</span>
+                            </label>
+                            <input type="number" id="stok_awal_jumlah" name="stok_awal_jumlah" min="1" inputmode="numeric"
+                                value="{{ old('stok_awal_jumlah') }}" placeholder="Contoh: 10"
+                                class="h-14 w-full rounded-xl border-2 border-slate-300 bg-white px-4 text-lg font-black text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                            @error('stok_awal_jumlah')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="stok_awal_harga" class="mb-1.5 block text-base font-black text-slate-900">
+                                Harga Beli Satuan <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="flex">
+                                <span class="inline-flex items-center rounded-l-xl border-2 border-r-0 border-slate-300 bg-slate-100 px-4 text-base font-black text-slate-700">Rp</span>
+                                <input type="number" id="stok_awal_harga" name="stok_awal_harga" min="0" step="100" inputmode="numeric"
+                                    value="{{ old('stok_awal_harga') }}" placeholder="Contoh: 15000"
+                                    class="h-14 w-full rounded-r-xl border-2 border-slate-300 bg-white px-4 text-lg font-black text-emerald-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                            </div>
+                            @error('stok_awal_harga')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div>
+                            <label for="stok_awal_pemasok" class="mb-1.5 block text-base font-black text-slate-900">
+                                Pemasok / Supplier
+                            </label>
+                            <select id="stok_awal_pemasok" name="stok_awal_pemasok"
+                                class="select2-dynamic w-full" data-placeholder="Pilih atau ketik pemasok baru...">
+                                <option value="{{ $pemasokUmumValue }}" {{ $pemasokTerpilih === $pemasokUmumValue || $pemasokTerpilih === 'Pemasok Umum' ? 'selected' : '' }}>
+                                    Pemasok Umum (Default)
                                 </option>
-                            @endforeach
-                        </select>
-                        @error('id_kategori')
-                            <p class="form-error">{{ $message }}</p>
+                                @foreach ($pemasoks as $pem)
+                                    @continue($pem->nama_pemasok === 'Pemasok Umum')
+                                    <option value="{{ $pem->id }}" {{ $pemasokTerpilih === (string) $pem->id || $pemasokTerpilih === (string) $pem->nama_pemasok ? 'selected' : '' }}>
+                                        {{ $pem->nama_pemasok }}
+                                    </option>
+                                @endforeach
+                                @if ($pemasokBaru)
+                                    <option value="{{ $pemasokTerpilih }}" selected>{{ $pemasokTerpilih }}</option>
+                                @endif
+                            </select>
+                            @error('stok_awal_pemasok')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="stok_awal_lokasi" class="mb-1.5 block text-base font-black text-slate-900">
+                                Lokasi Stok
+                            </label>
+                            <select id="stok_awal_lokasi" name="stok_awal_lokasi"
+                                class="select2-dynamic w-full" data-placeholder="Pilih atau ketik lokasi baru...">
+                                <option value=""></option>
+                                @foreach ($lokasis as $l)
+                                    <option value="{{ $l->nama_lokasi }}" @selected($lokasiDefault === (string) $l->nama_lokasi || $lokasiDefault === (string) $l->id)>
+                                        {{ $l->nama_lokasi }}
+                                    </option>
+                                @endforeach
+                                @if ($lokasiBaru)
+                                    <option value="{{ $lokasiDefault }}" selected>{{ $lokasiDefault }}</option>
+                                @endif
+                            </select>
+                            @error('stok_awal_lokasi')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="stok_awal_kondisi" class="mb-1.5 block text-base font-black text-slate-900">
+                                Kondisi Barang
+                            </label>
+                            <select id="stok_awal_kondisi" name="stok_awal_kondisi"
+                                class="select2-dynamic w-full" data-placeholder="Pilih atau ketik kondisi baru...">
+                                <option value=""></option>
+                                @foreach ($kondisis as $k)
+                                    <option value="{{ $k->nama_kondisi }}" @selected($kondisiDefault === (string) $k->nama_kondisi || $kondisiDefault === (string) $k->id)>
+                                        {{ $k->nama_kondisi }}
+                                    </option>
+                                @endforeach
+                                @if ($kondisiBaru)
+                                    <option value="{{ $kondisiDefault }}" selected>{{ $kondisiDefault }}</option>
+                                @endif
+                            </select>
+                            @error('stok_awal_kondisi')
+                                <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900">
+                        <span><i class="fas fa-calendar-day"></i> Tanggal: Hari ini</span>
+                        <span><i class="fas fa-lightbulb"></i> Lokasi dan kondisi bisa dipilih atau diketik baru.</span>
+                    </div>
+                </div>
+            </section>
+
+            <details class="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+                <summary class="cursor-pointer list-none p-4 text-base font-black text-slate-700 transition hover:bg-slate-50 sm:p-5">
+                    <span class="flex items-center gap-3">
+                        <i class="fas fa-circle-plus text-emerald-700"></i>
+                        Informasi Tambahan (Opsional)
+                    </span>
+                </summary>
+
+                <div class="space-y-5 border-t-2 border-slate-100 p-4 sm:p-6">
+                    <div>
+                        <label for="deskripsi" class="mb-1.5 block text-base font-black text-slate-900">Deskripsi</label>
+                        <textarea id="deskripsi" name="deskripsi" rows="3"
+                            placeholder="Tuliskan catatan atau deskripsi singkat bunga (misal: warna kelopak, cara perawatan, atau ketahanan bunga)..."
+                            class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">{{ old('deskripsi') }}</textarea>
+                        @error('deskripsi')
+                            <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div class="form-group">
-                        <label for="id_satuan" class="form-label">Satuan *</label>
-                        <select id="id_satuan" name="id_satuan" required class="form-control">
-                            <option value="">-- Pilih Satuan --</option>
-                            @foreach ($satuan as $s)
-                                <option value="{{ $s->id }}" {{ old('id_satuan') == $s->id ? 'selected' : '' }}>
-                                    {{ $s->nama_satuan }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('id_satuan')
-                            <p class="form-error">{{ $message }}</p>
+
+                    <div>
+                        <label for="foto" class="mb-1.5 block text-base font-black text-slate-900">Foto Barang</label>
+                        <input type="file" id="foto" name="foto" accept="image/*"
+                            class="w-full rounded-xl border-2 border-slate-300 bg-white p-3 text-base font-semibold text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-100 file:px-4 file:py-2 file:text-sm file:font-black file:text-emerald-800 focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                        <p class="mt-1.5 text-sm font-semibold text-slate-500">Maksimal 5MB. Boleh dikosongkan.</p>
+                        @error('foto')
+                            <p class="mt-1.5 text-sm font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
+            </details>
 
-                {{-- DESKRIPSI --}}
-                <div class="form-group">
-                    <label for="deskripsi" class="form-label">Deskripsi</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="3" class="form-control">{{ old('deskripsi') }}</textarea>
-                    @error('deskripsi')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- FOTO --}}
-                <div class="form-group" style="margin-bottom:0;">
-                    <label for="foto" class="form-label">Foto Barang</label>
-                    <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
-                    @error('foto')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
-                </div>
-
-            </div>
-
-            {{-- FOOTER --}}
-            <div class="form-footer">
-                <a href="{{ route('item.index') }}" class="btn-cancel">
-                    <i class="fas fa-xmark"></i> Batal
+            <div class="flex flex-col-reverse gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:justify-end sm:p-5">
+                <a href="{{ route('item.index') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-6 py-4 text-base font-black text-slate-700 transition hover:bg-slate-200">
+                    Batal
                 </a>
-                <button type="submit" class="btn-submit">
+                <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-4 text-base font-black text-white shadow-md transition hover:bg-emerald-800 sm:text-lg">
                     <i class="fas fa-save"></i> Simpan Item
                 </button>
             </div>
-
         </form>
-
     </div>
+
+    <script>
+        const stokAwalToggle = document.getElementById('buat_stok_awal');
+        const stokAwalPanel = document.getElementById('stok-awal-panel');
+        const stokAwalJumlah = document.getElementById('stok_awal_jumlah');
+        const stokAwalHarga = document.getElementById('stok_awal_harga');
+        const stokAwalPemasok = document.getElementById('stok_awal_pemasok');
+        const stokAwalLokasi = document.getElementById('stok_awal_lokasi');
+        const stokAwalKondisi = document.getElementById('stok_awal_kondisi');
+        let stokAwalSelect2Ready = false;
+
+        function initDynamicSelect2(selector) {
+            if (!window.jQuery || !$.fn.select2) return;
+
+            $(selector).each(function () {
+                const $select = $(this);
+                if ($select.data('select2')) return;
+
+                const placeholder = $select.data('placeholder') || 'Pilih atau ketik data baru...';
+
+                $select.select2({
+                    tags: true,
+                    allowClear: true,
+                    width: '100%',
+                    placeholder: placeholder,
+                    createTag: function (params) {
+                        const term = $.trim(params.term);
+                        if (term === '') return null;
+
+                        return {
+                            id: term,
+                            text: term,
+                            newTag: true
+                        };
+                    },
+                    templateResult: function (data) {
+                        if (data.newTag) {
+                            const $span = $('<span class="font-black text-emerald-800"></span>');
+                            $span.append('<i class="fas fa-plus-circle mr-1"></i> Tambah Baru: ');
+                            $span.append($('<strong>').text(data.text));
+                            return $span;
+                        }
+                        return data.text;
+                    },
+                    language: {
+                        noResults: function () {
+                            return 'Belum ada. Ketik nama lalu tekan Enter untuk membuat baru.';
+                        },
+                        searching: function () {
+                            return 'Mencari...';
+                        }
+                    }
+                });
+            });
+        }
+
+        function initStokAwalSelect2() {
+            if (stokAwalSelect2Ready) return;
+            initDynamicSelect2('#stok_awal_pemasok, #stok_awal_lokasi, #stok_awal_kondisi');
+            stokAwalSelect2Ready = true;
+        }
+
+        if (window.jQuery && $.fn.select2) {
+            initDynamicSelect2('#id_kategori, #id_satuan');
+        }
+
+        function syncStokAwal(clearWhenOff = false) {
+            const aktif = stokAwalToggle.checked;
+
+            stokAwalPanel.classList.toggle('hidden', !aktif);
+            stokAwalPanel.setAttribute('aria-hidden', String(!aktif));
+
+            [stokAwalJumlah, stokAwalHarga, stokAwalPemasok, stokAwalLokasi, stokAwalKondisi].forEach(function (el) {
+                el.disabled = !aktif;
+                el.required = aktif && el !== stokAwalPemasok && el !== stokAwalLokasi && el !== stokAwalKondisi;
+            });
+
+            if (aktif) {
+                initStokAwalSelect2();
+                setTimeout(function () {
+                    if (window.jQuery && $.fn.select2) {
+                        $(window).trigger('resize');
+                    }
+                }, 60);
+            }
+
+            if (!aktif && clearWhenOff) {
+                stokAwalJumlah.value = '';
+                stokAwalHarga.value = '';
+            }
+        }
+
+        stokAwalToggle.addEventListener('change', function () {
+            syncStokAwal(true);
+            if (this.checked) stokAwalJumlah.focus();
+        });
+
+        syncStokAwal(false);
+    </script>
 @endsection

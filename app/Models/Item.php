@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-
-use App\Models\BarangMasuk;
-use App\Models\BarangKeluar;
-use App\Models\Kategori;
-use App\Models\Satuan;
-use App\Models\User;
+use Illuminate\Support\Str;
 
 class Item extends Model
 {
     use HasFactory;
+
     protected $table = 'items';
+
     /*
     | PRIMARY KEY
     */
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     /*
@@ -36,7 +36,6 @@ class Item extends Model
         'id_kategori',
         'id_satuan',
         'stok_minimum',
-        'harga_dasar',
         'qr_code',
     ];
 
@@ -50,7 +49,7 @@ class Item extends Model
     {
         static::creating(function ($item) {
             if (empty($item->public_token)) {
-                $item->public_token = (string) \Illuminate\Support\Str::uuid();
+                $item->public_token = (string) Str::uuid();
             }
         });
     }
@@ -90,6 +89,7 @@ class Item extends Model
             'id'
         );
     }
+
     public function satuan()
     {
         return $this->belongsTo(
@@ -98,6 +98,7 @@ class Item extends Model
             'id'
         );
     }
+
     public function user()
     {
         return $this->belongsTo(
@@ -106,10 +107,12 @@ class Item extends Model
             'id'
         );
     }
+
     public function getTotalStokAttribute()
     {
         $totalIn = (int) $this->barangMasuk()->sum('jumlah');
         $totalOut = (int) $this->barangKeluar()->sum('jumlah_keluar');
+
         return max(0, $totalIn - $totalOut);
     }
 
@@ -117,6 +120,7 @@ class Item extends Model
     {
         return $this->total_stok;
     }
+
     public function getUmurTanamanAttribute()
     {
         $firstEntry = $this->barangMasuk()
@@ -125,31 +129,34 @@ class Item extends Model
         $startDate = $firstEntry->tanggal_masuk
             ?? $this->created_at
             ?? now();
-        $diffDays = (int) \Carbon\Carbon::parse($startDate)
+        $diffDays = (int) Carbon::parse($startDate)
             ->diffInDays(now());
         if ($diffDays <= 0) {
             return 'Baru Ditanam (1 Hari)';
         }
         if ($diffDays < 30) {
-            return $diffDays . ' Hari';
+            return $diffDays.' Hari';
         }
         if ($diffDays < 365) {
             $months = floor($diffDays / 30);
             $remainingDays = $diffDays % 30;
-            return $months . ' Bulan' .
+
+            return $months.' Bulan'.
                 ($remainingDays > 0
-                    ? ' ' . $remainingDays . ' Hari'
+                    ? ' '.$remainingDays.' Hari'
                     : '');
         }
-        return floor($diffDays / 365) . ' Tahun';
+
+        return floor($diffDays / 365).' Tahun';
     }
+
     public static function generateKodeBarang()
     {
         $userId = auth()->id();
         $latest = self::where('user_id', $userId)
             ->orderByDesc('id')
             ->first();
-        if (!$latest) {
+        if (! $latest) {
             return 'BRG-001';
         }
         $number = (int) str_replace(
@@ -157,7 +164,8 @@ class Item extends Model
             '',
             $latest->kode_barang
         );
-        return 'BRG-' .
+
+        return 'BRG-'.
             str_pad(
                 $number + 1,
                 3,
