@@ -13,6 +13,7 @@ class NotificationSeeder extends Seeder
 
         if ($userIds->isEmpty()) {
             $this->command?->warn('Tidak ada user ditemukan. Jalankan UserSeeder terlebih dahulu.');
+
             return;
         }
 
@@ -21,6 +22,7 @@ class NotificationSeeder extends Seeder
 
             if (empty($items)) {
                 $this->command?->warn("Belum ada item untuk user_id {$userId}. Jalankan ItemSeeder dahulu.");
+
                 continue;
             }
 

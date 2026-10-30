@@ -22,6 +22,7 @@ class SatuanSeeder extends Seeder
 
         if ($userIds->isEmpty()) {
             $this->command?->warn('Tidak ada user ditemukan. Jalankan UserSeeder terlebih dahulu.');
+
             return;
         }
 
