@@ -1,693 +1,288 @@
 @extends('layouts.app')
 
+@push('styles')
+    @include('reports.partials.accordion-style')
+@endpush
+
 @section('content')
-    <style>
-        :root {
-            --emerald: #0B4F35;
-            --emerald-dark: #065f46;
-            --emerald-soft: #ecfdf5;
-            --slate: #475569;
-            --border: #e2e8f0;
-            --offwhite: #f7f8f5;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | PAGE / CONTAINER
-                 | -------------------------------------------------------------------------- */
-
-        body {
-            background: var(--offwhite);
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-        }
-
-        main>.container {
-            width: 100%;
-            max-width: 1280px !important;
-            min-width: 0;
-            flex: 1 1 0%;
-            box-sizing: border-box;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 2rem 1.25rem 3rem;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | HEADER
-                 | -------------------------------------------------------------------------- */
-
-        .header {
-            width: 100%;
-            box-sizing: border-box;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 1.25rem;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
-        }
-
-        .header h4 {
-            margin: 0;
-            color: var(--emerald);
-            font-weight: 900;
-            font-size: 1.75rem;
-            letter-spacing: -.025em;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | BACK BUTTON
-                 | -------------------------------------------------------------------------- */
-
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .7rem 1rem;
-            background: #eef1eb;
-            color: var(--emerald);
-            border-radius: .75rem;
-            border: 0;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: all .2s ease;
-            box-sizing: border-box;
-        }
-
-        .back-button:hover {
-            background: #e2e8df;
-            color: var(--emerald-dark);
-            transform: translateY(-1px);
-        }
-
-        /* --------------------------------------------------------------------------
-                 | FILTER
-                 | -------------------------------------------------------------------------- */
-
-        .filter-form {
-            width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            background: #fff !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 1.25rem !important;
-            padding: 1.5rem !important;
-            margin-bottom: 1.25rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: flex-end;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
-        }
-
-        .filter-form .form-group {
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 180px;
-            min-width: 0;
-        }
-
-        .filter-form label {
-            color: #64748b;
-            font-size: .7rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            margin-bottom: .4rem;
-        }
-
-        .filter-form input,
-        .filter-form select {
-            width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            padding: .75rem 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: .75rem;
-            background: #fff;
-            font-family: inherit;
-            font-size: .9rem;
-            color: #334155;
-        }
-
-        .filter-form input:focus,
-        .filter-form select:focus {
-            border-color: var(--emerald);
-            outline: 0;
-            box-shadow: 0 0 0 4px rgba(11, 79, 53, .12);
-        }
-
-        /* --------------------------------------------------------------------------
-                 | ACTION FILTER
-                 | -------------------------------------------------------------------------- */
-
-        .filter-form .action-group {
-            display: flex;
-            flex-direction: row;
-            gap: .75rem;
-            flex: 0 0 auto;
-            min-width: 0;
-        }
-
-        .filter-form button {
-            padding: .75rem 1rem;
-            background: var(--emerald);
-            color: #fff;
-            border: 0;
-            border-radius: .75rem;
-            font-family: inherit;
-            font-size: .85rem;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all .2s ease;
-        }
-
-        .filter-form button:hover {
-            background: var(--emerald-dark);
-            transform: translateY(-1px);
-        }
-
-        /* --------------------------------------------------------------------------
-                 | EXPORT BUTTONS
-                 | -------------------------------------------------------------------------- */
-
-        .export-buttons {
-            width: 100%;
-            min-width: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: .75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .export-buttons a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .7rem 1rem;
-            color: #fff;
-            background: var(--emerald);
-            border-radius: .75rem;
-            margin: 0 !important;
-            font-size: .85rem;
-            font-weight: 800;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: all .2s ease;
-            box-sizing: border-box;
-        }
-
-        .export-buttons a:hover {
-            background: var(--emerald-dark);
-            transform: translateY(-1px);
-        }
-
-        .export-buttons a:first-child {
-            background: #e11d48;
-        }
-
-        .export-buttons a:first-child:hover {
-            background: #be123c;
-        }
-
-        .export-buttons a:nth-child(2),
-        .export-buttons a:nth-child(3) {
-            background: #059669;
-        }
-
-        .export-buttons a:nth-child(2):hover,
-        .export-buttons a:nth-child(3):hover {
-            background: #047857;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | TABLE
-                 | -------------------------------------------------------------------------- */
-
-        .table-responsive {
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 1.25rem;
-            overflow-x: auto;
-            overflow-y: hidden;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .table-responsive table {
-            width: 100%;
-            margin: 0;
-            border-collapse: separate;
-            border-spacing: 0;
-            min-width: 900px;
-        }
-
-        .table-responsive th {
-            padding: .9rem .75rem;
-            background: #f8fafc !important;
-            color: #64748b;
-            font-size: .7rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            white-space: nowrap;
-            border-bottom: 1px solid var(--border);
-            text-align: center;
-        }
-
-        .table-responsive th a {
-            color: inherit;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .table-responsive th a:hover {
-            text-decoration: underline;
-        }
-
-        .table-responsive td {
-            padding: .9rem .75rem;
-            background: #fff;
-            color: #334155;
-            font-size: .85rem;
-            font-weight: 500;
-            white-space: nowrap;
-            border-bottom: 1px solid #f1f5f9;
-            text-align: center;
-        }
-
-        .table-responsive tbody tr:hover td {
-            background: #f8fafc !important;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | PAGINATION
-                 | -------------------------------------------------------------------------- */
-
-        .pagination-wrapper {
-            width: 100%;
-            min-width: 0;
-            margin-top: 1.25rem;
-            text-align: center;
-        }
-
-        .pagination-wrapper .small {
-            color: #64748b;
-            font-size: .8rem;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | CHART
-                 | -------------------------------------------------------------------------- */
-
-        #stokChart {
-            width: 100% !important;
-            max-width: 100%;
-            margin-top: 2rem !important;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 1.25rem;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        /* --------------------------------------------------------------------------
-                 | 1024px - DESKTOP
-                 | -------------------------------------------------------------------------- */
-
-        @media (min-width: 1024px) {
-            main>.container {
-                width: 100%;
-                max-width: 1280px !important;
-                min-width: 0;
-                flex: 1 1 0%;
-                padding-left: 1.25rem;
-                padding-right: 1.25rem;
-            }
-
-            .filter-form .form-group {
-                flex: 1 1 160px;
-                min-width: 0;
-            }
-        }
-
-        /* --------------------------------------------------------------------------
-                 | TABLET
-                 | -------------------------------------------------------------------------- */
-
-        @media (max-width: 1023px) {
-            main>.container {
-                width: 100%;
-                max-width: 100% !important;
-                min-width: 0;
-                padding: 1.5rem 1rem 2.5rem;
-            }
-
-            .filter-form {
-                gap: .85rem;
-            }
-
-            .filter-form .form-group {
-                flex: 1 1 calc(50% - .85rem);
-                min-width: 0;
-            }
-
-            .filter-form .action-group {
-                width: 100%;
-            }
-        }
-
-        /* --------------------------------------------------------------------------
-                 | MOBILE
-                 | -------------------------------------------------------------------------- */
-
-        @media (max-width: 768px) {
-            main>.container {
-                width: 100%;
-                max-width: 100% !important;
-                min-width: 0;
-                padding: 1rem .75rem 2rem;
-            }
-
-            .header {
-                padding: 1rem;
-                border-radius: 1rem;
-                align-items: flex-start;
-            }
-
-            .header h4 {
-                font-size: 1.35rem;
-                line-height: 1.35;
-            }
-
-            .header .back-button {
-                width: 100%;
-                white-space: normal;
-                line-height: 1.4;
-            }
-
-            .filter-form {
-                padding: 1rem !important;
-                border-radius: 1rem !important;
-                flex-direction: column;
-                align-items: stretch;
-                gap: .75rem;
-            }
-
-            .filter-form .form-group {
-                width: 100%;
-                flex: none;
-                min-width: 0;
-            }
-
-            .filter-form .action-group {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: .65rem;
-            }
-
-            .filter-form button,
-            .filter-form .action-group .back-button {
-                width: 100%;
-            }
-
-            .export-buttons {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: .65rem;
-            }
-
-            .export-buttons a {
-                width: 100%;
-            }
-
-            .table-responsive {
-                border-radius: 1rem;
-            }
-
-            .table-responsive table {
-                min-width: 900px;
-            }
-
-            .pagination-wrapper {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .pagination-wrapper .ms-auto {
-                min-width: max-content;
-            }
-
-            #stokChart {
-                min-height: 260px;
-                padding: .75rem;
-                border-radius: 1rem;
-            }
-        }
-
-        /* --------------------------------------------------------------------------
-                 | MOBILE KECIL
-                 | -------------------------------------------------------------------------- */
-
-        @media (max-width: 480px) {
-            main>.container {
-                padding-left: .6rem;
-                padding-right: .6rem;
-            }
-
-            .header h4 {
-                font-size: 1.2rem;
-            }
-
-            .header {
-                padding: .9rem;
-            }
-
-            .filter-form {
-                padding: .85rem !important;
-            }
-
-            .filter-form input,
-            .filter-form select {
-                font-size: .85rem;
-                padding: .7rem .85rem;
-            }
-
-            .table-responsive table {
-                min-width: 900px;
-            }
-
-            #stokChart {
-                min-height: 240px;
-            }
-        }
-    </style>
-
-    @php $role = auth()->user()->role; @endphp
-
-    <div class="container">
-        <div class="header">
-            <h4>Laporan Transaksi & Stok Barang</h4>
+    @php
+        $items = $data ?? $grouped ?? collect();
+        $totalBatches = $totalBatches ?? ($items instanceof \Illuminate\Pagination\LengthAwarePaginator ? $items->total() : count($items));
+        $sortBy = request('sort_by', 'nama_barang');
+        $sortDir = request('sort_dir', 'asc');
+        $lokasiList = $lokasis ?? $listLokasi ?? [];
+        $isPaginator = $items instanceof \Illuminate\Pagination\LengthAwarePaginator;
+        $role = auth()->user()?->role ?? 'penjual';
+
+        $sortRoute = function (string $col) use ($sortBy, $sortDir) {
+            $nextDir = ($sortBy === $col && $sortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(['sort_by' => $col, 'sort_dir' => $nextDir]);
+        };
+    @endphp
+
+    <div class="container report-shell">
+        <!-- Header Ramah Lansia -->
+        <header class="report-header">
+            <div>
+                <h1>📦 Laporan Stok & Aset Bunga</h1>
+                <p>Pantau sisa stok nyata dan total modal tersimpan berdasarkan nota belanja riil.</p>
+            </div>
             @if (in_array($role, ['penjual', 'superadmin']))
-                <a href="{{ route('laporan.arus') }}" class="back-button">
-                    ← Lihat Laporan Arus Barang (Detail Transaksi)
+                <a href="{{ route('laporan.arus') }}" class="report-back">
+                    <span>⇄</span> Lihat Arus Masuk & Keluar
                 </a>
             @endif
-        </div>
+        </header>
 
-        {{-- Filter Form --}}
-        <form method="GET" class="filter-form">
-            {{-- ✨ Tambahan filter tanggal --}}
-            <div class="form-group">
-                <label>Tanggal Mulai:</label>
-                <input type="date" name="start_date" value="{{ request('start_date') }}">
+        <!-- Filter Sederhana -->
+        <form method="GET" class="report-filter" aria-label="Saring data stok bunga">
+            <div class="field">
+                <label for="start_date">📅 Tanggal Mulai</label>
+                <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}">
             </div>
-            <div class="form-group">
-                <label>Tanggal Selesai:</label>
-                <input type="date" name="end_date" value="{{ request('end_date') }}">
+            <div class="field">
+                <label for="end_date">📅 Tanggal Selesai</label>
+                <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}">
             </div>
-            <div class="form-group">
-                <label>Nama Barang:</label>
-                <input type="text" name="nama_barang" placeholder="Nama Barang..." value="{{ request('nama_barang') }}">
+            <div class="field">
+                <label for="nama_barang">🌸 Nama Bunga</label>
+                <input type="text" id="nama_barang" name="nama_barang" placeholder="Ketik nama bunga..." value="{{ request('nama_barang') }}">
             </div>
-            <div class="form-group">
-                <label>Kode Barang:</label>
-                <input type="text" name="kode_barang" placeholder="Kode Barang..." value="{{ request('kode_barang') }}">
+            <div class="field">
+                <label for="kode_barang">🔖 Kode Barang</label>
+                <input type="text" id="kode_barang" name="kode_barang" placeholder="Ketik kode..." value="{{ request('kode_barang') }}">
             </div>
-            <div class="form-group">
-                <label>Lokasi:</label>
-                <select name="lokasi">
-                    <option value="">-- Semua Lokasi --</option>
-                    @foreach ($lokasis as $lokasi)
+            <div class="field">
+                <label for="lokasi">📍 Lokasi Simpan</label>
+                <select id="lokasi" name="lokasi">
+                    <option value="">Semua Lokasi</option>
+                    @foreach ($lokasiList as $lok)
                         @php
-                            $lokasiId = is_array($lokasi) ? $lokasi['id'] ?? $lokasi['nama_lokasi'] : $lokasi;
-                            $lokasiName = is_array($lokasi) ? $lokasi['nama_lokasi'] ?? '-' : $lokasi;
+                            $val = is_array($lok) ? ($lok['id'] ?? $lok['nama_lokasi']) : (is_object($lok) ? ($lok->id ?? $lok->nama_lokasi) : $lok);
+                            $label = is_array($lok) ? ($lok['nama_lokasi'] ?? $val) : (is_object($lok) ? ($lok->nama_lokasi ?? $val) : $lok);
                         @endphp
-                        <option value="{{ $lokasiId }}" {{ request('lokasi') == $lokasiId ? 'selected' : '' }}>
-                            {{ $lokasiName }}
-                        </option>
+                        <option value="{{ $val }}" @selected((string) request('lokasi') === (string) $val)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
-            {{-- Bawa juga sort_by/sort_dir saat submit --}}
             <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
             <input type="hidden" name="sort_dir" value="{{ request('sort_dir') }}">
-            <div class="action-group">
-                <button type="submit">Terapkan Filter</button>
-                <a href="{{ route('laporan') }}" class="back-button">
-                    Reset Filter
-                </a>
+            <div class="actions">
+                <button type="submit" class="report-btn">Terapkan Filter</button>
+                <a href="{{ route('laporan') }}" class="report-btn report-btn--soft">Reset Filter</a>
             </div>
         </form>
 
-        @if (in_array($role, [ 'penjual', 'superadmin']))
-            <div class="export-buttons">
-                {{-- request()->query() sudah otomatis membawa start_date & end_date --}}
-                <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank">
-                    📄 Cetak PDF
-                </a>
-                <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
-                    📊 Export Excel (.xlsx)
-                </a>
-                <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'csv'])) }}"
-                    style="background-color: #059669;">
-                    📄 Export CSV (.csv)
-                </a>
-            </div>
-        @endif
+        <!-- Tombol Aksi Export -->
+        <div class="report-exports">
+            @if (Route::has('laporan.pdf'))
+                <a href="{{ route('laporan.pdf', request()->query()) }}" target="_blank" class="report-btn report-btn--pdf">📄 Cetak PDF</a>
+            @endif
 
-        @php
-            $sortBy = request('sort_by');
-            $columns = [
-                'kode_barang' => 'Kode Barang',
-                'nama_barang' => 'Nama Barang',
-                'harga_dasar' => 'Harga Dasar',
-                'total_masuk' => 'Total Masuk',
-                'total_keluar' => 'Total Keluar',
-                'stok_akhir' => 'Stok Akhir',
-                'lokasi' => 'Lokasi',
-                'username' => 'Username',
-            ];
-        @endphp
+            @if (Route::has('laporan.excel'))
+                <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'xlsx'])) }}" class="report-btn">📊 Export Excel</a>
+                <a href="{{ route('laporan.excel', array_merge(request()->query(), ['format' => 'csv'])) }}" class="report-btn report-btn--soft">📄 Export CSV</a>
+            @endif
+        </div>
 
-        <div class="table-responsive">
-            <table>
+        <!-- Banner Ringkasan Raksasa -->
+        <section class="report-cards" aria-label="Ringkasan aset riil">
+            <article class="report-card report-card--omzet">
+                <div class="report-card__label">TOTAL NILAI ASET RIIL <span class="sr-only">Total Nilai Aset Riil</span></div>
+                <div class="report-card__value">Rp {{ number_format($totalAset ?? 0, 0, ',', '.') }}</div>
+                <div class="report-card__sub">Dihitung murni dari sisa stok × harga beli riil per nota</div>
+            </article>
+            <article class="report-card">
+                <div class="report-card__label">JUMLAH JENIS BUNGA</div>
+                <div class="report-card__value" style="color: var(--report-emerald-dark);">
+                    {{ $isPaginator ? $items->total() : count($items) }}
+                </div>
+                <div class="report-card__sub">Jenis tanaman/bunga yang masih memiliki stok fisik</div>
+            </article>
+            <article class="report-card">
+                <div class="report-card__label">NOTA / BATCH AKTIF</div>
+                <div class="report-card__value" style="color: var(--report-amber);">
+                    {{ $totalBatches }}
+                </div>
+                <div class="report-card__sub">Total nota belanja masuk yang stoknya belum habis terjual</div>
+            </article>
+        </section>
+
+        <!-- Tabel Utama Induk (Accordion) -->
+        <div class="report-table-wrap">
+            <table class="report-table">
                 <thead>
                     <tr>
-                        @foreach ($columns as $key => $label)
-                            <th>
-                                <a
-                                    href="{{ route(
-                                        'laporan',
-                                        array_merge(request()->all(), [
-                                            'sort_by' => $key,
-                                            'sort_dir' => $sortBy === $key && request('sort_dir') === 'asc' ? 'desc' : 'asc',
-                                        ]),
-                                    ) }}">
-                                    {{ $label }}
-                                    @if ($sortBy === $key)
-                                        {{ request('sort_dir') === 'asc' ? '↑' : '↓' }}
-                                    @else
-                                        ▲▼
-                                    @endif
-                                </a>
-                            </th>
-                        @endforeach
+                        <th>
+                            <a href="{{ $sortRoute('nama_barang') }}">
+                                Nama Bunga {!! $sortBy === 'nama_barang' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('total_stok') }}">
+                                Total Stok Sisa {!! $sortBy === 'total_stok' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('total_aset') }}">
+                                Total Nilai Aset Riil {!! $sortBy === 'total_aset' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th style="text-align: center; width: 220px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($data as $item)
-                        <tr>
-                            <td>{{ $item['kode_barang'] }}</td>
-                            <td style="text-align:left">
-                                {{ $item['nama_barang'] }}
-                            </td>
+                    @forelse ($items as $group)
+                        @php
+                            $detailId = 'stok-detail-'.$loop->index;
+                            $stokVal = $group['total_stok'] ?? $group['stok_akhir'] ?? 0;
+                            $asetVal = $group['total_aset'] ?? $group['jumlah_aset'] ?? $group['nilai_aset'] ?? 0;
+                            $satuan = $group['satuan'] ?? '';
+                            $batches = $group['batches'] ?? [];
+                        @endphp
+                        <tr class="parent-row">
                             <td>
-                                Rp {{ number_format($item['harga_dasar'], 0, ',', '.') }}
+                                <span class="report-name">{{ $group['nama_barang'] ?? '-' }}</span>
+                                <span class="report-meta">
+                                    Kode: {{ $group['kode_barang'] ?? '-' }} · {{ count($batches) ?: ($group['batch_count'] ?? 1) }} nota masuk
+                                    @if (!empty($group['lokasi'])) · Lokasi: {{ $group['lokasi'] }} @endif
+                                </span>
                             </td>
-                            <td>{{ $item['total_masuk'] }}</td>
-                            <td>{{ $item['total_keluar'] }}</td>
-                            <td>{{ $item['stok_akhir'] }}</td>
-                            <td>
-                                {{ is_array($item['lokasi']) ? $item['lokasi']['nama_lokasi'] ?? '-' : $item['lokasi'] }}
+                            <td class="report-quantity">
+                                {{ number_format($stokVal, 0, ',', '.') }} {{ $satuan }}
                             </td>
-                            <td>{{ $item['username'] }}</td>
+                            <td class="report-value">
+                                Rp {{ number_format($asetVal, 0, ',', '.') }}
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="report-toggle" data-report-toggle data-target="{{ $detailId }}" aria-expanded="false" aria-controls="{{ $detailId }}">
+                                    <span class="toggle-label">👁️ Lihat Rincian Nota</span>
+                                </button>
+                            </td>
                         </tr>
-                    @endforeach
+
+                        <!-- Sub-Tabel Lipat (Accordion Detail) -->
+                        <tr class="report-detail-row" id="{{ $detailId }}" hidden>
+                            <td colspan="4">
+                                <div class="report-detail-panel">
+                                    <p class="report-detail-title">
+                                        📋 Rincian Nota Belanja Masuk — {{ $group['nama_barang'] }}
+                                    </p>
+                                    <table class="report-detail-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No. Nota / Tanggal</th>
+                                                <th>Sisa Stok Batch</th>
+                                                <th>Harga Beli Riil</th>
+                                                <th>Subtotal Aset</th>
+                                                <th>Pemasok</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($batches as $batch)
+                                                @php
+                                                    $bSisa = $batch['sisa_stok'] ?? $batch['stok_akhir'] ?? 0;
+                                                    $bHarga = $batch['harga_beli'] ?? 0;
+                                                    $bAset = $batch['nilai_aset'] ?? $batch['jumlah_aset'] ?? ($bSisa * $bHarga);
+                                                    $bSatuan = $batch['satuan'] ?? $satuan;
+                                                    $tgl = $batch['tanggal_masuk'] ?? null;
+                                                    $tglStr = $tgl instanceof \Carbon\CarbonInterface ? $tgl->format('d/m/Y') : ($tgl ? date('d/m/Y', strtotime((string)$tgl)) : '-');
+                                                    $notaTitle = !empty($batch['catatan']) ? $batch['catatan'] : $batch['batch_code'];
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <strong style="color: var(--report-emerald-dark); font-size: 1.05rem;">
+                                                            {{ $notaTitle }}
+                                                        </strong>
+                                                        <div class="report-meta">
+                                                            Ref: {{ $batch['batch_code'] }} · Tgl Masuk: {{ $tglStr }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-emerald-dark); font-size: 1.1rem;">
+                                                            {{ number_format($bSisa, 0, ',', '.') }}
+                                                        </strong> {{ $bSatuan }}
+                                                    </td>
+                                                    <td>
+                                                        Rp {{ number_format($bHarga, 0, ',', '.') }}
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-slate); font-size: 1.05rem;">
+                                                            Rp {{ number_format($bAset, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: 700; color: #334155;">
+                                                            {{ $batch['pemasok'] ?: 'Pemasok Umum' }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center py-3 text-slate-500">
+                                                        Belum ada rincian nota aktif untuk bunga ini.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <strong>Total Nilai Aset Riil ({{ $group['nama_barang'] }})</strong>
+                                                </td>
+                                                <td colspan="2">
+                                                    <strong style="color: var(--report-emerald-dark); font-size: 1.15rem;">
+                                                        Rp {{ number_format($asetVal, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="report-empty">
+                                🌸 Belum ada data stok bunga yang tersedia untuk saringan ini.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Pagination + summary --}}
-        @php
-            $isPaginator = $data instanceof \Illuminate\Pagination\LengthAwarePaginator;
-            $total = $isPaginator ? $data->total() : (is_countable($data) ? count($data) : collect($data)->count());
-            $first = $isPaginator ? $data->firstItem() ?? ($total ? 1 : 0) : ($total ? 1 : 0);
-            $last = $isPaginator ? $data->lastItem() ?? $total : $total;
-        @endphp
-
-        <div class="pagination-wrapper">
-            <div class="small text-muted">
-                Showing {{ $first }} to {{ $last }} of {{ $total }} results
+        @if ($isPaginator && $items->hasPages())
+            <div class="report-pagination">
+                <div class="summary">
+                    Menampilkan data bunga ke-{{ $items->firstItem() ?? 0 }} sampai {{ $items->lastItem() ?? 0 }} dari total {{ $items->total() }} jenis
+                </div>
+                {!! $items->appends(request()->query())->links('pagination::bootstrap-5') !!}
             </div>
-            <div class="ms-auto">
-                @if ($isPaginator)
-                    {!! $data->appends(request()->query())->links('pagination::bootstrap-5') !!}
-                @endif
-            </div>
-        </div>
-
-        @php
-            $chartItems = $isPaginator ? $data->items() : $data;
-        @endphp
-
-        @if ($total > 0)
-            <canvas id="stokChart" height="150"></canvas>
         @endif
     </div>
 @endsection
 
-@section('scripts')
-    @if (
-        ($data instanceof \Illuminate\Pagination\LengthAwarePaginator && $data->total() > 0) ||
-            (!($data instanceof \Illuminate\Pagination\LengthAwarePaginator) && count($data) > 0))
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-report-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const targetId = button.getAttribute('data-target');
+                    const panel = document.getElementById(targetId);
+                    if (!panel) return;
 
-        <script>
-            const labels = {!! json_encode(collect($chartItems)->pluck('nama_barang')->values()) !!};
-            const stokData = {!! json_encode(collect($chartItems)->pluck('stok_akhir')->values()) !!};
-            const ctx = document.getElementById('stokChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Stok Akhir',
-                        data: stokData,
-                        backgroundColor: 'rgba(16, 185, 129, 0.6)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                    const isOpen = button.getAttribute('aria-expanded') === 'true';
+                    button.setAttribute('aria-expanded', String(!isOpen));
+                    button.classList.toggle('is-open', !isOpen);
+                    panel.hidden = isOpen;
+
+                    const label = button.querySelector('.toggle-label');
+                    if (label) {
+                        label.textContent = isOpen ? '👁️ Lihat Rincian Nota' : '🙈 Tutup Rincian';
                     }
-                }
+                });
             });
-        </script>
-    @endif
-@endsection
+        });
+    </script>
+@endpush

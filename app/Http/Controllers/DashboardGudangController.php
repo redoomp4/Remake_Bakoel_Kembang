@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Item;
-use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
+use App\Models\BarangMasuk;
+use App\Models\Item;
+use App\Services\BatchInventoryService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardGudangController extends Controller
 {
-    public function index()
+    public function index(BatchInventoryService $inventory)
     {
         $userId = Auth::id();
 
@@ -21,47 +22,18 @@ class DashboardGudangController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 1. OMZET & TRANSAKSI HARI INI
+        | 1. LEDGER KEUANGAN RIIL PER BATCH (FIFO)
         |--------------------------------------------------------------------------
         */
 
-        $barangKeluarHariIni = BarangKeluar::where('user_id', $userId)
-            ->whereDate('tanggal_keluar', $today);
+        $ledger = $inventory->outgoings($userId, now());
+        $ledgerHariIni = $ledger->filter(fn (array $row) => $row['tanggal'] && $row['tanggal']->isSameDay($today));
+        $ledgerBulanIni = $ledger->filter(fn (array $row) => $row['tanggal'] && $row['tanggal']->between($awalBulan, $akhirBulan));
 
-        $omzetHariIni = (float) $barangKeluarHariIni
-            ->sum('total_harga_jual');
+        $omzetHariIni = (float) $ledgerHariIni->sum('omzet');
+        $transaksiKeluarHariIni = $ledgerHariIni->count();
 
-        $transaksiKeluarHariIni = (int) $barangKeluarHariIni
-            ->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2. HPP HARI INI
-        |--------------------------------------------------------------------------
-        |
-        | SEMENTARA:
-        | HPP = jumlah keluar × harga_dasar item
-        |
-        | Nanti bisa diganti menjadi Moving Average.
-        |
-        */
-
-        $hppHariIni = (float) BarangKeluar::query()
-            ->where('barang_keluars.user_id', $userId)
-            ->whereDate('barang_keluars.tanggal_keluar', $today)
-            ->join(
-                'items',
-                'barang_keluars.item_id',
-                '=',
-                'items.id'
-            )
-            ->selectRaw(
-                'COALESCE(SUM(
-                    barang_keluars.jumlah_keluar * items.harga_dasar
-                ), 0) AS total_hpp'
-            )
-            ->value('total_hpp');
-
+        $hppHariIni = (float) $ledgerHariIni->sum('modal_riil');
         $labaKotorHariIni = $omzetHariIni - $hppHariIni;
 
         $marginHariIni = $omzetHariIni > 0
@@ -70,96 +42,20 @@ class DashboardGudangController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 3. NILAI PERSEDIAAN
+        | 2. NILAI PERSEDIAAN DARI SISA BATCH RIIL
         |--------------------------------------------------------------------------
-        |
-        | Stok = total masuk - total keluar
-        |
-        | Nilai sementara:
-        | stok × harga_dasar
-        |
         */
 
-        $nilaiPersediaan = (float) Item::query()
-            ->where('items.user_id', $userId)
-            ->leftJoinSub(
-                BarangMasuk::query()
-                    ->select(
-                        'item_id',
-                        DB::raw('SUM(jumlah) AS total_masuk')
-                    )
-                    ->where('user_id', $userId)
-                    ->groupBy('item_id'),
-                'masuk',
-                'masuk.item_id',
-                '=',
-                'items.id'
-            )
-            ->leftJoinSub(
-                BarangKeluar::query()
-                    ->select(
-                        'item_id',
-                        DB::raw('SUM(jumlah_keluar) AS total_keluar')
-                    )
-                    ->where('user_id', $userId)
-                    ->groupBy('item_id'),
-                'keluar',
-                'keluar.item_id',
-                '=',
-                'items.id'
-            )
-            ->selectRaw(
-                'COALESCE(SUM(
-                    GREATEST(
-                        COALESCE(masuk.total_masuk, 0)
-                        -
-                        COALESCE(keluar.total_keluar, 0),
-                        0
-                    ) * COALESCE(items.harga_dasar, 0)
-                ), 0) AS nilai_persediaan'
-            )
-            ->value('nilai_persediaan');
+        $nilaiPersediaan = $inventory->stockValue($userId, now());
 
         /*
         |--------------------------------------------------------------------------
-        | 4. DATA BULAN INI
+        | 3. DATA BULAN INI
         |--------------------------------------------------------------------------
         */
 
-        $barangKeluarBulanIni = BarangKeluar::query()
-            ->where('user_id', $userId)
-            ->whereBetween(
-                'tanggal_keluar',
-                [$awalBulan, $akhirBulan]
-            );
-
-        $omzetBulanIni = (float) $barangKeluarBulanIni
-            ->sum('total_harga_jual');
-
-        /*
-        |--------------------------------------------------------------------------
-        | HPP BULAN INI
-        |--------------------------------------------------------------------------
-        */
-
-        $hppBulanIni = (float) BarangKeluar::query()
-            ->where('barang_keluars.user_id', $userId)
-            ->whereBetween(
-                'barang_keluars.tanggal_keluar',
-                [$awalBulan, $akhirBulan]
-            )
-            ->join(
-                'items',
-                'barang_keluars.item_id',
-                '=',
-                'items.id'
-            )
-            ->selectRaw(
-                'COALESCE(SUM(
-                    barang_keluars.jumlah_keluar * items.harga_dasar
-                ), 0) AS total_hpp'
-            )
-            ->value('total_hpp');
+        $omzetBulanIni = (float) $ledgerBulanIni->sum('omzet');
+        $hppBulanIni = (float) $ledgerBulanIni->sum('modal_riil');
 
         $labaBulanIni = $omzetBulanIni - $hppBulanIni;
 
@@ -221,8 +117,7 @@ class DashboardGudangController extends Controller
             ->select(
                 'items.id',
                 'items.nama_barang',
-                'items.stok_minimum',
-                'items.harga_dasar'
+                'items.stok_minimum'
             )
 
             ->selectRaw(
@@ -278,7 +173,7 @@ class DashboardGudangController extends Controller
                 'tanggal_kadaluarsa',
                 [
                     $today,
-                    $today->copy()->addDays(30)
+                    $today->copy()->addDays(30),
                 ]
             )
             ->join(
