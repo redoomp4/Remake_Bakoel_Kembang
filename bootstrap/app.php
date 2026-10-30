@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Middleware\AutoLogoutInactiveUser;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+
+  // TAMBAHKAN INI!
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,14 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // TAMBAHKAN INI UNTUK NGROK!
+        $middleware->trustProxies(at: '*');
+
+        // Kalau masih redirect, tambahkan ini juga:
+        // $middleware->trustProxies(
+        //     headers: Request::HEADER_X_FORWARDED_ALL
+        // );
+
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'auto.logout' => \App\Http\Middleware\AutoLogoutInactiveUser::class,
+            'role' => RoleMiddleware::class,
+            'auto.logout' => AutoLogoutInactiveUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException $e) {
+        $exceptions->render(function (TooManyRequestsHttpException $e) {
             $retry = $e->getHeaders()['Retry-After'] ?? 60;
+
             return back()->with('error', "Terlalu sering meminta kirim ulang. Coba lagi dalam {$retry} detik.");
         });
     })->create();

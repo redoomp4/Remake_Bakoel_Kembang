@@ -1,15 +1,13 @@
 <?php
-namespace App\Models;
 
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-
 class Lokasi extends Model
 {
     use HasFactory;
-
 
     protected $fillable = [
         'nama_lokasi',
@@ -21,14 +19,14 @@ class Lokasi extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function barangMasuks()
     {
-        return $this->hasMany(\App\Models\BarangMasuk::class, 'id_lokasi');
+        return $this->hasMany(BarangMasuk::class, 'id_lokasi');
     }
 
     public function barangKeluars()
     {
-        return $this->hasMany(\App\Models\BarangKeluar::class, 'id_lokasi');
+        return $this->hasMany(BarangKeluar::class, 'id_lokasi');
     }
 }

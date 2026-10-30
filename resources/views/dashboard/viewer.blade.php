@@ -13,9 +13,9 @@
       <p class="text-brand-slate font-medium text-md max-w-xl mx-auto">
         Anda telah berhasil masuk sebagai <strong>{{ Auth::user()->name }}</strong> ({{ strtoupper(Auth::user()->role) }}). Anda dapat memantau data stok dan laporan inventaris kebun secara realtime.
       </p>
-      <div class="pt-4 flex justify-center gap-4">
-        <a href="{{ route('laporan') }}" class="px-6 py-3 bg-brand-emerald text-white rounded-xl font-bold text-sm shadow-md">
-          <i class="fas fa-file-invoice-dollar mr-2"></i> Lihat Laporan Stok
+      <div class="pt-4 flex flex-wrap justify-center gap-4">
+        <a href="{{ route('laporan') }}" class="px-6 py-3 bg-brand-emerald text-white rounded-xl font-bold text-sm shadow-md hover:bg-emerald-800 transition-all flex items-center gap-2">
+          <i class="fas fa-file-invoice-dollar"></i> Lihat Laporan Transaksi Lengkap
         </a>
       </div>
     </div>

@@ -5,25 +5,25 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public const HOME = '/dashboard/penjual';
+
     /**
      * Redirect user after authentication based on role.
-     *
-     * @return string
      */
     public static function redirectByRole(): string
     {
-        $role = auth()->user()->role ?? null;
+        $role = Auth::user()?->role;
 
-        return match ($role) {
+        return match (strtolower($role ?? '')) {
             'superadmin' => route('dashboard.superadmin'),
-            'gudang'     => route('dashboard.gudang'),
-            'viewer'     => route('laporan.stok.viewer'), // langsung ke laporan
-            default      => route('dashboard'),
+            'penjual' => route('dashboard.penjual'),
+            default => route('dashboard.penjual'),
         };
     }
 

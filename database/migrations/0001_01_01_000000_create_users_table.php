@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email', 191)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role', 20)->default('viewer');
+            $table->string('role', 20)->default('penjual');
             $table->string('status', 20)->default('Active');
             $table->string('position', 100)->nullable();
             $table->string('phone', 30)->nullable();

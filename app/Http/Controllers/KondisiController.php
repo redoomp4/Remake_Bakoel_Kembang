@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kondisi;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
 
 class KondisiController extends Controller
 {
@@ -20,7 +20,7 @@ class KondisiController extends Controller
             // Grouping agar orWhere tidak mengabaikan filter user_id
             $query->where(function ($q) use ($search) {
                 $q->where('nama_kondisi', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%");
+                    ->orWhere('deskripsi', 'like', "%{$search}%");
             });
         }
 
@@ -50,14 +50,14 @@ class KondisiController extends Controller
             'deskripsi' => ['nullable', 'string'],
         ], [
             'nama_kondisi.required' => 'Nama kondisi wajib diisi.',
-            'nama_kondisi.unique'   => 'Nama kondisi ini sudah ada.',
+            'nama_kondisi.unique' => 'Nama kondisi ini sudah ada.',
         ]);
 
         try {
             Kondisi::create([
-                'user_id'      => Auth::id(),
+                'user_id' => Auth::id(),
                 'nama_kondisi' => $nama,
-                'deskripsi'    => $request->input('deskripsi'),
+                'deskripsi' => $request->input('deskripsi'),
             ]);
 
             return redirect()
@@ -71,6 +71,7 @@ class KondisiController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama kondisi ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         } catch (\Throwable $e) {
@@ -110,13 +111,13 @@ class KondisiController extends Controller
             'deskripsi' => ['nullable', 'string'],
         ], [
             'nama_kondisi.required' => 'Nama kondisi wajib diisi.',
-            'nama_kondisi.unique'   => 'Nama kondisi ini sudah ada.',
+            'nama_kondisi.unique' => 'Nama kondisi ini sudah ada.',
         ]);
 
         try {
             $kondisi->update([
                 'nama_kondisi' => $nama,
-                'deskripsi'    => $request->input('deskripsi'),
+                'deskripsi' => $request->input('deskripsi'),
             ]);
 
             return redirect()
@@ -129,6 +130,7 @@ class KondisiController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama kondisi ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat mengubah data.');
         } catch (\Throwable $e) {
@@ -146,7 +148,7 @@ class KondisiController extends Controller
 
         try {
             // Opsional: pre-check relasi agar pesan jelas
-            $dipakaiDiMasuk  = method_exists($kondisi, 'barangMasuks')  && $kondisi->barangMasuks()->exists();
+            $dipakaiDiMasuk = method_exists($kondisi, 'barangMasuks') && $kondisi->barangMasuks()->exists();
             $dipakaiDiKeluar = method_exists($kondisi, 'barangKeluars') && $kondisi->barangKeluars()->exists();
             if ($dipakaiDiMasuk || $dipakaiDiKeluar) {
                 return back()->with('error', 'Tidak dapat menghapus data karena sudah digunakan untuk pencatatan barang masuk/keluar.');
@@ -160,13 +162,14 @@ class KondisiController extends Controller
         } catch (QueryException $e) {
             // FK violation (MySQL 1451 / SQLSTATE 23000 / Postgres 23503)
             $mysqlCode = $e->errorInfo[1] ?? null; // 1451
-            $sqlState  = $e->errorInfo[0] ?? null; // 23000
-            $pgCode    = $e->getCode();           // 23503
+            $sqlState = $e->errorInfo[0] ?? null; // 23000
+            $pgCode = $e->getCode();           // 23503
             if ($sqlState === '23000' || $mysqlCode == 1451 || $pgCode == '23503') {
                 return back()->with('error', 'Tidak dapat menghapus data karena sudah digunakan untuk pencatatan barang masuk/keluar.');
             }
 
             report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         } catch (\Throwable $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');

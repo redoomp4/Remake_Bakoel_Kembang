@@ -1,4 +1,14 @@
-<footer class="bg-white border-t border-brand-accent py-8 px-6 text-center text-sm font-semibold text-brand-slate mt-auto">
-  <p>© {{ date('Y') }} BAKOELKEMBANG Premium Orchid & Inventory System. Hak Cipta Dilindungi.</p>
-  <p class="text-xs text-gray-400 mt-1">Dibuat khusus untuk kenyamanan Lansia dengan standar modern Botanical Fintech.</p>
+<footer class="bg-white border-t border-brand-accent
+               py-3 px-3 md:px-5 text-center mt-auto">
+
+    <p class="text-xs font-bold text-brand-slate">
+        © {{ date('Y') }}
+        BAKOELKEMBANG
+        <span class="text-brand-sage">•</span>
+        Premium Orchid & Inventory System
+    </p>
+
+    <p class="text-[10px] text-gray-400 mt-0.5">
+        Dibangun untuk mendukung pengelolaan UMKM secara modern, terintegrasi, dan mudah digunakan. </p>
+
 </footer>

@@ -6,7 +6,15 @@
     </div>
     <div class="space-y-2">
       <h3 class="text-2xl md:text-3xl font-black text-brand-emerald tracking-tight" id="toast-title">
-        {{ session('error') ? '⚠️ PERHATIAN / KENDALA' : '✓ TRANSAKSI & LACI KAS BERHASIL DIPERBARUI!' }}
+        @if(session('error'))
+          ⚠️ PERHATIAN / KENDALA
+        @elseif(session('toast_title'))
+          ✓ {{ session('toast_title') }}
+        @elseif(session('success') && (str_contains(strtolower(session('success')), 'login') || str_contains(strtolower(session('success')), 'verifikasi') || str_contains(strtolower(session('success')), 'masuk')))
+          ✓ BERHASIL MASUK / TERVERIFIKASI!
+        @else
+          ✓ BERHASIL!
+        @endif
       </h3>
       <p class="text-md text-brand-slate font-bold" id="toast-msg">
         {{ session('success') ?? session('status') ?? session('error') ?? 'Semua data logistik dan finansial kebun telah di-sync secara aman ke dalam sistem database.' }}

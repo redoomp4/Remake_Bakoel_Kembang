@@ -1,257 +1,617 @@
 @extends('layouts.app')
 
 @section('content')
+    <div
+        style="
+            background:#FAF9F6;
+            min-height:100vh;
+            width:100%;
+            padding:2rem 1.25rem 3rem;
+            box-sizing:border-box;
+            overflow-x:hidden;
+        "
+    >
+        <div
+            style="
+                width:100%;
+                max-width:1250px;
+                margin:0 auto;
+                box-sizing:border-box;
+            "
+        >
+            {{-- HEADER --}}
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:1rem;
+                    flex-wrap:wrap;
+                    margin-bottom:1.5rem;
+                "
+            >
+                <div style="min-width:0;">
+                    <p
+                        style="
+                            color:#8FA882;
+                            font-weight:800;
+                            font-size:.75rem;
+                            text-transform:uppercase;
+                            margin:0 0 .25rem 0;
+                        "
+                    >
+                        Inventori · Master Barang
+                    </p>
+                    <h4
+                        style="
+                            color:#0B4F35;
+                            font-size:1.9rem;
+                            font-weight:900;
+                            margin:0;
+                        "
+                    >
+                        Daftar Item
+                    </h4>
+                </div>
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                    <a href="{{ route('barang-masuk.index') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-boxes-stacked"></i>
+                        Barang Masuk
+                    </a>
+                    <a href="{{ route('barang-masuk.create') }}"
+                        style="
+                            background:#fff;
+                            color:#0B4F35;
+                            border:2px solid #0B4F35;
+                            padding:.75rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-arrow-down"></i>
+                        Catat Barang Masuk
+                    </a>
+                    <a href="{{ route('item.create') }}"
+                        style="
+                            background:#0B4F35;
+                            color:#fff;
+                            padding:.8rem 1.25rem;
+                            border-radius:.85rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-plus"></i>
+                        Tambah Item Baru
+                    </a>
+                </div>
+            </div>
+
+            {{-- FILTER --}}
+            <form method="GET" action="{{ route('item.index') }}"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    background:#fff;
+                    border:1px solid #E4E4D9;
+                    border-radius:1.25rem;
+                    padding:1.25rem;
+                    display:flex;
+                    gap:1rem;
+                    align-items:flex-end;
+                    flex-wrap:wrap;
+                    margin-bottom:1.5rem;
+                "
+            >
+                {{-- SEARCH --}}
+                <div style="flex:1 1 280px;min-width:0;">
+                    <label for="search"
+                        style="
+                            display:block;
+                            color:#475569;
+                            font-weight:800;
+                            font-size:.85rem;
+                            margin-bottom:.5rem;
+                        "
+                    >
+                        Cari Barang
+                    </label>
+                    <input type="text" id="search" name="search"
+                        placeholder="Cari nama atau kode barang..."
+                        value="{{ request('search') }}"
+                        style="
+                            width:100%;
+                            box-sizing:border-box;
+                            padding:.8rem;
+                            border:1px solid #E4E4D9;
+                            border-radius:.75rem;
+                        "
+                    >
+                </div>
+
+                {{-- KATEGORI --}}
+                <div style="flex:1 1 280px;min-width:0;">
+                    <label for="kategori"
+                        style="
+                            display:block;
+                            color:#475569;
+                            font-weight:800;
+                            font-size:.85rem;
+                            margin-bottom:.5rem;
+                        "
+                    >
+                        Kategori
+                    </label>
+                    <select name="kategori" id="kategori"
+                        style="
+                            width:100%;
+                            box-sizing:border-box;
+                            padding:.8rem;
+                            border:1px solid #E4E4D9;
+                            border-radius:.75rem;
+                            background:#fff;
+                        "
+                    >
+                        <option value="">-- Semua Kategori --</option>
+                        @foreach ($kategoris as $kategori)
+                            <option value="{{ $kategori->id }}"
+                                {{ request('kategori') == $kategori->id ? 'selected' : '' }}
+                            >
+                                {{ $kategori->kategori }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- BUTTON --}}
+                <div style="display:flex;gap:.75rem;flex-shrink:0;">
+                    <button type="submit"
+                        style="
+                            background:#0B4F35;
+                            color:#fff;
+                            border:0;
+                            border-radius:.75rem;
+                            padding:.8rem 1.25rem;
+                            font-weight:800;
+                            cursor:pointer;
+                            white-space:nowrap;
+                        "
+                    >
+                        <i class="fas fa-filter"></i>
+                        Filter
+                    </button>
+                    <a href="{{ route('item.index') }}"
+                        style="
+                            background:#E4E4D9;
+                            color:#475569;
+                            border-radius:.75rem;
+                            padding:.8rem 1.25rem;
+                            text-decoration:none;
+                            font-weight:800;
+                            white-space:nowrap;
+                        "
+                    >
+                        Reset
+                    </a>
+                </div>
+            </form>
+
+            {{-- TABLE --}}
+            <div
+                style="
+                    width:100%;
+                    max-width:100%;
+                    box-sizing:border-box;
+                    background:#fff;
+                    border:1px solid #E4E4D9;
+                    border-radius:1.5rem;
+                    box-shadow:0 1px 4px rgba(0,0,0,.05);
+                    overflow-x:auto;
+                    overflow-y:hidden;
+                "
+            >
+                <table
+                    style="
+                        width:100%;
+                        min-width:1050px;
+                        border-collapse:collapse;
+                        margin:0;
+                    "
+                >
+                    <thead
+                        style="
+                            background:#f0ebe3;
+                            color:#475569;
+                            font-size:.68rem;
+                            text-transform:uppercase;
+                            letter-spacing:.05em;
+                        "
+                    >
+                        <tr>
+                            <th style="padding:.75rem;text-align:left;white-space:nowrap;">No</th>
+                            <th style="padding:.75rem;text-align:left;white-space:nowrap;">Foto</th>
+                            <th style="padding:.75rem;text-align:left;white-space:nowrap;">Kode Barang</th>
+                            <th style="padding:.75rem;text-align:left;">Nama Barang</th>
+                            <th style="padding:.75rem;text-align:left;white-space:nowrap;">Kategori</th>
+                            <th style="padding:.75rem;text-align:left;white-space:nowrap;">Satuan</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Total Stok</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Status Stok</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Stok Minimum</th>
+                            <th style="padding:.75rem;text-align:center;white-space:nowrap;">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($items as $item)
+                            <tr
+                                style="border-bottom:1px solid #E4E4D9;font-size:.82rem;"
+                                onmouseover="this.style.background='#fafbf8'"
+                                onmouseout="this.style.background='#fff'"
+                            >
+                                {{-- NO --}}
+                                <td style="padding:.75rem;text-align:center;color:#64748b;font-weight:700;">
+                                    {{ $items->firstItem() + $loop->index }}
+                                </td>
+
+                                {{-- FOTO --}}
+                                <td style="padding:.75rem;">
+                                    @if ($item->foto)
+                                        <img src="{{ asset('storage/' . $item->foto) }}"
+                                            alt="Foto {{ $item->nama_barang }}"
+                                            style="
+                                                width:44px;
+                                                height:44px;
+                                                border-radius:.75rem;
+                                                object-fit:cover;
+                                                border:1px solid #E4E4D9;
+                                            "
+                                        >
+                                    @else
+                                        <span style="color:#999;font-size:.75rem;">
+                                            -
+                                        </span>
+                                    @endif
+                                </td>
+
+                                {{-- KODE --}}
+                                <td style="padding:.75rem;font-weight:800;white-space:nowrap;color:#0B4F35;">
+                                    {{ $item->kode_barang }}
+                                </td>
+
+                                {{-- NAMA --}}
+                                <td style="padding:.75rem;max-width:180px;word-break:break-word;">
+                                    {{ $item->nama_barang }}
+                                </td>
+
+                                {{-- KATEGORI --}}
+                                <td style="padding:.75rem;">
+                                    <span
+                                        style="
+                                            display:inline-block;
+                                            background:#f1f5f9;
+                                            color:#475569;
+                                            padding:.35rem .6rem;
+                                            border-radius:999px;
+                                            font-size:.68rem;
+                                            font-weight:800;
+                                            white-space:nowrap;
+                                        "
+                                    >
+                                        {{ $item->kategori->kategori ?? '-' }}
+                                    </span>
+                                </td>
+
+                                {{-- SATUAN --}}
+                                <td style="padding:.75rem;white-space:nowrap;">
+                                    {{ $item->satuan->nama_satuan ?? '-' }}
+                                </td>
+
+                                {{-- TOTAL STOK --}}
+                                @php
+                                    $stokItem = max(0, ($item->total_masuk ?? $item->total_stok ?? 0) - ($item->total_keluar ?? 0));
+                                    $statusStok = $stokItem <= 0 ? 'Habis' : ($stokItem <= ($item->stok_minimum ?? 0) ? 'Menipis' : 'Stok Aman');
+                                    $badgeBg = $statusStok === 'Stok Aman' ? '#ecfdf5' : ($statusStok === 'Menipis' ? '#fef3c7' : '#fee2e2');
+                                    $badgeColor = $statusStok === 'Stok Aman' ? '#047857' : ($statusStok === 'Menipis' ? '#b45309' : '#b91c1c');
+                                @endphp
+                                <td style="padding:.75rem;text-align:center;font-weight:800;white-space:nowrap;color:#0B4F35;">
+                                    {{ number_format($stokItem, 0, ',', '.') }} {{ $item->satuan->nama_satuan ?? '' }}
+                                </td>
+
+                                {{-- STATUS STOK --}}
+                                <td style="padding:.75rem;text-align:center;white-space:nowrap;">
+                                    <span style="display:inline-block;padding:.3rem .65rem;border-radius:999px;font-size:.72rem;font-weight:800;background:{{ $badgeBg }};color:{{ $badgeColor }};">
+                                        {{ $statusStok }}
+                                    </span>
+                                </td>
+
+                                {{-- STOK MINIMUM --}}
+                                <td style="padding:.75rem;text-align:center;white-space:nowrap;">
+                                    {{ number_format($item->stok_minimum, 0, ',', '.') }}
+                                </td>
+
+                                {{-- AKSI --}}
+                                <td style="padding:.75rem;white-space:nowrap;">
+                                    <div
+                                        style="
+                                            display:flex;
+                                            gap:.35rem;
+                                            align-items:center;
+                                            justify-content:center;
+                                        "
+                                    >
+                                        {{-- DETAIL --}}
+                                        <a href="{{ route('item.show', $item->id) }}" title="Lihat Detail"
+                                            style="
+                                                background:#60a5fa;
+                                                color:#fff;
+                                                width:32px;
+                                                height:32px;
+                                                min-width:32px;
+                                                border-radius:.55rem;
+                                                text-decoration:none;
+                                                display:inline-flex;
+                                                align-items:center;
+                                                justify-content:center;
+                                            "
+                                        >
+                                            <i class="fas fa-eye" style="font-size:.8rem;"></i>
+                                        </a>
+
+                                        {{-- EDIT --}}
+                                        <a href="{{ route('item.edit', $item->id) }}" title="Edit"
+                                            style="
+                                                background:#fbbf24;
+                                                color:#1a1a1a;
+                                                width:32px;
+                                                height:32px;
+                                                min-width:32px;
+                                                border-radius:.55rem;
+                                                text-decoration:none;
+                                                display:inline-flex;
+                                                align-items:center;
+                                                justify-content:center;
+                                            "
+                                        >
+                                            <i class="fas fa-pen" style="font-size:.8rem;"></i>
+                                        </a>
+
+                                        {{-- Cetak QR --}}
+                                        @if ($item->qr_code)
+                                            <a href="{{ route('item.cetak.pdf', $item->id) }}" target="_blank"
+                                                title="Cetak QR Code"
+                                                style="
+                                                    background:#10b981;
+                                                    color:#fff;
+                                                    width:32px;
+                                                    height:32px;
+                                                    min-width:32px;
+                                                    border-radius:.55rem;
+                                                    text-decoration:none;
+                                                    display:inline-flex;
+                                                    align-items:center;
+                                                    justify-content:center;
+                                                "
+                                            >
+                                                <i class="fas fa-qrcode" style="font-size:.8rem;"></i>
+                                            </a>
+                                        @endif
+
+                                        {{-- HAPUS --}}
+                                        <form action="{{ route('item.destroy', $item->id) }}" method="POST"
+                                            class="delete-form"
+                                            data-item="{{ $item->nama_barang }}"
+                                            style="
+                                                display:inline-flex;
+                                                width:32px;
+                                                min-width:32px;
+                                                height:32px;
+                                                margin:0;
+                                                padding:0;
+                                            "
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" title="Hapus" onclick="openDeleteModal(this)"
+                                                style="
+                                                    background:#dc2626;
+                                                    color:#fff;
+                                                    width:32px;
+                                                    height:32px;
+                                                    min-width:32px;
+                                                    padding:0;
+                                                    margin:0;
+                                                    border:0;
+                                                    border-radius:.55rem;
+                                                    cursor:pointer;
+                                                    display:inline-flex;
+                                                    align-items:center;
+                                                    justify-content:center;
+                                                "
+                                            >
+                                                <i class="fas fa-trash" style="font-size:.8rem;"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10"
+                                    style="
+                                        padding:3rem 1rem;
+                                        text-align:center;
+                                        color:#999;
+                                    "
+                                >
+                                    <i class="fas fa-box-open"
+                                        style="
+                                            font-size:1.8rem;
+                                            margin-bottom:.75rem;
+                                        "
+                                    >
+                                    </i>
+                                    <div style="font-weight:700;">
+                                        Data item belum tersedia
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- PAGINATION --}}
+            <div style="width:100%;margin-top:1.5rem;text-align:center;">
+                {{ $items->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
+
+    {{-- DELETE CONFIRMATION MODAL --}}
+    <div id="delete-modal"
+        class="fixed inset-0 bg-brand-emerald/40 backdrop-blur-sm
+               flex items-center justify-center z-[999] p-4 hidden"
+        role="dialog" aria-modal="true"
+    >
+        <div id="delete-modal-content"
+            class="bg-white text-gray-900
+                   border-2 border-brand-emerald
+                   p-7 md:p-10 rounded-3xl shadow-2xl
+                   max-w-xl w-full text-center space-y-5
+                   transform scale-95 transition-transform duration-300"
+        >
+            {{-- ICON --}}
+            <div
+                class="w-16 h-16 bg-rose-50 rounded-2xl
+                       flex items-center justify-center
+                       text-rose-600 mx-auto"
+            >
+                <i class="fas fa-trash-can text-3xl"></i>
+            </div>
+
+            {{-- TITLE --}}
+            <div>
+                <h3 id="delete-title" class="text-xl md:text-2xl font-black text-[#0B4F35]">
+                    Hapus Item?
+                </h3>
+                <p class="text-sm text-[#475569] font-semibold mt-2">
+                    Data item yang dipilih akan dihapus.
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+            </div>
+
+            {{-- ITEM --}}
+            <div class="bg-[#FAF9F6]
+                    border border-[#E4E4D9]
+                    rounded-2xl p-4">
+                <p class="text-sm text-[#475569] font-semibold">
+                    Apakah Anda yakin ingin menghapus item:
+                </p>
+                <p id="deleteItemName" class="text-base font-black text-[#0B4F35] mt-1">
+                </p>
+            </div>
+
+            {{-- BUTTON --}}
+            <div class="flex items-center justify-center gap-3 pt-1">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="px-6 py-3 bg-gray-100 hover:bg-gray-200
+                           text-[#475569] font-black rounded-xl transition"
+                >
+                    Batal
+                </button>
+                <button type="button" onclick="submitDelete()"
+                    class="px-6 py-3 bg-rose-600 hover:bg-rose-700
+                           text-white font-black rounded-xl transition"
+                >
+                    <i class="fas fa-trash-can mr-1"></i>
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- JAVASCRIPT --}}
+    <script>
+        let deleteForm = null;
+
+        function openDeleteModal(button) {
+            deleteForm = button.closest('.delete-form');
+            const itemName = deleteForm.dataset.item;
+            document.getElementById('deleteItemName').textContent = itemName;
+
+            const modal = document.getElementById('delete-modal');
+            const content = document.getElementById('delete-modal-content');
+
+            modal.classList.remove('hidden');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 30);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            const content = document.getElementById('delete-modal-content');
+
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                deleteForm = null;
+            }, 180);
+        }
+
+        function submitDelete() {
+            if (deleteForm) {
+                deleteForm.submit();
+            }
+        }
+
+        document.getElementById('delete-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDeleteModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (
+                event.key === 'Escape' &&
+                !document.getElementById('delete-modal').classList.contains('hidden')
+            ) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+@endsection
+
 <style>
-    .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
-
-    /* ==== HEADER ==== */
-    .header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    .back-button, .btn-secondary, .create-button {
-        padding: 8px 14px;
-        border-radius: 6px;
-        font-size: 14px;
-        text-decoration: none;
-        transition: background 0.2s ease;
-        border: none;
+    input:focus,
+    select:focus {
         outline: none;
-        display: inline-block;
-    }
-    .back-button { background-color: #e5e7eb; color: #111827; }
-    .back-button:hover { background-color: #d1d5db; }
-    .create-button { background-color: #1a5de2; color: #fff; }
-
-    /* ==== FILTER ==== */
-    form.filter-form {
-        background-color: #f9fafb;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: flex-end;
-    }
-    .filter-form .form-group {
-        display: flex;
-        flex-direction: column;
-        min-width: 200px;
-    }
-    .filter-form label {
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 4px;
-    }
-    .filter-form input,
-    .filter-form select {
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-    .filter-form button {
-        height: 38px;
-        padding: 0 16px;
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-    .filter-form button:hover { background-color: #2563eb; }
-
-    /* ==== TABLE ==== */
-    .table-wrapper { width: 100%; overflow-x: auto; }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-    }
-    th, td {
-        padding: 10px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-        vertical-align: middle;
-    }
-    th {
-        background-color: #f3f4f6;
-        font-weight: 600;
-        white-space: nowrap;
+        border-color: #0B4F35 !important;
+        box-shadow: 0 0 0 3px rgba(11, 79, 53, .12);
     }
 
-    /* Tombol Aksi */
-    .td-action {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: nowrap;
-    }
-    .btn-action {
-        padding: 6px 10px;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-    }
-
-    /* ==== MOBILE: jadikan kartu ==== */
-    @media(max-width: 768px) {
-        .header { flex-direction: column; align-items: flex-start; }
-        .filter-form { flex-direction: column; }
-        .filter-form .form-group { width: 100%; }
-        .filter-form button, .btn-secondary { width: 100%; }
-
-        table, thead, tbody, th, td, tr { display: block; width: 100%; }
-        thead { display: none; }
-
-        tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 12px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
         }
-        td {
-            border: none !important;
-            text-align: left;
-            padding: 8px 12px 8px 55%;
-            position: relative;
-        }
-        td:before {
-            position: absolute;
-            top: 8px;
-            left: 12px;
-            width: 38%;
-            white-space: nowrap;
-            font-weight: bold;
-            color: #333;
-            content: "";
-        }
-
-        /* Label sesuai urutan kolom */
-        td:nth-of-type(1):before { content: "Kode Barang"; }
-        td:nth-of-type(2):before { content: "Nama Barang"; }
-        td:nth-of-type(3):before { content: "Kategori"; }
-        td:nth-of-type(4):before { content: "Satuan"; }
-        td:nth-of-type(5):before { content: "Stok Minimum"; }
-        td:nth-of-type(6):before { content: "Foto"; }
-        td:nth-of-type(7):before { content: "Aksi"; }
-
-        .td-action { justify-content: flex-start; }
     }
 </style>
-
-<div class="container">
-    <div class="header">
-        <h4>Daftar Item</h4>
-        <a href="{{ route('item.create') }}" class="create-button">+ Tambah Item</a>
-    </div>
-
-    {{-- Form Filter --}}
-    <form method="GET" action="{{ route('item.index') }}" class="filter-form">
-        <div class="form-group">
-            <label for="search">Cari Barang</label>
-            <input type="text" id="search" name="search" placeholder="Cari nama barang" value="{{ request('search') }}">
-        </div>
-
-        <div class="form-group">
-            <label for="kategori">Kategori</label>
-            <select name="kategori" id="kategori">
-                <option value="">-- Semua Kategori --</option>
-                @foreach($kategoris as $kategori)
-                    <option value="{{ $kategori->id }}" {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
-                        {{ $kategori->kategori }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="form-group" style="flex-direction: row; gap: 10px;">
-            <button type="submit">Filter</button>
-            <a href="{{ route('item.index') }}" class="back-button">Reset</a>
-        </div>
-    </form>
-
-    {{-- Tabel --}}
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Foto</th>
-                    <th>Kode Barang</th>
-                    <th>Nama Barang</th>
-                    <th>Kategori</th>
-                    <th>Satuan</th>
-                    <th>Stok Minimum</th>
-                    <th >Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($items as $item)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>
-                            @if ($item->foto)
-                                <img src="{{ asset('storage/' . $item->foto) }}" 
-                                     alt="Foto {{ $item->nama_barang }}" 
-                                     class="rounded-circle" width="50" height="50" style="object-fit: cover;">
-                            @else
-                                <span class="text-muted fst-italic">(Tidak ada foto)</span>
-                            @endif
-                        </td>
-                        <td>{{ $item->kode_barang }}</td>
-                        <td>{{ $item->nama_barang }}</td>
-                        <td>{{ $item->kategori->kategori }}</td>
-                        <td>{{ $item->satuan->nama_satuan ?? '-' }}</td>
-                        <td>{{ $item->stok_minimum }}</td>
-                        
-                        <td class="text-start">
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="{{ route('item.show', $item->kode_barang) }}" 
-                                class="btn-action" style="background-color: #60a5fa; color: #fff;">Lihat</a>
-                                <a href="{{ route('item.edit', $item->kode_barang) }}" 
-                                class="btn-action" style="background-color: #fbbf24; color: #111;">Edit</a>
-                                <a href="{{ route('barang-masuk.qrshow.kode', $item->kode_barang) }}" 
-                                class="btn-action" style="background-color: #10b981; color: #fff;" target="_blank" title="Lihat QR Code">🌸 QR</a>
-                                {{--<form action="{{ route('item.destroy', $item->kode_barang) }}" 
-                                    method="POST" onsubmit="return confirm('Yakin hapus?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-action" style="background-color: #ef4444; color: #fff;">Hapus</button>
-                                </form>--}}
-                            </div>
-                        </td>
-
-                    </tr>
-                @empty
-                    <tr><td colspan="7" class="text-center">Data belum tersedia.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Pagination --}}
-    <div style="margin-top:20px; text-align:center;">
-        {{ $items->links('pagination::bootstrap-5') }}
-    </div>
-</div>
-
-
-@endsection

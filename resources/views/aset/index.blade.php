@@ -1,304 +1,282 @@
 @extends('layouts.app')
 
-
-
+@push('styles')
+    @include('reports.partials.accordion-style')
+@endpush
 
 @section('content')
-<style>
-    .container-laporan { max-width:1200px;margin:auto;padding:30px 20px;font-family:'Segoe UI',sans-serif; }
-
-    .header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-
-
-
-    /* Filter Form */
-    .filter-form {
-        background-color: #f9fafb;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: flex-end;
-    }
-    .filter-form .form-group {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-width: 180px;
-    }
-    .filter-form label {
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 4px;
-    }
-    .filter-form input,
-    .filter-form select {
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-
-
-
-
-    /* Tombol */
-    .filter-form .action-group {
-        display: flex;
-        flex-direction: row;
-        gap: 10px;
-        flex-shrink: 0;
-    }
-    .filter-form button {
-        padding: 8px 16px;
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-    .filter-form button:hover { background-color: #2563eb; }
-    .back-button {
-        padding: 8px 14px;
-        background-color: #e5e7eb;
-        color: #111827;
-        border-radius: 6px;
-        font-size: 14px;
-        text-decoration: none;
-        transition: background 0.2s ease;
-        text-align: center;
-    }
-    .back-button:hover { background-color: #d1d5db; }
-
-
-
-
-    /* Export */
-    .export-buttons { margin-bottom: 20px; }
-    .export-buttons a {
-        padding: 8px 12px;
-        background-color: #2563eb;
-        color: #fff;
-        border-radius: 6px;
-        margin-right: 10px;
-        text-decoration: none;
-        font-size: 14px;
-    }
-    .export-buttons a:hover { background-color: #1d4ed8; }
-
-
-
-
-    /* Table */
-    .table-wrapper { overflow-x: auto; }
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-        min-width: 800px;
-    }
-    th, td {
-        padding: 12px;
-        background-color: white;
-        text-align: center;
-    }
-    th {
-        background-color: #f3f4f6;
-        font-weight: 600;
-        border-bottom: 1px solid #ddd;
-    }
-    th a { color: inherit; text-decoration: none; }
-    th a:hover { text-decoration: underline; }
-    tr { box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05); border-radius: 8px; }
-    .total-row { background-color: yellow; font-weight: bold; }
-
-
-
-
-    /* Responsif */
-    @media(max-width: 768px) {
-        .filter-form { flex-direction: column; gap: 12px; align-items: stretch; }
-        .filter-form .form-group,
-        .filter-form .action-group { width: 100%; }
-        .filter-form .action-group { flex-direction: column; }
-        .filter-form .action-group .back-button,
-        .filter-form .action-group button { width: 100%; }
-        .container-laporan { padding: 15px 10px; }
-    }
-</style>
-
-
-
-
-<div class="container">
-    <div class="header">
-        <h4>Laporan Total Aset</h4>
-    </div>
- 
-
-
-
-    {{-- Filter --}}
-    <form method="GET" class="filter-form">
-        <div class="form-group">
-            <label>Tanggal Mulai:</label>
-            <input type="date" name="start_date" value="{{ request('start_date') }}">
-        </div>
-        <div class="form-group">
-            <label>Tanggal Selesai:</label>
-            <input type="date" name="end_date" value="{{ request('end_date') }}">
-        </div>
-        <div class="form-group">
-            <label>Lokasi:</label>
-            <select name="lokasi">
-                <option value="">-- Semua Lokasi --</option>
-                @foreach($listLokasi as $lokasi)
-                    <option value="{{ $lokasi }}" {{ request('lokasi') == $lokasi ? 'selected' : '' }}>
-                        {{ $lokasi }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Kondisi:</label>
-            <select name="kondisi">
-                <option value="">-- Semua Kondisi --</option>
-                @foreach($listKondisi as $kondisi)
-                    <option value="{{ $kondisi }}" {{ request('kondisi') == $kondisi ? 'selected' : '' }}>
-                        {{ $kondisi }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Nama Barang:</label>
-            <input type="text" name="nama_barang" placeholder="Nama Barang..." value="{{ request('nama_barang') }}">
-        </div>
-        <div class="action-group">
-            <button type="submit">Terapkan Filter</button>
-            <a href="{{ route('aset.index') }}" class="back-button">Reset Filter</a>
-        </div>
-    </form>
-
-
-
-
-    {{-- Tombol Ekspor --}}
     @php
-        $query = request()->except(['page']);
-        if (request('start_date')) $query['tanggal_mulai'] = request('start_date');
-        if (request('end_date')) $query['tanggal_selesai'] = request('end_date');
+        $items = $grouped ?? $data ?? collect();
+        $totalBatches = $totalBatches ?? ($items instanceof \Illuminate\Pagination\LengthAwarePaginator ? $items->total() : count($items));
+        $sortBy = request('sort_by', 'nama_barang');
+        $sortDir = request('sort_dir', 'asc');
+        $lokasiList = $listLokasi ?? $lokasis ?? [];
+        $isPaginator = $items instanceof \Illuminate\Pagination\LengthAwarePaginator;
+        $role = auth()->user()?->role ?? 'penjual';
+
+        $sortRoute = function (string $col) use ($sortBy, $sortDir) {
+            $nextDir = ($sortBy === $col && $sortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(['sort_by' => $col, 'sort_dir' => $nextDir]);
+        };
     @endphp
 
+    <div class="container report-shell">
+        <!-- Header Ramah Lansia -->
+        <header class="report-header">
+            <div>
+                <h1>💎 Laporan Total Aset Bunga</h1>
+                <p>Nilai kekayaan aset bunga dihitung murni dari sisa stok fisik dikali harga beli riil per nota.</p>
+            </div>
+            @if (Route::has('laporan.arus'))
+                <a href="{{ route('laporan.arus') }}" class="report-back">
+                    <span>⇄</span> Lihat Arus Masuk & Keluar
+                </a>
+            @endif
+        </header>
 
-    <div class="export-buttons">
-        <a href="{{ route('export.aset.pdf', $query) }}" target="_blank">📄 Cetak PDF</a>
-        <a href="{{ route('export.aset.excel', $query) }}">📊 Export Excel</a>
-    </div>
+        <!-- Filter Sederhana -->
+        <form method="GET" class="report-filter" aria-label="Saring data aset bunga">
+            <div class="field">
+                <label for="start_date">📅 Tanggal Mulai</label>
+                <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}">
+            </div>
+            <div class="field">
+                <label for="end_date">📅 Tanggal Selesai</label>
+                <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}">
+            </div>
+            <div class="field">
+                <label for="nama_barang">🌸 Nama Bunga</label>
+                <input type="text" id="nama_barang" name="nama_barang" placeholder="Ketik nama bunga..." value="{{ request('nama_barang') }}">
+            </div>
+            <div class="field">
+                <label for="lokasi">📍 Lokasi Simpan</label>
+                <select id="lokasi" name="lokasi">
+                    <option value="">Semua Lokasi</option>
+                    @foreach ($lokasiList as $lok)
+                        @php
+                            $val = is_array($lok) ? ($lok['id'] ?? $lok['nama_lokasi']) : (is_object($lok) ? ($lok->id ?? $lok->nama_lokasi) : $lok);
+                            $label = is_array($lok) ? ($lok['nama_lokasi'] ?? $val) : (is_object($lok) ? ($lok->nama_lokasi ?? $val) : $lok);
+                        @endphp
+                        <option value="{{ $val }}" @selected((string) request('lokasi') === (string) $val)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+            <input type="hidden" name="sort_dir" value="{{ request('sort_dir') }}">
+            <div class="actions">
+                <button type="submit" class="report-btn">Terapkan Filter</button>
+                <a href="{{ route('laporan.aset') }}" class="report-btn report-btn--soft">Reset Filter</a>
+            </div>
+        </form>
 
+        <!-- Tombol Aksi Export -->
+        <div class="report-exports">
+            @if (Route::has('export.aset.pdf'))
+                <a href="{{ route('export.aset.pdf', request()->query()) }}" target="_blank" class="report-btn report-btn--pdf">📄 Cetak PDF</a>
+            @endif
+            @if (Route::has('export.aset.excel'))
+                <a href="{{ route('export.aset.excel', request()->query()) }}" class="report-btn">📊 Export Excel</a>
+            @endif
+        </div>
 
+        <!-- Banner Ringkasan Raksasa -->
+        <section class="report-cards" aria-label="Ringkasan aset riil">
+            <article class="report-card report-card--omzet">
+                <div class="report-card__label">TOTAL NILAI ASET RIIL <span class="sr-only">Total Nilai Aset Riil</span></div>
+                <div class="report-card__value">Rp {{ number_format($totalAset ?? 0, 0, ',', '.') }}</div>
+                <div class="report-card__sub">Dihitung murni dari sisa stok × harga beli riil per nota</div>
+            </article>
+            <article class="report-card">
+                <div class="report-card__label">JUMLAH JENIS BUNGA</div>
+                <div class="report-card__value" style="color: var(--report-emerald-dark);">
+                    {{ $isPaginator ? $items->total() : count($items) }}
+                </div>
+                <div class="report-card__sub">Jenis tanaman/bunga yang masih memiliki nilai aset</div>
+            </article>
+            <article class="report-card">
+                <div class="report-card__label">NOTA / BATCH AKTIF</div>
+                <div class="report-card__value" style="color: var(--report-amber);">
+                    {{ $totalBatches }}
+                </div>
+                <div class="report-card__sub">Total nota belanja masuk yang stoknya belum habis terjual</div>
+            </article>
+        </section>
 
-
-
-
-    {{-- Tabel --}}
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    @php
-                        $sortBy = request('sort_by');
-                        $columns = [
-                            'nama_barang' => 'Nama Barang',
-                            'lokasi'      => 'Lokasi',
-                            'kondisi'     => 'Kondisi',
-                            'stok_akhir'  => 'Stok Akhir',
-                            'harga_beli'  => 'Harga Beli',
-                            'jumlah_aset' => 'Jumlah Aset',
-                        ];
-                    @endphp
-                    <th>No</th>
-                    @foreach($columns as $key => $label)
+        <!-- Tabel Utama Induk (Accordion) -->
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
                         <th>
-                            <a href="{{ route('aset.index', array_merge(request()->all(), ['sort_by' => $key, 'sort_dir' => ($sortBy === $key && request('sort_dir') === 'asc') ? 'desc' : 'asc'])) }}">
-                                {{ $label }}
-                                @if($sortBy === $key)
-                                    {{ request('sort_dir') === 'asc' ? '↑' : '↓' }}
-                                @else
-                                    ▲▼
-                                @endif
+                            <a href="{{ $sortRoute('nama_barang') }}">
+                                Nama Bunga {!! $sortBy === 'nama_barang' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
                             </a>
                         </th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($grouped as $index => $row)
-                    <tr>
-                        {{-- nomor urut mengikuti halaman --}}
-                        <td>{{ ($grouped->firstItem() ?? 0) + $index }}</td>
-                        <td>{{ $row['nama_barang'] }}</td>
-                        <td>{{ $row['lokasi'] }}</td>
-                        <td>{{ $row['kondisi'] }}</td>
-                        <td>{{ $row['stok_akhir'] }}</td>
-                        <td>Rp {{ number_format($row['harga_beli'], 0, ',', '.') }}</td>
-                        <td>Rp {{ number_format($row['jumlah_aset'], 0, ',', '.') }}</td>
+                        <th>
+                            <a href="{{ $sortRoute('total_stok') }}">
+                                Total Stok Sisa {!! $sortBy === 'total_stok' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ $sortRoute('total_aset') }}">
+                                Total Nilai Aset Riil {!! $sortBy === 'total_aset' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
+                            </a>
+                        </th>
+                        <th style="text-align: center; width: 220px;">Aksi</th>
                     </tr>
-                @endforeach
-                <tr class="total-row">
-                    <td colspan="6" class="text-center">Total Aset</td>
-                    <td>Rp {{ number_format($totalAset, 0, ',', '.') }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse ($items as $group)
+                        @php
+                            $detailId = 'aset-detail-'.$loop->index;
+                            $stokVal = $group['total_stok'] ?? $group['stok_akhir'] ?? 0;
+                            $asetVal = $group['total_aset'] ?? $group['jumlah_aset'] ?? $group['nilai_aset'] ?? 0;
+                            $satuan = $group['satuan'] ?? '';
+                            $batches = $group['batches'] ?? [];
+                        @endphp
+                        <tr class="parent-row">
+                            <td>
+                                <span class="report-name">{{ $group['nama_barang'] ?? '-' }}</span>
+                                <span class="report-meta">
+                                    Kode: {{ $group['kode_barang'] ?? '-' }} · {{ count($batches) ?: ($group['batch_count'] ?? 1) }} nota masuk
+                                    @if (!empty($group['lokasi'])) · Lokasi: {{ $group['lokasi'] }} @endif
+                                </span>
+                            </td>
+                            <td class="report-quantity">
+                                {{ number_format($stokVal, 0, ',', '.') }} {{ $satuan }}
+                            </td>
+                            <td class="report-value">
+                                Rp {{ number_format($asetVal, 0, ',', '.') }}
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="report-toggle" data-report-toggle data-target="{{ $detailId }}" aria-expanded="false" aria-controls="{{ $detailId }}">
+                                    <span class="toggle-label">👁️ Lihat Rincian Nota</span>
+                                </button>
+                            </td>
+                        </tr>
 
-
-
-
-    {{-- Pagination + summary (selalu tampil meski 1 halaman) --}}
-    @if ($grouped instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <div style="margin-top:20px; text-align:center;">
-            <div class="small text-muted">
-                Showing {{ $grouped->firstItem() ?? ($grouped->total() ? 1 : 0) }}
-                to {{ $grouped->lastItem() ?? $grouped->total() }}
-                of {{ $grouped->total() }} results
-            </div>
-            <div class="ms-auto">
-                {!! $grouped->appends(request()->query())->links('pagination::bootstrap-5') !!}
-            </div>
+                        <!-- Sub-Tabel Lipat (Accordion Detail) -->
+                        <tr class="report-detail-row" id="{{ $detailId }}" hidden>
+                            <td colspan="4">
+                                <div class="report-detail-panel">
+                                    <p class="report-detail-title">
+                                        📋 Rincian Nota Belanja Masuk — {{ $group['nama_barang'] }}
+                                    </p>
+                                    <table class="report-detail-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No. Nota / Tanggal</th>
+                                                <th>Sisa Stok Batch</th>
+                                                <th>Harga Beli Riil</th>
+                                                <th>Subtotal Aset</th>
+                                                <th>Pemasok</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($batches as $batch)
+                                                @php
+                                                    $bSisa = $batch['sisa_stok'] ?? $batch['stok_akhir'] ?? 0;
+                                                    $bHarga = $batch['harga_beli'] ?? 0;
+                                                    $bAset = $batch['nilai_aset'] ?? $batch['jumlah_aset'] ?? ($bSisa * $bHarga);
+                                                    $bSatuan = $batch['satuan'] ?? $satuan;
+                                                    $tgl = $batch['tanggal_masuk'] ?? null;
+                                                    $tglStr = $tgl instanceof \Carbon\CarbonInterface ? $tgl->format('d/m/Y') : ($tgl ? date('d/m/Y', strtotime((string)$tgl)) : '-');
+                                                    $notaTitle = !empty($batch['catatan']) ? $batch['catatan'] : $batch['batch_code'];
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <strong style="color: var(--report-emerald-dark); font-size: 1.05rem;">
+                                                            {{ $notaTitle }}
+                                                        </strong>
+                                                        <div class="report-meta">
+                                                            Ref: {{ $batch['batch_code'] }} · Tgl Masuk: {{ $tglStr }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-emerald-dark); font-size: 1.1rem;">
+                                                            {{ number_format($bSisa, 0, ',', '.') }}
+                                                        </strong> {{ $bSatuan }}
+                                                    </td>
+                                                    <td>
+                                                        Rp {{ number_format($bHarga, 0, ',', '.') }}
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: var(--report-slate); font-size: 1.05rem;">
+                                                            Rp {{ number_format($bAset, 0, ',', '.') }}
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: 700; color: #334155;">
+                                                            {{ $batch['pemasok'] ?: 'Pemasok Umum' }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center py-3 text-slate-500">
+                                                        Belum ada rincian nota aktif untuk bunga ini.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <strong>Total Nilai Aset Riil ({{ $group['nama_barang'] }})</strong>
+                                                </td>
+                                                <td colspan="2">
+                                                    <strong style="color: var(--report-emerald-dark); font-size: 1.15rem;">
+                                                        Rp {{ number_format($asetVal, 0, ',', '.') }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="report-empty">
+                                💎 Belum ada aset bunga yang tersedia untuk saringan ini.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    @endif
-</div>
- 
+
+        @if ($isPaginator && $items->hasPages())
+            <div class="report-pagination">
+                <div class="summary">
+                    Menampilkan data bunga ke-{{ $items->firstItem() ?? 0 }} sampai {{ $items->lastItem() ?? 0 }} dari total {{ $items->total() }} jenis
+                </div>
+                {!! $items->appends(request()->query())->links('pagination::bootstrap-5') !!}
+            </div>
+        @endif
+    </div>
 @endsection
 
-
-
-
-@section('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+@push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            flatpickr("input[name='start_date']", {
-                dateFormat: "d/m/Y",
-            });
-            flatpickr("input[name='end_date']", {
-                dateFormat: "d/m/Y",
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-report-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const targetId = button.getAttribute('data-target');
+                    const panel = document.getElementById(targetId);
+                    if (!panel) return;
+
+                    const isOpen = button.getAttribute('aria-expanded') === 'true';
+                    button.setAttribute('aria-expanded', String(!isOpen));
+                    button.classList.toggle('is-open', !isOpen);
+                    panel.hidden = isOpen;
+
+                    const label = button.querySelector('.toggle-label');
+                    if (label) {
+                        label.textContent = isOpen ? '👁️ Lihat Rincian Nota' : '🙈 Tutup Rincian';
+                    }
+                });
             });
         });
     </script>
-@endsection
+@endpush

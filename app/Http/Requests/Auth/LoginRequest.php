@@ -2,13 +2,16 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\User; // ✅ Pastikan model User di-import
+
+ // ✅ Pastikan model User di-import
 
 class LoginRequest extends FormRequest
 {
@@ -23,7 +26,7 @@ class LoginRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * @return array<string, Rule|array|string>
      */
     public function rules(): array
     {
@@ -36,17 +39,17 @@ class LoginRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
         $credentials = $this->only('email', 'password');
-        $user = \App\Models\User::where('email', $this->email)->first();
+        $user = User::where('email', $this->email)->first();
 
         // ⚠️ Jika user tidak ditemukan → tampilkan pesan akun tidak terdaftar
-        if (!$user) {
+        if (! $user) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -55,7 +58,7 @@ class LoginRequest extends FormRequest
         }
 
         // ⚠️ Jika akun ditemukan tapi nonaktif → tampilkan pesan akun nonaktif
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -64,7 +67,7 @@ class LoginRequest extends FormRequest
         }
 
         // ✅ Jika akun ditemukan & aktif → lanjut login
-        if (!Auth::attempt($credentials, $this->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -79,12 +82,10 @@ class LoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
     }
 
-
-
     /**
      * Ensure the login request is not rate limited.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {

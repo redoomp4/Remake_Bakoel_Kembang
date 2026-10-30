@@ -1,6 +1,15 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
+
+$mysqlSslOptions = [];
+
+if (class_exists(Mysql::class) && defined('Pdo\\Mysql::ATTR_SSL_CA')) {
+    $mysqlSslOptions[Mysql::ATTR_SSL_CA] = env('MYSQL_ATTR_SSL_CA');
+} elseif (defined('PDO::MYSQL_ATTR_SSL_CA')) {
+    $mysqlSslOptions[constant('PDO::MYSQL_ATTR_SSL_CA')] = env('MYSQL_ATTR_SSL_CA');
+}
 
 return [
 
@@ -58,9 +67,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => extension_loaded('pdo_mysql') ? array_filter($mysqlSslOptions) : [],
         ],
 
         'pgsql' => [

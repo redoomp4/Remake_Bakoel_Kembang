@@ -3,16 +3,17 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class RoleMiddleware
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @param  Closure(Request): (Response|RedirectResponse)  $next
+     * @return Response|RedirectResponse
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
@@ -23,9 +24,10 @@ class RoleMiddleware
             return $next($request);
         }
 
-        if (!in_array($userRole, $roles)) {
+        if (! in_array($userRole, $roles)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki izin.');
         }
+
         return $next($request);
     }
 }

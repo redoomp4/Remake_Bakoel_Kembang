@@ -3,15 +3,16 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
     /**
      * A list of exception types with their corresponding custom log levels.
      *
-     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     * @var array<class-string<Throwable>, LogLevel::*>
      */
     protected $levels = [
         //
@@ -20,7 +21,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array<int, class-string<\Throwable>>
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -50,11 +51,13 @@ class Handler extends ExceptionHandler
     }
 
     public function render($request, Throwable $e)
-{
-    if ($e instanceof TooManyRequestsHttpException) {
-        $retry = $e->getHeaders()['Retry-After'] ?? 60;
-        return back()->with('error', "Terlalu sering meminta kirim ulang. Coba lagi dalam {$retry} detik.");
+    {
+        if ($e instanceof TooManyRequestsHttpException) {
+            $retry = $e->getHeaders()['Retry-After'] ?? 60;
+
+            return back()->with('error', "Terlalu sering meminta kirim ulang. Coba lagi dalam {$retry} detik.");
+        }
+
+        return parent::render($request, $e);
     }
-    return parent::render($request, $e);
-}
 }

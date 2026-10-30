@@ -26,6 +26,6 @@ class MagicLinkMail extends Mailable
     public function build()
     {
         return $this->subject('Link Login Instan di bakoelkembang.com')
-                    ->view('emails.magic-link');
+            ->view('emails.magic-link');
     }
 }

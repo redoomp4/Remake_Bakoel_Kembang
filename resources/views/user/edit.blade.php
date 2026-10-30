@@ -83,8 +83,7 @@
                 <label class="form-label">Role:</label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                     <option value="superadmin" {{ $user->role == 'superadmin' ? 'selected' : '' }}>Superadmin</option>
-                    <option value="gudang" {{ $user->role == 'gudang' ? 'selected' : '' }}>Gudang</option>
-                    <option value="viewer" {{ $user->role == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                    <option value="penjual" {{ $user->role == 'penjual' ? 'selected' : '' }}>Penjual</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -118,7 +117,7 @@
 
         <div class="mb-3">
             <label class="form-label">Upload Foto (Opsional):</label>
-            <input type="file" name="photo" class="form-control @error('photo') is-invalid @enderror">
+            <input type="file" name="photo" accept="image/*" class="form-control @error('photo') is-invalid @enderror">
             @error('photo')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

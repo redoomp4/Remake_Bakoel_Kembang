@@ -1,158 +1,62 @@
 <?php
 
-
-
-
 namespace App\Http\Controllers;
 
-
-
-
-use Illuminate\Http\Request;
-use App\Models\Item;
-use App\Models\BarangMasuk;
-use App\Models\BarangKeluar;
 use App\Models\Kategori;
 use App\Models\Lokasi;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Str;
+use App\Services\BatchInventoryService;
 use Carbon\Carbon;
-
-
-
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class LaporanController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, BatchInventoryService $inventory)
     {
-        $nama   = $request->nama_barang;
-        $kode   = $request->kode_barang;
-        $lokasi = $request->lokasi;
+        $userId = Auth::id();
+
+        $start = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : now();
+
+        $rows = $inventory->batches($userId, $end)
+            ->filter(fn (array $row) => (int) $row['sisa_stok'] > 0)
+            ->when($start, fn ($rows) => $rows->filter(
+                fn (array $row) => $row['tanggal_masuk'] && $row['tanggal_masuk']->gte($start)
+            ))
+            ->when($request->filled('nama_barang'), fn ($rows) => $rows->filter(
+                fn (array $row) => stripos($row['nama_barang'], (string) $request->nama_barang) !== false
+            ))
+            ->when($request->filled('kode_barang'), fn ($rows) => $rows->filter(
+                fn (array $row) => stripos($row['kode_barang'], (string) $request->kode_barang) !== false
+            ))
+            ->when($request->filled('lokasi'), fn ($rows) => $rows->where('lokasi_id', (int) $request->lokasi))
+            ->values();
+
         $sortBy = $request->sort_by ?? 'nama_barang';
         $sortDir = $request->sort_dir === 'desc' ? 'desc' : 'asc';
-        $userId = auth()->id(); // Ambil ID user yang login
+        $allowedSort = ['batch_code', 'tanggal_masuk', 'kode_barang', 'nama_barang', 'harga_beli', 'jumlah_masuk', 'jumlah_keluar', 'sisa_stok', 'nilai_aset', 'lokasi', 'username'];
 
+        if (! in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'nama_barang';
+        }
 
+        $rows = $rows->sortBy(function (array $row) use ($sortBy) {
+            $value = $row[$sortBy] ?? null;
 
+            if ($value instanceof Carbon) {
+                return $value->timestamp;
+            }
 
-        // Barang Masuk milik user login
-        $barangMasuk = BarangMasuk::with(['item', 'lokasi', 'user'])
-            ->where('user_id', $userId)
-            ->get()
-            ->filter(function ($bm) use ($nama, $kode, $lokasi) {
-                return (!$nama || str_contains(strtolower($bm->item->nama_barang), strtolower($nama)))
-                    && (!$kode || str_contains(strtolower($bm->item->kode_barang), strtolower($kode)))
-                    && (!$lokasi || $bm->lokasi?->id == $lokasi);
-            })
-            ->map(function ($bm) {
-                return collect([
-                    'kode_barang' => $bm->item->kode_barang,
-                    'nama_barang' => $bm->item->nama_barang,
-                    'harga_dasar' => $bm->item->harga_dasar ?? 0,
-                    'lokasi'      => [
-                        'id' => $bm->lokasi->id ?? null,
-                        'nama_lokasi' => $bm->lokasi->nama_lokasi ?? '-',
-                    ],
-                    'kondisi'     => $bm->kondisi ?? 'Baik',
-                    'username'    => $bm->user->username ?? '-',
-                    'jenis'       => 'Masuk',
-                    'jumlah'      => $bm->jumlah,
-                ]);
-            });
-
-
-
-
-        // Barang Keluar milik user login
-        $barangKeluar = BarangKeluar::with(['item', 'lokasi', 'user'])
-            ->where('user_id', $userId)
-            ->get()
-            ->filter(function ($bk) use ($nama, $kode, $lokasi) {
-                return (!$nama || str_contains(strtolower($bk->item->nama_barang), strtolower($nama)))
-                    && (!$kode || str_contains(strtolower($bk->item->kode_barang), strtolower($kode)))
-                    && (!$lokasi || $bk->lokasi?->id == $lokasi);
-            })
-            ->map(function ($bk) {
-                return collect([
-                    'kode_barang' => $bk->item->kode_barang,
-                    'nama_barang' => $bk->item->nama_barang,
-                    'harga_dasar' => $bk->item->harga_dasar ?? 0,
-                    'lokasi'      => [
-                        'id' => $bk->lokasi->id ?? null,
-                        'nama_lokasi' => $bk->lokasi->nama_lokasi ?? '-',
-                    ],
-                    'kondisi'     => $bk->kondisi ?? 'Baik',
-                    'username'    => $bk->user->username ?? '-',
-                    'jenis'       => 'Keluar',
-                    'jumlah'      => $bk->jumlah_keluar,
-                ]);
-            });
-
-
-
-
-        // Gabungkan dan kelompokkan
-        $merged = $barangMasuk->merge($barangKeluar);
-
-
-
-
-        $grouped = $merged->groupBy(function ($row) {
-            return $row['kode_barang'] . '|' . ($row['lokasi']['nama_lokasi'] ?? '-') . '|' . $row['kondisi'] . '|' . $row['username'];
-        });
-
-
-
-
-        // Hitung total stok
-        $collection = $grouped->map(function ($rows) {
-            $rows = collect($rows);
-            return [
-                'kode_barang'  => $rows->first()['kode_barang'],
-                'nama_barang'  => $rows->first()['nama_barang'],
-                'harga_dasar'  => $rows->first()['harga_dasar'],
-                'total_masuk'  => $rows->where('jenis', 'Masuk')->sum('jumlah'),
-                'total_keluar' => $rows->where('jenis', 'Keluar')->sum('jumlah'),
-                'stok_akhir'   => $rows->where('jenis', 'Masuk')->sum('jumlah') - $rows->where('jenis', 'Keluar')->sum('jumlah'),
-                'lokasi'       => $rows->first()['lokasi'],
-                'kondisi'      => $rows->first()['kondisi'],
-                'username'     => $rows->first()['username'],
-            ];
-        });
-
-
-
-
-        // Sorting
-        $collection = $collection->sortBy(function ($item) use ($sortBy) {
-            $value = data_get($item, $sortBy);
-            return is_string($value) ? strtolower($value) : $value;
+            return is_string($value) ? mb_strtolower($value) : $value;
         }, SORT_REGULAR, $sortDir === 'desc')->values();
 
-
-
-
-        // Lokasi unik untuk dropdown filter
-        $lokasiList = $collection->pluck('lokasi')
-            ->unique(fn($lok) => is_array($lok) ? $lok['nama_lokasi'] : $lok)
-            ->values()
-            ->all();
-
-
-
-
-        // Pagination (stok)
         $perPage = 10;
         $page = LengthAwarePaginator::resolveCurrentPage('page');
-        $currentItems = $collection->forPage($page, $perPage);
-
-
-
 
         $paginator = new LengthAwarePaginator(
-            $currentItems,
-            $collection->count(),
+            $rows->forPage($page, $perPage)->values(),
+            $rows->count(),
             $perPage,
             $page,
             [
@@ -161,304 +65,226 @@ class LaporanController extends Controller
             ]
         );
 
-
-
+        $lokasis = $inventory->batches($userId, $end)
+            ->pluck('lokasi_id', 'lokasi')
+            ->map(fn ($id, $name) => ['id' => $id, 'nama_lokasi' => $name])
+            ->values();
 
         return view('laporan.index', [
             'data' => $paginator,
-            'lokasis' => $lokasiList,
+            'lokasis' => $lokasis,
+            'totalAset' => (float) $rows->sum('nilai_aset'),
         ]);
     }
 
-
-
-
-    public function arus(Request $request)
+    public function arus(Request $request, BatchInventoryService $inventory)
     {
-        $start = $request->start_date;
-        $end = $request->end_date;
-        $kategori = $request->kategori;
-        $lokasi = $request->lokasi;
-        $search = $request->search;
-        $userId = auth()->id();
+        $start = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : now();
+        $kategori = $request->filled('kategori') ? (int) $request->kategori : null;
+        $lokasi = $request->filled('lokasi') ? (int) $request->lokasi : null;
+        $search = $request->filled('search') ? mb_strtolower((string) $request->search) : null;
+        $userId = Auth::id();
 
+        $snapshot = $inventory->snapshot($userId, $end);
 
+        $arusMasuk = $snapshot['batches']
+            ->when($start, fn ($rows) => $rows->filter(
+                fn (array $row) => $row['tanggal_masuk'] && $row['tanggal_masuk']->gte($start)
+            ))
+            ->when($kategori, fn ($rows) => $rows->where('kategori_id', $kategori))
+            ->when($lokasi, fn ($rows) => $rows->where('lokasi_id', $lokasi))
+            ->when($search, fn ($rows) => $rows->filter(
+                fn (array $row) => str_contains(mb_strtolower($row['nama_barang']), $search)
+                    || str_contains(mb_strtolower($row['kode_barang']), $search)
+                    || str_contains(mb_strtolower($row['pemasok']), $search)
+            ))
+            ->map(fn (array $row) => [
+                'tanggal' => $row['tanggal_masuk'],
+                'jenis' => 'Masuk',
+                'kode_barang' => $row['kode_barang'],
+                'nama_barang' => $row['nama_barang'],
+                'satuan' => $row['satuan'] ?? '-',
+                'batch_refs' => $row['batch_code'],
+                'harga_beli' => $row['harga_beli'],
+                'harga_jual' => null,
+                'jumlah' => $row['jumlah_masuk'],
+                'omzet' => null,
+                'total_nilai' => (float) ($row['jumlah_masuk'] * $row['harga_beli']),
+                'modal_riil' => null,
+                'laba_riil' => null,
+                'lokasi' => $row['lokasi'],
+                'pihak' => $row['pemasok'],
+                'allocations' => [[
+                    'batch_code' => $row['batch_code'],
+                    'tanggal_masuk' => $row['tanggal_masuk'],
+                    'jumlah' => $row['jumlah_masuk'],
+                    'harga_beli' => $row['harga_beli'],
+                    'subtotal' => (float) ($row['jumlah_masuk'] * $row['harga_beli']),
+                ]],
+            ]);
 
+        $arusKeluar = $snapshot['outgoings']
+            ->when($start, fn ($rows) => $rows->filter(
+                fn (array $row) => $row['tanggal'] && $row['tanggal']->gte($start)
+            ))
+            ->when($kategori, fn ($rows) => $rows->where('kategori_id', $kategori))
+            ->when($lokasi, fn ($rows) => $rows->where('lokasi_id', $lokasi))
+            ->when($search, fn ($rows) => $rows->filter(
+                fn (array $row) => str_contains(mb_strtolower($row['nama_barang']), $search)
+                    || str_contains(mb_strtolower($row['kode_barang']), $search)
+                    || str_contains(mb_strtolower($row['batch_refs']), $search)
+            ))
+            ->map(fn (array $row) => [
+                'tanggal' => $row['tanggal'],
+                'jenis' => 'Keluar',
+                'kode_barang' => $row['kode_barang'],
+                'nama_barang' => $row['nama_barang'],
+                'satuan' => $row['satuan'] ?? '-',
+                'batch_refs' => $row['batch_refs'] ?: '-',
+                'harga_beli' => null,
+                'harga_jual' => $row['harga_jual'],
+                'jumlah' => $row['jumlah_keluar'],
+                'omzet' => $row['omzet'],
+                'total_nilai' => (float) $row['omzet'],
+                'modal_riil' => $row['modal_riil'],
+                'laba_riil' => $row['laba_riil'],
+                'lokasi' => $row['lokasi'],
+                'pihak' => $row['penerima'] ?? '-',
+                'allocations' => $row['allocations'] ?? [],
+            ]);
 
-        // Barang Masuk
-        $arusMasuk = BarangMasuk::with(['item.kategori', 'lokasi'])
-            ->where('user_id', $userId)
-            ->when($start && $end, fn($q) => $q->whereBetween('tanggal_masuk', [$start, $end]))
-            ->get()
-            ->filter(function ($masuk) use ($kategori, $lokasi, $search) {
-                return (!$kategori || $masuk->item->id_kategori == $kategori)
-                    && (!$lokasi || $masuk->id_lokasi == $lokasi)
-                    && (!$search || str_contains(strtolower($masuk->item->nama_barang), strtolower($search))
-                        || str_contains(strtolower($masuk->item->kode_barang), strtolower($search))
-                        || str_contains(strtolower($masuk->pemasok ?? ''), strtolower($search)));
-            })
-            ->map(function ($masuk) {
-                return [
-                    'tanggal' => $masuk->tanggal_masuk,
-                    'jenis' => 'Masuk',
-                    'kode_barang' => $masuk->item->kode_barang,
-                    'nama_barang' => $masuk->item->nama_barang,
-                    'harga_dasar' => $masuk->item->harga_dasar ?? 0,
-                    'jumlah' => $masuk->jumlah,
-                    'lokasi' => $masuk->lokasi->nama_lokasi ?? '-',
-                    'pihak' => $masuk->pemasok ?? '-',
-                ];
-            });
+        $combined = $arusMasuk->merge($arusKeluar)
+            ->sortBy(fn (array $row) => $row['tanggal']?->timestamp ?? 0)
+            ->values();
 
-
-
-
-        // Barang Keluar
-        $arusKeluar = BarangKeluar::with(['item.kategori', 'lokasi'])
-            ->where('user_id', $userId)
-            ->when($start && $end, fn($q) => $q->whereBetween('tanggal_keluar', [$start, $end]))
-            ->get()
-            ->filter(function ($keluar) use ($kategori, $lokasi, $search) {
-                return (!$kategori || $keluar->item->id_kategori == $kategori)
-                    && (!$lokasi || $keluar->id_lokasi == $lokasi)
-                    && (!$search || str_contains(strtolower($keluar->item->nama_barang), strtolower($search))
-                        || str_contains(strtolower($keluar->item->kode_barang), strtolower($search))
-                        || str_contains(strtolower($keluar->penerima ?? ''), strtolower($search)));
-            })
-            ->map(function ($keluar) {
-                return [
-                    'tanggal' => $keluar->tanggal_keluar,
-                    'jenis' => 'Keluar',
-                    'kode_barang' => $keluar->item->kode_barang,
-                    'nama_barang' => $keluar->item->nama_barang,
-                    'harga_dasar' => $keluar->item->harga_dasar ?? 0,
-                    'jumlah' => $keluar->jumlah_keluar,
-                    'lokasi' => $keluar->lokasi->nama_lokasi ?? '-',
-                    'pihak' => $keluar->penerima ?? '-',
-                ];
-            });
-
-
-
-
-        // Gabungkan dan urutkan
-        $combined = $arusMasuk->merge($arusKeluar)->sortBy('tanggal')->values();
-
-
-
-
-        // Hitung stok berjalan
         $stokPerBarang = [];
         $enhanced = collect();
 
-
-
-
         foreach ($combined as $row) {
             $kode = $row['kode_barang'];
-            if (!isset($stokPerBarang[$kode])) $stokPerBarang[$kode] = 0;
 
+            if (! isset($stokPerBarang[$kode])) {
+                $stokPerBarang[$kode] = 0;
+            }
 
-
-
-            $jumlahMasuk  = $row['jenis'] === 'Masuk'  ? $row['jumlah'] : 0;
+            $jumlahMasuk = $row['jenis'] === 'Masuk' ? $row['jumlah'] : 0;
             $jumlahKeluar = $row['jenis'] === 'Keluar' ? $row['jumlah'] : 0;
-
-
-
 
             $stokPerBarang[$kode] += $jumlahMasuk - $jumlahKeluar;
 
-
-
-
             $enhanced->push(array_merge($row, [
-                'jumlah_masuk'  => $jumlahMasuk,
+                'jumlah_masuk' => $jumlahMasuk,
                 'jumlah_keluar' => $jumlahKeluar,
-                'total_barang'  => $stokPerBarang[$kode],
+                'total_barang' => $stokPerBarang[$kode],
             ]));
         }
 
+        $totalOmzet = (float) $enhanced->where('jenis', 'Keluar')->sum('omzet');
+        $totalModal = (float) $enhanced->where('jenis', 'Keluar')->sum('modal_riil');
+        $totalLaba = (float) $enhanced->where('jenis', 'Keluar')->sum('laba_riil');
 
-
-
-        // Sorting manual
         $sortBy = $request->get('sort_by', 'tanggal');
         $sortDir = $request->get('sort_dir', 'asc');
-        $enhanced = $enhanced->sortBy($sortBy, SORT_REGULAR, $sortDir === 'desc')->values();
+        $allowedSort = ['tanggal', 'jenis', 'batch_refs', 'kode_barang', 'nama_barang', 'harga_beli', 'harga_jual', 'jumlah_masuk', 'jumlah_keluar', 'total_barang', 'omzet', 'modal_riil', 'laba_riil', 'lokasi', 'pihak'];
 
+        if (! in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'tanggal';
+        }
 
+        $enhanced = $enhanced->sortBy(function (array $row) use ($sortBy) {
+            $value = $row[$sortBy] ?? null;
 
+            return $value instanceof Carbon ? $value->timestamp : $value;
+        }, SORT_REGULAR, $sortDir === 'desc')->values();
 
-        // Pagination manual (10 per halaman)
-        $perPage = 10; // <-- diset ke 10 agar "Showing 1 to 10 ..."
+        $perPage = 10;
         $page = LengthAwarePaginator::resolveCurrentPage();
-        $currentPageItems = $enhanced->slice(($page - 1) * $perPage, $perPage)->values()->all();
-
-
-
-
         $paginated = new LengthAwarePaginator(
-            $currentPageItems,
+            $enhanced->slice(($page - 1) * $perPage, $perPage)->values()->all(),
             $enhanced->count(),
             $perPage,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-
-
-
-        // Ambil kategori dan lokasi berdasarkan user login
-        $kategoris = Kategori::all();
-
-
-
-
-        $lokasiMasuk = BarangMasuk::where('user_id', $userId)->pluck('id_lokasi')->unique();
-        $lokasiKeluar = BarangKeluar::where('user_id', $userId)->pluck('id_lokasi')->unique();
-        $lokasiIds = $lokasiMasuk->merge($lokasiKeluar)->unique();
-        $lokasis = Lokasi::whereIn('id', $lokasiIds)->get();
-
-
-
+        $kategoris = Kategori::where('user_id', $userId)->orderBy('kategori')->get();
+        $lokasis = Lokasi::whereIn('id', $snapshot['batches']->pluck('lokasi_id')->merge($snapshot['outgoings']->pluck('lokasi_id'))->unique())
+            ->orderBy('nama_lokasi')
+            ->get();
 
         return view('laporan.arus', compact(
             'paginated',
-            'start',
-            'end',
             'kategoris',
             'lokasis',
             'search',
             'kategori',
-            'lokasi'
-        ));
-    }
-
-
-
-
-
-
-public function stokViewer(Request $request)
-{
-    $query = Item::select('items.*')
-        ->addSelect([
-            // total stok masuk (stok_akhir)
-            'stok_akhir' => function ($q) {
-                $q->selectRaw('COALESCE(SUM(jumlah),0)')
-                  ->from('barang_masuks')
-                  ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang');
-            },
-            // username terakhir input barang masuk
-            'username' => function ($q) {
-                $q->selectRaw('COALESCE(users.username, users.name)')
-                  ->from('barang_masuks')
-                  ->join('users', 'users.id', '=', 'barang_masuks.user_id')
-                  ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang')
-                  ->orderBy('barang_masuks.created_at', 'desc')
-                  ->limit(1);
-            },
+            'lokasi',
+            'totalOmzet',
+            'totalModal',
+            'totalLaba'
+        ) + [
+            'start' => $request->start_date,
+            'end' => $request->end_date,
         ]);
-
-
-    // Pencarian: kode / nama / username terakhir (via subquery)
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('items.kode_barang', 'like', "%{$search}%")
-              ->orWhere('items.nama_barang', 'like', "%{$search}%")
-              ->orWhereRaw(
-                  "(SELECT COALESCE(u.username, u.name)
-                      FROM barang_masuks bm
-                      JOIN users u ON u.id = bm.user_id
-                     WHERE bm.kode_barang = items.kode_barang
-                  ORDER BY bm.created_at DESC
-                     LIMIT 1) LIKE ?",
-                  ["%{$search}%"]
-              );
-        });
     }
 
-
-    // Hanya tampilkan item yang pernah ada transaksi masuk (stok_akhir > 0 secara efektif)
-    $query->whereExists(function ($q) {
-        $q->select(DB::raw(1))
-          ->from('barang_masuks')
-          ->whereColumn('barang_masuks.kode_barang', 'items.kode_barang');
-    });
-
-
-    // Sorting aman (izinkan hanya kolom berikut)
-    $allowedSort = ['kode_barang', 'nama_barang', 'stok_akhir', 'username'];
-    $sortBy  = $request->get('sort_by', 'nama_barang');
-    $sortDir = strtolower($request->get('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
-    if (!in_array($sortBy, $allowedSort, true)) {
-        $sortBy = 'nama_barang';
+    public function stokViewer(Request $request, BatchInventoryService $inventory)
+    {
+        return $this->stokSummary($request, $inventory, 'views.index');
     }
 
-
-    // ORDER BY termasuk alias (MySQL mendukung)
-    $query->orderByRaw("{$sortBy} {$sortDir}");
-
-
-    // Pagination + keep query string
-    $data = $query->paginate(10)->appends($request->query());
-
-
-    return view('views.index', compact('data', 'sortBy', 'sortDir'));
-}
-
-
-public function stokAdmin(Request $request)
-{
-    $query = Item::select(
-            'items.nama_barang',
-            'items.kode_barang',
-            DB::raw('COALESCE(SUM(bm.jumlah),0) as stok_akhir'),
-            DB::raw('COALESCE(u.username, u.name) as username')
-        )
-        ->leftJoin('barang_masuks as bm', 'bm.kode_barang', '=', 'items.kode_barang')
-        ->leftJoin('users as u', 'u.id', '=', 'bm.user_id')
-        ->groupBy('items.nama_barang', 'items.kode_barang', 'u.username', 'u.name');
-
-
-    // Filter pencarian
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('items.kode_barang', 'like', "%{$search}%")
-              ->orWhere('items.nama_barang', 'like', "%{$search}%")
-              ->orWhere('u.username', 'like', "%{$search}%")
-              ->orWhere('u.name', 'like', "%{$search}%");
-        });
+    public function stokAdmin(Request $request, BatchInventoryService $inventory)
+    {
+        return $this->stokSummary($request, $inventory, 'views.admin');
     }
 
+    private function stokSummary(Request $request, BatchInventoryService $inventory, string $view)
+    {
+        $search = $request->filled('search') ? mb_strtolower((string) $request->search) : null;
 
-    // Filter lokasi jika ada
-    if ($request->filled('lokasi')) {
-        $query->where('items.lokasi', $request->lokasi);
+        $rows = $inventory->batches(Auth::id())
+            ->groupBy('kode_barang')
+            ->map(function ($batches, $kode) {
+                $latest = $batches->sortByDesc('tanggal_masuk')->first();
+
+                return (object) [
+                    'kode_barang' => $kode,
+                    'nama_barang' => $latest['nama_barang'],
+                    'stok_akhir' => (int) $batches->sum('sisa_stok'),
+                    'username' => $latest['username'],
+                ];
+            })
+            ->filter(fn ($row) => $row->stok_akhir > 0)
+            ->when($search, fn ($rows) => $rows->filter(
+                fn ($row) => str_contains(mb_strtolower($row->kode_barang), $search)
+                    || str_contains(mb_strtolower($row->nama_barang), $search)
+                    || str_contains(mb_strtolower($row->username), $search)
+            ))
+            ->values();
+
+        $allowedSort = ['kode_barang', 'nama_barang', 'stok_akhir', 'username'];
+        $sortBy = $request->get('sort_by', 'nama_barang');
+        $sortDir = strtolower($request->get('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if (! in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'nama_barang';
+        }
+
+        $rows = $rows->sortBy(function ($row) use ($sortBy) {
+            return is_string($row->{$sortBy}) ? mb_strtolower($row->{$sortBy}) : $row->{$sortBy};
+        }, SORT_REGULAR, $sortDir === 'desc')->values();
+
+        $perPage = 10;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $data = new LengthAwarePaginator(
+            $rows->slice(($page - 1) * $perPage, $perPage)->values(),
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        return view($view, compact('data', 'sortBy', 'sortDir'));
     }
-
-
-    // Hanya tampilkan stok > 0
-    $query->having('stok_akhir', '>', 0);
-
-
-    // Sorting
-    $sortBy = $request->sort_by ?? 'items.nama_barang';
-    $sortDir = $request->sort_dir === 'desc' ? 'desc' : 'asc';
-    $query->orderBy($sortBy, $sortDir);
-
-
-    // Pagination
-    $data = $query->paginate(10)->appends($request->query());
-
-
-    return view('views.admin', compact('data', 'sortBy', 'sortDir'));
-}
-
-
-
-
 }

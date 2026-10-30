@@ -1,230 +1,713 @@
 @extends('layouts.app')
 
-
 @section('content')
-<div class="container">
-    <h2>Form Barang Keluar</h2>
+    <style>
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        main>.container {
+            width: 100%;
+            max-width: 1280px !important;
+            min-width: 0;
+            padding: 2rem 1.25rem 3rem;
+            margin: 0 auto;
+        }
 
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .page-header {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        }
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @elseif(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        .page-header .eyebrow {
+            color: #059669;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
 
+        .page-header h1 {
+            margin: .2rem 0 .25rem;
+            color: #0f172a;
+            font-size: 1.75rem;
+            font-weight: 900;
+        }
 
-    <form action="{{ route('barang-keluar.store') }}" method="POST" id="barangKeluarForm">
-        @csrf
+        .page-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: .9rem;
+        }
 
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .7rem 1.25rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: .75rem;
+            color: #475569;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-back:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
 
-        <div class="mb-3">
-            <label for="kode_lokasi_kondisi">Pilih Barang (Kode - Lokasi - Kondisi)</label>
-            <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" class="form-control @error('kode_lokasi_kondisi') is-invalid @enderror" required>
-                <option value="" disabled selected>-- Pilih Barang --</option>
-            </select>
-            @error('kode_lokasi_kondisi') <div class="text-danger">{{ $message }}</div> @enderror
+        /* ============================================================
+           ALERT
+           ============================================================ */
+        .alert-box {
+            padding: .9rem 1rem;
+            border-radius: .9rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .alert-danger-box {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }
+
+        /* ============================================================
+           FORM CARD
+           ============================================================ */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        }
+
+        .form-header {
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+
+        .form-header .icon-box {
+            width: 40px;
+            height: 40px;
+            background: #0B4F35;
+            color: #fff;
+            border-radius: .75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-header h2 {
+            color: #0B4F35;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .form-header p {
+            color: #475569;
+            font-size: .75rem;
+            margin: 0;
+        }
+
+        .form-body {
+            padding: 1.5rem;
+        }
+
+        .form-footer {
+            padding: 1.25rem 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: .75rem;
+        }
+
+        @media (min-width: 640px) {
+            .form-footer {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ============================================================
+           FORM ELEMENTS
+           ============================================================ */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            color: #475569;
+            font-size: .8rem;
+            font-weight: 800;
+            margin-bottom: .5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: .75rem;
+            font-size: .9rem;
+            font-weight: 600;
+            transition: .2s;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: 0;
+            border-color: #0B4F35;
+            box-shadow: 0 0 0 4px rgba(11, 79, 53, .12);
+        }
+
+        .form-control:read-only {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        select.form-control {
+            appearance: auto;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+            font-weight: 400;
+        }
+
+        .form-error {
+            color: #dc2626;
+            font-size: .75rem;
+            font-weight: 700;
+            margin-top: .25rem;
+        }
+
+        .form-warning {
+            color: #dc2626;
+            font-size: .75rem;
+            font-weight: 700;
+            margin-top: .25rem;
+        }
+
+        /* ============================================================
+           GRID
+           ============================================================ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        /* ============================================================
+           TOTAL BOX
+           ============================================================ */
+        .total-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .total-box .label {
+            color: #059669;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .total-box .sub-label {
+            color: #475569;
+            font-size: .7rem;
+            margin-top: .25rem;
+        }
+
+        .total-box .total-amount {
+            color: #0B4F35;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        @media (min-width: 768px) {
+            .total-box .total-amount {
+                font-size: 2rem;
+            }
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .75rem 1.5rem;
+            background: #0B4F35;
+            color: #fff;
+            border: 0;
+            border-radius: .75rem;
+            font-size: .85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .btn-submit:hover:not(:disabled) {
+            background: #065f46;
+            transform: translateY(-1px);
+        }
+        .btn-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .75rem 1.25rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: .75rem;
+            color: #475569;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-cancel:hover {
+            background: #f8fafc;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            main>.container {
+                padding: 1rem .75rem 2rem;
+            }
+            .page-header {
+                padding: 1rem;
+                border-radius: 1rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .page-header h1 {
+                font-size: 1.35rem;
+            }
+            .btn-back {
+                width: 100%;
+                justify-content: center;
+            }
+            .form-header {
+                padding: 1rem;
+                flex-wrap: wrap;
+            }
+            .form-body {
+                padding: 1rem;
+            }
+            .form-footer {
+                padding: 1rem;
+                flex-direction: column;
+            }
+            .btn-submit, .btn-cancel {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main>.container {
+                padding-left: .6rem;
+                padding-right: .6rem;
+            }
+            .page-header h1 {
+                font-size: 1.2rem;
+            }
+            .form-body {
+                padding: .75rem;
+            }
+            .total-box {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <div class="container">
+
+        {{-- HEADER --}}
+        <div class="page-header">
+            <div>
+                <div class="eyebrow">Inventori · Arus Keluar</div>
+                <h1>Tambah Barang Keluar</h1>
+                <p>Catat pengeluaran barang dari inventori.</p>
+            </div>
+            <a href="{{ route('barang-keluar.index') }}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
         </div>
 
+        {{-- ALERT ERROR --}}
+        @if ($errors->any())
+            <div class="alert-box alert-danger-box">
+                <div style="display:flex;align-items:flex-start;gap:.75rem;">
+                    <i class="fas fa-circle-exclamation" style="margin-top:.15rem;"></i>
+                    <div>
+                        <p style="font-weight:800;margin:0 0 .25rem;">Terdapat kesalahan pada form</p>
+                        <ul style="margin:0;padding-left:1.25rem;font-weight:500;list-style:disc;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
 
-        <input type="hidden" name="kode_barang" id="kode_barang">
-        <input type="hidden" name="id_lokasi" id="id_lokasi">
-        <input type="hidden" name="id_kondisi" id="id_kondisi">
+        @if (session('error'))
+            <div class="alert-box alert-danger-box">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span style="font-weight:700;">{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
 
+        {{-- FORM --}}
+        <form method="POST" action="{{ route('barang-keluar.store') }}" onsubmit="return confirmSimpan();" class="form-card">
+            @csrf
 
-        <div class="mb-3">
-            <label>Nama Barang</label>
-            <input type="text" id="nama_barang" class="form-control" readonly>
-        </div>
+            {{-- FORM HEADER --}}
+            <div class="form-header">
+                <div class="icon-box">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div>
+                    <h2>Informasi Barang Keluar</h2>
+                    <p>Pilih barang dan masukkan detail pengeluaran.</p>
+                </div>
+            </div>
 
+            {{-- FORM BODY --}}
+            <div class="form-body">
 
-        <div class="mb-3">
-            <label>Satuan</label>
-            <input type="text" id="satuan" class="form-control" readonly>
-        </div>
+                {{-- BARANG --}}
+                <div class="form-group">
+                    <label for="kode_lokasi_kondisi" class="form-label">Pilih Barang (Cari Bunga)</label>
+                    <select name="kode_lokasi_kondisi" id="kode_lokasi_kondisi" required class="form-control" data-searchable="true">
+                        <option value="" disabled selected>-- Pilih Bunga / Barang --</option>
+                    </select>
+                    @error('kode_lokasi_kondisi')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
 
+                {{-- HIDDEN --}}
+                <input type="hidden" name="id_lokasi" id="id_lokasi">
+                <input type="hidden" name="id_kondisi" id="id_kondisi">
+                <input type="hidden" name="item_id" id="item_id">
 
-        <div class="mb-3">
-            <label for="stok_tersedia">Stok Tersedia</label>
-            <input type="number" class="form-control" id="stok_tersedia" readonly value="0">
-        </div>
+                {{-- INFORMASI BARANG --}}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="nama_barang" class="form-label">Nama Barang</label>
+                        <input type="text" id="nama_barang" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="satuan" class="form-label">Satuan</label>
+                        <input type="text" id="satuan" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="stok_tersedia" class="form-label">Stok Tersedia</label>
+                        <input type="text" id="stok_tersedia" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
+                    </div>
+                </div>
 
+                {{-- JUMLAH + HARGA --}}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="jumlah_keluar" class="form-label">Jumlah Keluar</label>
+                        <input type="number" name="jumlah_keluar" id="jumlah_keluar" min="1"
+                               required placeholder="Contoh: 10" class="form-control">
+                        <p id="jumlah_warning" class="form-warning"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="harga_jual" class="form-label">Harga Jual / Unit</label>
+                        <input type="number" name="harga_jual" id="harga_jual" min="0" step="0.01"
+                               required placeholder="Contoh: 25000" class="form-control">
+                    </div>
+                </div>
 
-        <!-- Harga Rata-Rata otomatis -->
-        <div class="mb-3">
-            <label for="harga_dasar">Harga Rata-Rata (diambil dari Harga Beli)</label>
-            <input type="number" id="harga_dasar" class="form-control" readonly value="0">
-        </div>
+                {{-- TOTAL --}}
+                <div class="form-group">
+                    <div class="total-box">
+                        <div>
+                            <p class="label">Total Nilai Barang</p>
+                            <p class="sub-label">Jumlah × Harga Jual</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="color:#059669;font-size:.7rem;font-weight:800;margin:0;">TOTAL</p>
+                            <p id="total_harga_display" class="total-amount">Rp 0</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="total_harga_jual" name="total_harga_jual" value="0">
+                </div>
 
+                {{-- PENERIMA + JENIS TRANSAKSI --}}
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="penerima" class="form-label">Penerima</label>
+                        <input type="text" name="penerima" id="penerima"
+                               value="{{ old('penerima') }}" required
+                               placeholder="Ketik nama pembeli atau tujuan (misal: Ibu Rina / Pelanggan Toko)" class="form-control">
+                        @error('penerima')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="jenis_transaksi" class="form-label">Jenis Transaksi</label>
+                        <select name="jenis_transaksi" id="jenis_transaksi" required class="form-control select2-tags" data-placeholder="Ketik atau pilih jenis (misal: Eceran / Papan Duka / Event Weddings)">
+                            <option value=""></option>
+                            @php
+                                $selectedJenis = old('jenis_transaksi', 'Penjualan');
+                                $availableJenis = $jenisTransaksis ?? collect(['Penjualan', 'Eceran', 'Grosir', 'Project Bunga Papan', 'Event Wedding', 'Bunga Meja', 'Donasi', 'Pemakaian Internal', 'Pemindahan Barang', 'Retur ke Supplier', 'Penghapusan', 'Lainnya']);
+                            @endphp
+                            @foreach ($availableJenis as $jenis)
+                                <option value="{{ $jenis }}" {{ $selectedJenis == $jenis ? 'selected' : '' }}>
+                                    {{ $jenis }}
+                                </option>
+                            @endforeach
+                            @if ($selectedJenis && !collect($availableJenis)->contains($selectedJenis))
+                                <option value="{{ $selectedJenis }}" selected>{{ $selectedJenis }}</option>
+                            @endif
+                        </select>
+                        @error('jenis_transaksi')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
 
-        <div class="mb-3">
-            <label for="jumlah_keluar">Jumlah Keluar</label>
-            <input type="number" name="jumlah_keluar" id="jumlah_keluar" class="form-control" required>
-            <div id="jumlah_warning" class="text-danger mt-1"></div>
-        </div>
+                {{-- LOKASI TUJUAN --}}
+                <div class="form-group">
+                    <label for="lokasi_tujuan" class="form-label">Lokasi Tujuan</label>
+                    <input type="text" name="lokasi_tujuan" id="lokasi_tujuan"
+                           value="{{ old('lokasi_tujuan') }}" required
+                           placeholder="Contoh: Toko / Meja Kasir / Pelanggan" class="form-control">
+                    @error('lokasi_tujuan')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
 
+                {{-- CATATAN --}}
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="catatan" class="form-label">Catatan</label>
+                    <textarea name="catatan" id="catatan" rows="3" maxlength="255"
+                              placeholder="Contoh: Pesanan buket wisuda / Diberi pita merah" class="form-control">{{ old('catatan') }}</textarea>
+                    @error('catatan')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
 
-        <div class="mb-3">
-            <label for="harga_jual">Harga Jual / Unit</label>
-            <input type="number" name="harga_jual" id="harga_jual" class="form-control" required>
-        </div>
+            </div>
 
+            {{-- FOOTER --}}
+            <div class="form-footer">
+                <a href="{{ route('barang-keluar.index') }}" class="btn-cancel">
+                    <i class="fas fa-xmark"></i> Batal
+                </a>
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    <i class="fas fa-save"></i> Simpan Barang Keluar
+                </button>
+            </div>
 
-        <div class="mb-3">
-            <label for="total_harga">Total Harga Jual</label>
-            <input type="number" class="form-control" id="total_harga" readonly value="0">
-        </div>
+        </form>
 
+    </div>
 
-        <div class="mb-3">
-            <label for="catatan">Catatan</label>
-            <select name="catatan" id="catatan" class="form-control" required>
-                <option value="" disabled selected>-- Pilih Catatan --</option>
-                <option value="Penerimaan Penjualan">Penerimaan Penjualan</option>
-                <option value="Penghapusan">Penghapusan</option>
-                <option value="Retur">Retur</option>
-            </select>
-        </div>
+    {{-- JAVASCRIPT --}}
+    <script>
+        function num(value) {
+            const number = parseFloat(
+                String(value ?? '').replace(/[^\d.-]/g, '')
+            );
+            return isNaN(number) ? 0 : number;
+        }
 
+        function speakField(id) {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.speak(
+                    new SpeechSynthesisUtterance('Masukkan ' + id)
+                );
+            }
+        }
 
-        <div class="mb-3">
-            <label for="penerima">Penerima</label>
-            <input type="text" name="penerima" id="penerima" class="form-control @error('penerima') is-invalid @enderror" required>
-            @error('penerima') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
+        async function loadPilihanBarang() {
+            try {
+                const response = await fetch(
+                    "{{ route('barang-keluar.pilihan-barang') }}"
+                );
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil data barang.');
+                }
+                const data = await response.json();
+                const select = document.getElementById('kode_lokasi_kondisi');
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.dataset.itemId = item.item_id;
+                    option.value = `${item.kode}|${item.lokasi_id}|${item.kondisi_id}`;
+                    option.text = `${item.nama_barang} — Stok: ${item.stok} ${item.satuan}`;
+                    option.dataset.nama = item.nama_barang ?? '';
+                    option.dataset.kode = item.kode ?? '';
+                    option.dataset.lokasi = item.lokasi ?? '';
+                    option.dataset.kondisi = item.kondisi ?? '';
+                    option.dataset.satuan = item.satuan ?? '';
+                    option.dataset.stok = item.stok ?? 0;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error(error);
+                alert('Gagal mengambil daftar barang. Silakan refresh halaman.');
+            }
+        }
 
+        async function fetchDetail(itemId, lokasi, kondisi) {
+            try {
+                const response = await fetch(
+                    `{{ route('barang-keluar.detail-barang') }}?item_id=${encodeURIComponent(itemId)}&id_lokasi=${encodeURIComponent(lokasi)}&id_kondisi=${encodeURIComponent(kondisi)}`
+                );
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil detail barang.');
+                }
+                const data = await response.json();
+                document.getElementById('nama_barang').value = data.nama_barang ?? '';
+                document.getElementById('satuan').value = data.satuan ?? '';
+                document.getElementById('stok_tersedia').value = num(data.stok);
+            } catch (error) {
+                console.error(error);
+            }
+        }
 
-        <div class="mb-3">
-            <label for="lokasi_tujuan">Lokasi Tujuan</label>
-            <input type="text" name="lokasi_tujuan" id="lokasi_tujuan" class="form-control @error('lokasi_tujuan') is-invalid @enderror" required>
-            @error('lokasi_tujuan') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
+        function updateTotal() {
+            const jumlah = num(document.getElementById('jumlah_keluar').value);
+            const harga = num(document.getElementById('harga_jual').value);
+            const stok = num(document.getElementById('stok_tersedia').value);
+            const total = jumlah * harga;
 
+            document.getElementById('total_harga_jual').value = total;
+            document.getElementById('total_harga_display').textContent =
+                'Rp ' + new Intl.NumberFormat('id-ID').format(total);
 
-        <button type="submit" class="btn btn-primary" id="submitBtn">Simpan</button>
-    </form>
-</div>
+            const warning = document.getElementById('jumlah_warning');
+            const submit = document.getElementById('submitBtn');
 
+            if (jumlah > stok) {
+                warning.textContent = `Jumlah melebihi stok tersedia (${stok}).`;
+                submit.disabled = true;
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (jumlah < 1) {
+                warning.textContent = 'Jumlah minimal 1.';
+                submit.disabled = true;
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                warning.textContent = '';
+                submit.disabled = false;
+                submit.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
 
-<script>
-// helper angka
-function num(val){
-  if(val==null) return 0;
-  const n = parseFloat(String(val).replace(/[^\d.-]/g,''));
-  return isNaN(n) ? 0 : n;
-}
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('kode_lokasi_kondisi');
+            const jumlah = document.getElementById('jumlah_keluar');
+            const harga = document.getElementById('harga_jual');
 
+            loadPilihanBarang();
 
-// Ambil harga dari response
-function pickHarga(obj){
-  if(!obj || typeof obj!=='object') return 0;
-  if (obj.harga_dasar  != null) return num(obj.harga_dasar);   // dari API (kita isi = harga_satuan)
-  if (obj.harga        != null) return num(obj.harga);
-  if (obj.harga_satuan != null) return num(obj.harga_satuan);   // fallback ekstra
-  if (obj.item && obj.item.harga_dasar != null) return num(obj.item.harga_dasar);
-  return 0;
-}
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                $('.select2-tags').each(function() {
+                    const ph = $(this).data('placeholder') || 'Ketik atau pilih...';
+                    $(this).select2({
+                        tags: true,
+                        placeholder: ph,
+                        width: '100%',
+                        allowClear: false
+                    });
+                });
+            }
 
+            select.addEventListener('change', async function() {
+                const [kode, lokasi, kondisi] = this.value.split('|');
+                const option = this.options[this.selectedIndex];
+                document.getElementById('item_id').value = option.dataset.itemId;
+                document.getElementById('id_lokasi').value = lokasi;
+                document.getElementById('id_kondisi').value = kondisi;
+                document.getElementById('nama_barang').value = option.dataset.nama ?? '';
+                document.getElementById('satuan').value = option.dataset.satuan ?? '';
+                document.getElementById('stok_tersedia').value = num(option.dataset.stok);
+                await fetchDetail(option.dataset.itemId, lokasi, kondisi);
+                updateTotal();
+            });
 
-// load opsi dropdown
-async function loadPilihanBarang() {
-  const res = await fetch("{{ route('barang-keluar.pilihan-barang') }}");
-  const data = await res.json();
-  const select = document.getElementById("kode_lokasi_kondisi");
-  data.forEach(item => {
-    const opt = document.createElement("option");
-    opt.value = `${item.kode}|${item.lokasi_id}|${item.kondisi_id}`;
-    opt.text  = `${item.kode} - ${item.nama_barang} - ${item.lokasi} - ${item.kondisi}`;
-    if (item.nama_barang) opt.dataset.nama = item.nama_barang;
-    if (item.satuan)      opt.dataset.satuan = item.satuan;
-    if (item.stok!=null)  opt.dataset.stok = item.stok;
-    const harga = pickHarga(item);
-    if (item.harga_dasar!==undefined || item.harga!==undefined || item.harga_satuan!==undefined) {
-      opt.dataset.harga = harga; // simpan meski 0
-    }
-    select.appendChild(opt);
-  });
-}
+            jumlah.addEventListener('input', updateTotal);
+            harga.addEventListener('input', updateTotal);
+            updateTotal();
+        });
 
-
-// ambil detail untuk isi stok/harga dst
-async function fetchDetail(kode,lokasi,kondisi){
-  const DETAIL_URL = "{{ route('barang-keluar.detail-barang') }}";
-  const url = `${DETAIL_URL}?kode_barang=${encodeURIComponent(kode)}&id_lokasi=${encodeURIComponent(lokasi)}&id_kondisi=${encodeURIComponent(kondisi)}`;
-  const res = await fetch(url);
-  const data = await res.json();
-
-
-  document.getElementById('nama_barang').value   = data.nama_barang ?? document.getElementById('nama_barang').value;
-  document.getElementById('satuan').value        = data.satuan ?? document.getElementById('satuan').value;
-  document.getElementById('stok_tersedia').value = num(data.stok ?? document.getElementById('stok_tersedia').value);
-  document.getElementById('harga_dasar').value   = pickHarga(data);
-}
-
-
-document.addEventListener('DOMContentLoaded', function () {
-  const select        = document.getElementById('kode_lokasi_kondisi');
-  const jumlahKeluar  = document.getElementById('jumlah_keluar');
-  const hargaJual     = document.getElementById('harga_jual');
-  const totalHarga    = document.getElementById('total_harga');
-  const submitBtn     = document.getElementById('submitBtn');
-
-
-  // setelah opsi dimuat, trigger sekali supaya field keisi
-  loadPilihanBarang().then(() => {
-    if (select.value) select.dispatchEvent(new Event('change'));
-  });
-
-
-  async function onSelectChange(){
-    const val = select.value; if(!val) return;
-    const [kode,lokasi,kondisi] = val.split('|');
-
-
-    document.getElementById('kode_barang').value = kode;
-    document.getElementById('id_lokasi').value   = lokasi;
-    document.getElementById('id_kondisi').value  = kondisi;
-
-
-    const opt = select.options[select.selectedIndex];
-    if (opt){
-      if (opt.dataset.nama)   document.getElementById('nama_barang').value = opt.dataset.nama;
-      if (opt.dataset.satuan) document.getElementById('satuan').value      = opt.dataset.satuan;
-      if (opt.dataset.stok!=null) document.getElementById('stok_tersedia').value = num(opt.dataset.stok);
-      if (opt.dataset.harga !== undefined) document.getElementById('harga_dasar').value = num(opt.dataset.harga);
-    }
-
-
-    await fetchDetail(kode,lokasi,kondisi);
-    updateTotal();
-  }
-  select.addEventListener('change', onSelectChange);
-
-
-  function updateTotal(){
-    totalHarga.value = num(jumlahKeluar.value) * num(hargaJual.value);
-  }
-
-
-  jumlahKeluar.addEventListener('input', function(){
-    const jumlahStr = this.value;
-    const jumlah = num(jumlahStr);
-    const stok   = num(document.getElementById('stok_tersedia').value);
-    const warning = document.getElementById('jumlah_warning');
-
-
-    if (!/^\d+$/.test(jumlahStr)) { warning.textContent="Jumlah harus bilangan bulat positif."; submitBtn.disabled=true; }
-    else if (jumlah < 1)          { warning.textContent="Jumlah tidak boleh kurang dari 1.";   submitBtn.disabled=true; }
-    else if (jumlah > stok)       { warning.textContent=`Jumlah melebihi stok (${stok}).`;     submitBtn.disabled=true; }
-    else                          { warning.textContent="";                                    submitBtn.disabled=false; }
-    updateTotal();
-  });
-
-
-  hargaJual.addEventListener('input', function(){
-    const harga = num(this.value);
-    submitBtn.disabled = (harga < 0 || isNaN(harga));
-    updateTotal();
-  });
-});
-</script>
+        function confirmSimpan() {
+            const jumlah = num(document.getElementById('jumlah_keluar').value);
+            const stok = num(document.getElementById('stok_tersedia').value);
+            if (jumlah > stok) {
+                alert(`Jumlah keluar melebihi stok tersedia. Sisa stok: ${stok}`);
+                return false;
+            }
+            return confirm('Apakah Anda yakin ingin menyimpan transaksi barang keluar ini?');
+        }
+    </script>
 @endsection

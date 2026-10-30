@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pemasok;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
 
 class PemasokController extends Controller
 {
@@ -20,12 +20,12 @@ class PemasokController extends Controller
             // group kondisi pencarian agar tidak "bocor" dari filter user_id
             $query->where(function ($q) use ($search) {
                 $q->where('nama_pemasok', 'like', "%{$search}%")
-                  ->orWhere('alamat', 'like', "%{$search}%")
-                  ->orWhere('no_telepon', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('jenis', 'like', "%{$search}%")
-                  ->orWhere('nama_pic', 'like', "%{$search}%")
-                  ->orWhere('bergabung_sejak', 'like', "%{$search}%");
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('no_telepon', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('jenis', 'like', "%{$search}%")
+                    ->orWhere('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('bergabung_sejak', 'like', "%{$search}%");
             });
         }
 
@@ -44,42 +44,47 @@ class PemasokController extends Controller
     public function store(Request $request)
     {
         // normalisasi ringan
-        $nama   = trim((string) $request->input('nama_pemasok'));
-        $email  = $request->input('email');
+        $nama = trim((string) $request->input('nama_pemasok'));
+        $email = $request->input('email');
 
         $request->validate([
             'nama_pemasok' => [
-                'required','string','max:255',
-                Rule::unique('pemasoks','nama_pemasok')
-                    ->where(fn($q)=>$q->where('user_id', Auth::id())),
+                'required', 'string', 'max:150',
+                Rule::unique('pemasoks', 'nama_pemasok')
+                    ->where(fn ($q) => $q->where('user_id', Auth::id())),
             ],
             'email' => [
-                'nullable','email','max:191',
+                'nullable', 'email', 'max:191',
                 // opsional: jaga unik email per user jika migrasi menambahkan unique gabungan (user_id,email)
-                Rule::unique('pemasoks','email')
-                    ->where(fn($q)=>$q->where('user_id', Auth::id())),
+                Rule::unique('pemasoks', 'email')
+                    ->where(fn ($q) => $q->where('user_id', Auth::id())),
             ],
-            'no_telepon'      => ['nullable','string','max:20'],
-            'alamat'          => ['nullable','string'],
-            'jenis'           => ['nullable','string','max:50'],
-            'bergabung_sejak' => ['nullable','date'],
-            'nama_pic'        => ['nullable','string','max:255'],
+            'no_telepon' => ['nullable', 'string', 'max:50'],
+            'alamat' => ['nullable', 'string', 'max:255'],
+            'jenis' => ['nullable', 'string', 'max:50'],
+            'bergabung_sejak' => ['nullable', 'date'],
+            'nama_pic' => ['nullable', 'string', 'max:120'],
         ], [
-            'nama_pemasok.required' => 'Nama pemasok wajib diisi.',
-            'nama_pemasok.unique'   => 'Nama pemasok ini sudah ada.',
-            'email.email'           => 'Format email tidak valid.',
+            'nama_pemasok.required' => 'Nama pemasok wajib diisi ya Bu/Pak.',
+            'nama_pemasok.max' => 'Nama pemasok terlalu panjang, maksimal 150 karakter ya Bu/Pak.',
+            'nama_pemasok.unique' => 'Nama pemasok ini sudah ada. Silakan pakai nama lain ya Bu/Pak.',
+            'email.email' => 'Format email belum benar. Contoh: nama@email.com.',
+            'email.max' => 'Email terlalu panjang, maksimal 191 karakter.',
+            'no_telepon.max' => 'Nomor telepon terlalu panjang, maksimal 50 karakter.',
+            'nama_pic.max' => 'Nama PIC terlalu panjang, maksimal 120 karakter.',
+            'alamat.max' => 'Alamat terlalu panjang, maksimal 255 karakter.',
         ]);
 
         try {
             Pemasok::create([
-                'user_id'        => Auth::id(),
-                'nama_pemasok'   => $nama,
-                'email'          => $email,
-                'no_telepon'     => $request->input('no_telepon'),
-                'alamat'         => $request->input('alamat'),
-                'jenis'          => $request->input('jenis'),
-                'bergabung_sejak'=> $request->input('bergabung_sejak'),
-                'nama_pic'       => $request->input('nama_pic'),
+                'user_id' => Auth::id(),
+                'nama_pemasok' => $nama,
+                'email' => $email,
+                'no_telepon' => $request->input('no_telepon'),
+                'alamat' => $request->input('alamat'),
+                'jenis' => $request->input('jenis'),
+                'bergabung_sejak' => $request->input('bergabung_sejak'),
+                'nama_pic' => $request->input('nama_pic'),
             ]);
 
             return redirect()->route('pemasok.index')
@@ -92,6 +97,7 @@ class PemasokController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama/email pemasok ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         } catch (\Throwable $e) {
@@ -118,42 +124,47 @@ class PemasokController extends Controller
                 ->with('error', 'Anda tidak berhak mengedit data ini.');
         }
 
-        $nama  = trim((string) $request->input('nama_pemasok'));
+        $nama = trim((string) $request->input('nama_pemasok'));
         $email = $request->input('email');
 
         $request->validate([
             'nama_pemasok' => [
-                'required','string','max:255',
-                Rule::unique('pemasoks','nama_pemasok')
-                    ->where(fn($q)=>$q->where('user_id', Auth::id()))
+                'required', 'string', 'max:150',
+                Rule::unique('pemasoks', 'nama_pemasok')
+                    ->where(fn ($q) => $q->where('user_id', Auth::id()))
                     ->ignore($pemasok->id),
             ],
             'email' => [
-                'nullable','email','max:191',
-                Rule::unique('pemasoks','email')
-                    ->where(fn($q)=>$q->where('user_id', Auth::id()))
+                'nullable', 'email', 'max:191',
+                Rule::unique('pemasoks', 'email')
+                    ->where(fn ($q) => $q->where('user_id', Auth::id()))
                     ->ignore($pemasok->id),
             ],
-            'no_telepon'      => ['nullable','string','max:20'],
-            'alamat'          => ['nullable','string'],
-            'jenis'           => ['nullable','string','max:50'],
-            'bergabung_sejak' => ['nullable','date'],
-            'nama_pic'        => ['nullable','string','max:255'],
+            'no_telepon' => ['nullable', 'string', 'max:50'],
+            'alamat' => ['nullable', 'string', 'max:255'],
+            'jenis' => ['nullable', 'string', 'max:50'],
+            'bergabung_sejak' => ['nullable', 'date'],
+            'nama_pic' => ['nullable', 'string', 'max:120'],
         ], [
-            'nama_pemasok.required' => 'Nama pemasok wajib diisi.',
-            'nama_pemasok.unique'   => 'Nama pemasok ini sudah ada.',
-            'email.email'           => 'Format email tidak valid.',
+            'nama_pemasok.required' => 'Nama pemasok wajib diisi ya Bu/Pak.',
+            'nama_pemasok.max' => 'Nama pemasok terlalu panjang, maksimal 150 karakter ya Bu/Pak.',
+            'nama_pemasok.unique' => 'Nama pemasok ini sudah ada. Silakan pakai nama lain ya Bu/Pak.',
+            'email.email' => 'Format email belum benar. Contoh: nama@email.com.',
+            'email.max' => 'Email terlalu panjang, maksimal 191 karakter.',
+            'no_telepon.max' => 'Nomor telepon terlalu panjang, maksimal 50 karakter.',
+            'nama_pic.max' => 'Nama PIC terlalu panjang, maksimal 120 karakter.',
+            'alamat.max' => 'Alamat terlalu panjang, maksimal 255 karakter.',
         ]);
 
         try {
             $pemasok->update([
-                'nama_pemasok'    => $nama,
-                'email'           => $email,
-                'no_telepon'      => $request->input('no_telepon'),
-                'alamat'          => $request->input('alamat'),
-                'jenis'           => $request->input('jenis'),
+                'nama_pemasok' => $nama,
+                'email' => $email,
+                'no_telepon' => $request->input('no_telepon'),
+                'alamat' => $request->input('alamat'),
+                'jenis' => $request->input('jenis'),
                 'bergabung_sejak' => $request->input('bergabung_sejak'),
-                'nama_pic'        => $request->input('nama_pic'),
+                'nama_pic' => $request->input('nama_pic'),
             ]);
 
             return redirect()->route('pemasok.index')
@@ -165,6 +176,7 @@ class PemasokController extends Controller
                 return back()->withInput()
                     ->with('error', 'Nama/email pemasok ini sudah ada.');
             }
+
             return back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat memperbarui data.');
         } catch (\Throwable $e) {
@@ -193,11 +205,12 @@ class PemasokController extends Controller
         } catch (QueryException $e) {
             // FK violation (MySQL 1451 / SQLSTATE 23000 / Postgres 23503)
             $mysqlCode = $e->errorInfo[1] ?? null; // 1451
-            $sqlState  = $e->errorInfo[0] ?? null; // 23000
-            $pgCode    = $e->getCode();           // 23503
+            $sqlState = $e->errorInfo[0] ?? null; // 23000
+            $pgCode = $e->getCode();           // 23503
             if ($sqlState === '23000' || $mysqlCode == 1451 || $pgCode == '23503') {
                 return back()->with('error', 'Tidak dapat menghapus data karena sudah digunakan untuk pencatatan barang masuk/keluar.');
             }
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         } catch (\Throwable $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');

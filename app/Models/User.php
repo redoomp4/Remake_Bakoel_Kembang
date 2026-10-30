@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomVerifyEmailNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,10 +20,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name', 'username', 'email', 'password',
-        'role', 'position', 'phone', 'status', 'photo', 'note', 'is_active', 'last_login'
+        'role', 'position', 'phone', 'status', 'photo', 'note', 'is_active', 'last_login',
     ];
-
-    
 
     /**
      * The attributes that should be hidden for serialization.
@@ -36,23 +35,24 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
-        'last_login' => 'datetime', 
+        'last_login' => 'datetime',
     ];
 
     public function barangMasuk()
     {
-        return $this->hasMany(\App\Models\BarangMasuk::class);
+        return $this->hasMany(BarangMasuk::class);
     }
 
     public function barangKeluar()
     {
-        return $this->hasMany(\App\Models\BarangKeluar::class);
+        return $this->hasMany(BarangKeluar::class);
     }
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Kirim notifikasi verifikasi email khusus dengan template HTML ramah anti-spam.
      */
-    
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new CustomVerifyEmailNotification);
+    }
 }

@@ -18,6 +18,7 @@ class NotDisposableEmail implements Rule
     public function passes($attribute, $value): bool
     {
         $domain = Str::of($value)->after('@')->lower()->toString();
+
         return ! in_array($domain, $this->blocked, true);
     }
 

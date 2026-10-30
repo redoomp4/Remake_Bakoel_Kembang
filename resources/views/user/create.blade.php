@@ -83,8 +83,7 @@
                 <select name="role" class="form-select @error('role') is-invalid @enderror">
                     <option value="">-- Pilih Role --</option>
                     <option value="superadmin" {{ old('role') == 'superadmin' ? 'selected' : '' }}>Superadmin</option>
-                    <option value="gudang" {{ old('role') == 'gudang' ? 'selected' : '' }}>Gudang</option>
-                    <option value="viewer" {{ old('role') == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                    <option value="penjual" {{ old('role') == 'penjual' ? 'selected' : '' }}>Penjual</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -128,7 +127,7 @@
 
         <div class="mb-3">
             <label class="form-label">Foto:</label>
-            <input type="file" name="photo" class="form-control @error('photo') is-invalid @enderror">
+            <input type="file" name="photo" accept="image/*" class="form-control @error('photo') is-invalid @enderror">
             @error('photo')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

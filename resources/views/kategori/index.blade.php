@@ -1,289 +1,456 @@
 @extends('layouts.app')
 
 @section('content')
-<style>
-    .container-laporan {
-        max-width: 1200px;
-        margin: auto;
-        padding: 30px 20px;
-        font-family: 'Segoe UI', sans-serif;
-    }
-
-    .header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .back-button, .btn-secondary {
-        padding: 8px 14px;
-        background-color: #e5e7eb;
-        color: #111827;
-        border-radius: 6px;
-        font-size: 14px;
-        text-decoration: none;
-        transition: background 0.2s ease;
-        border: none;
-        outline: none;
-    }
-    .back-button:hover, .btn-secondary:hover {
-        background-color: #d1d5db;
-    }
-
-    form.filter-form {
-        background-color: #f9fafb;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: flex-end;
-    }
-    .filter-form .form-group {
-        display: flex;
-        flex-direction: column;
-        min-width: 200px;
-    }
-    .filter-form input {
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-    .filter-form button {
-        height: 38px;
-        padding: 0 16px;
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-    .filter-form button:hover {
-        background-color: #2563eb;
-    }
-
-    /* Table */
-    .table-wrapper {
-        width: 100%;
-        overflow-x: auto;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-    }
-    th, td {
-        padding: 10px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-        vertical-align: middle;
-    }
-    th {
-        background-color: #f3f4f6;
-        font-weight: 600;
-    }
-
-    /* Tombol Aksi */
-    .td-action {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: nowrap;
-    }
-    .td-action form {
-        display: inline;
-    }
-    .btn-action {
-        padding: 6px 10px;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-    }
-    .btn-edit { background-color: #facc15; color: #1f2937; }
-    .btn-delete { background-color: #ef4444; color: white; }
-    .btn-edit:hover { background-color: #eab308; }
-    .btn-delete:hover { background-color: #dc2626; }
-    /* Default tombol aksi */
-    .action-buttons {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap; /* ✅ biar kalau sempit turun baris */
-    }
-
-    /* Mobile */
-    @media(max-width: 768px) {
-        .action-buttons {
-            justify-content: flex-start; /* ✅ geser ke kiri */
-            flex-wrap: nowrap;           /* ✅ biar tetap sejajar */
-            overflow-x: auto;            /* ✅ kalau kepanjangan bisa di-scroll horizontal */
+    <style>
+        /* ============================================================
+           ROOT VARIABLES
+           ============================================================ */
+        :root {
+            --emerald: #0B4F35;
+            --emerald-dark: #065f46;
+            --border: #e2e8f0;
+            --offwhite: #f8fafc;
         }
 
-        .action-buttons a,
-        .action-buttons button {
-            flex-shrink: 0; /* ✅ biar tidak kepotong */
+        /* ============================================================
+           CONTAINER
+           ============================================================ */
+        main>.container {
+            width: 100%;
+            max-width: 1280px !important;
+            min-width: 0;
+            padding: 2rem 1.25rem 3rem;
+            margin: 0 auto;
         }
-    }
 
-    /* Mobile Responsive */
-    @media(max-width: 768px) {
-        .header { 
-            flex-direction: column; 
-            align-items: flex-start; 
-        }
-        .filter-form { 
-            flex-direction: column; 
-        }
-        .filter-form .form-group { 
-            width: 100%; 
-        }
-        .filter-form button, .btn-secondary { 
-            width: 100%; 
-        }
-            /* Table jadi Card View */
-    table, thead, tbody, th, td, tr {
-        display: block;
-        width: 100%;
-    }
-    thead { 
-        display: none; 
-    }
-
-    tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 12px;
-        background-color: #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-    }
-
-    td {
-        border: none !important;
-        text-align: left;
-        padding: 8px 12px 8px 45%; /* ✅ kasih ruang lebih */
-        position: relative;
-        word-wrap: break-word;     /* ✅ biar isi text turun ke bawah kalau panjang */
-        white-space: normal;       /* ✅ teks bisa wrap */
-    }
-
-    td:before {
-        position: absolute;
-        top: 8px;
-        left: 12px;
-        width: 40%;                /* ✅ label lebih lebar */
-        font-weight: bold;
-        color: #333;
-        white-space: normal;       /* ✅ biar label juga bisa turun ke bawah */
-    }
-        td:nth-of-type(1):before { content: "No"; }
-        td:nth-of-type(2):before { content: "Kategori"; }
-        td:nth-of-type(3):before { content: "Deskripsi"; }
-        td:nth-of-type(4):before { content: "Created At"; }
-        td:nth-of-type(5):before { content: "Updated At"; }
-        td:nth-of-type(6):before { content: "Aksi"; }
-
-        /* Tombol Aksi tetap sejajar di mobile */
-        .td-action {
-            flex-direction: row;
-            justify-content: flex-start; /* geser ke kiri */
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .page-header {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
         }
 
-        .td-action a,
-        .td-action button {
-            width: auto;
+        .page-header .eyebrow {
+            color: #059669;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
         }
-    }
-</style>
 
-<div class="container">
-    <div class="header">
-        <h4>Daftar Kategori</h4>
-        <a href="{{ route('kategori.create') }}" class="btn btn-primary">+ Tambah Kategori</a>
-    </div>
+        .page-header h1 {
+            margin: .2rem 0 .25rem;
+            color: #0f172a;
+            font-size: 1.75rem;
+            font-weight: 900;
+        }
 
-    {{-- Flash Message --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger">{{ $errors->first() }}</div>
-    @endif
+        .page-header p {
+            margin: 0;
+            color: #64748b;
+            font-size: .9rem;
+        }
 
-    {{-- Filter --}}
-    <form method="GET" action="{{ route('kategori.index') }}" class="filter-form">
-        <div class="form-group">
-            <label for="search">Cari:</label>
-            <input type="text" name="search" id="search" placeholder="Cari nama kategori, deskripsi" value="{{ request('search') }}">
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            padding: .75rem 1rem;
+            background: var(--emerald);
+            color: #fff;
+            border-radius: .75rem;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: .2s;
+        }
+        .btn-add:hover {
+            background: var(--emerald-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-filter, .btn-reset {
+            display: inline-flex;
+            align-items: center;
+            padding: .75rem 1rem;
+            border-radius: .75rem;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-filter {
+            background: var(--emerald);
+            color: #fff;
+            border: 1px solid var(--emerald);
+            cursor: pointer;
+        }
+        .btn-filter:hover {
+            background: var(--emerald-dark);
+            border-color: var(--emerald-dark);
+            transform: translateY(-1px);
+        }
+        .btn-reset {
+            background: #fff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-reset:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .btn-empty {
+            display: inline-flex;
+            align-items: center;
+            padding: .7rem 1rem;
+            background: var(--emerald);
+            color: #fff;
+            border-radius: .75rem;
+            font-size: .85rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s;
+        }
+        .btn-empty:hover {
+            background: var(--emerald-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* ============================================================
+           ALERT
+           ============================================================ */
+        .alert-box {
+            padding: .9rem 1rem;
+            border-radius: .9rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .alert-success-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+        .alert-danger-box {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }
+
+        /* ============================================================
+           CARD
+           ============================================================ */
+        .data-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+        }
+
+        /* ============================================================
+           FILTER
+           ============================================================ */
+        .filter-wrapper {
+            background: #f8fafc;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: .75rem;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 300px;
+            min-width: 0;
+        }
+        .filter-group label {
+            color: #64748b;
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: .4rem;
+        }
+        .filter-group input {
+            padding: .75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: .75rem;
+            font-size: .9rem;
+        }
+        .filter-group input:focus {
+            outline: 0;
+            border-color: var(--emerald);
+            box-shadow: 0 0 0 4px rgba(11, 79, 53, .12);
+        }
+        .filter-actions {
+            display: flex;
+            gap: .65rem;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table-responsive table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table-responsive th {
+            padding: .9rem .75rem;
+            background: #f8fafc;
+            color: #64748b;
+            border-bottom: 1px solid var(--border);
+            font-size: .7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            white-space: nowrap;
+        }
+        .table-responsive th:first-child { padding-left: 1.25rem; }
+        .table-responsive th:last-child { padding-right: 1.25rem; }
+        .table-responsive td {
+            padding: .9rem .75rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: .85rem;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+        .table-responsive td:first-child { padding-left: 1.25rem; }
+        .table-responsive td:last-child { padding-right: 1.25rem; }
+        .table-responsive tbody tr:hover td { background: #f8fafc; }
+
+        /* ============================================================
+           BADGE
+           ============================================================ */
+        .badge-kategori {
+            display: inline-flex;
+            padding: .45rem .8rem;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        /* ============================================================
+           ACTION BUTTONS
+           ============================================================ */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+        }
+        .action-edit, .action-delete {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: .65rem;
+            font-size: .8rem;
+            transition: .2s;
+        }
+        .action-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .action-edit:hover {
+            background: #fde68a;
+            color: #78350f;
+            transform: translateY(-1px);
+        }
+        .action-delete {
+            background: #ffe4e6;
+            color: #e11d48;
+            cursor: pointer;
+        }
+        .action-delete:hover {
+            background: #fecdd3;
+            color: #be123c;
+            transform: translateY(-1px);
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            padding: 4rem 1.5rem !important;
+            text-align: center;
+        }
+        .empty-state i { color: #94a3b8; margin-bottom: 1rem; }
+        .empty-state h5 { color: #0f172a; font-weight: 900; margin-bottom: .4rem; }
+        .empty-state p { color: #64748b; font-size: .85rem; margin-bottom: 1rem; }
+
+        /* ============================================================
+           PAGINATION
+           ============================================================ */
+        .pagination-wrapper {
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1023px) {
+            main>.container { padding: 1.5rem 1rem 2.5rem; }
+            .filter-group { flex: 1 1 260px; }
+        }
+
+        @media (max-width: 768px) {
+            main>.container { padding: 1rem .75rem 2rem; }
+            .page-header {
+                padding: 1rem;
+                border-radius: 1rem;
+                align-items: flex-start;
+            }
+            .page-header h1 { font-size: 1.35rem; }
+            .btn-add { width: 100%; justify-content: center; }
+            .filter-form { flex-direction: column; align-items: stretch; }
+            .filter-group { width: 100%; flex: none; }
+            .filter-actions { width: 100%; flex-direction: column; }
+            .btn-filter, .btn-reset { width: 100%; justify-content: center; }
+            .table-responsive table { min-width: 900px; }
+            .pagination-wrapper { padding: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            main>.container { padding-left: .6rem; padding-right: .6rem; }
+            .page-header h1 { font-size: 1.2rem; }
+            .filter-group input { padding: .7rem .85rem; font-size: .85rem; }
+        }
+    </style>
+
+    <div class="container">
+
+        {{-- HEADER --}}
+        <div class="page-header">
+            <div>
+                <div class="eyebrow">Master Data</div>
+                <h1>Kelola Kategori Bunga</h1>
+                <p>Atur kategori agar pencatatan inventaris lebih rapi.</p>
+            </div>
+            <a href="{{ route('kategori.create') }}" class="btn-add">
+                <i class="fas fa-plus-circle me-2"></i> Tambah Kategori Baru
+            </a>
         </div>
-        <button type="submit">Filter</button>
-        <a href="{{ route('kategori.index') }}" class="back-button">Reset</a>
-    </form>
 
-    {{-- Table --}}
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kategori</th>
-                    <th>Deskripsi</th>
-                    <th>Created at</th>
-                    <th>Updated at</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($kategoris as $index => $kategori)
-                    <tr>
-                        <td>{{ $kategoris->firstItem() + $index }}</td>
-                        <td>{{ $kategori->kategori }}</td>
-                        <td>{{ $kategori->deskripsi ?? '-' }}</td>
-                        <td>{{ optional($kategori->created_at)->format('d-m-Y H:i:s') }}</td>
-                        <td>{{ optional($kategori->updated_at)->format('d-m-Y H:i:s') }}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ route('kategori.edit', $kategori->id) }}" class="btn-action btn-edit">Edit</a>
-                                <form action="{{ route('kategori.destroy', $kategori->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn-action btn-delete">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="6" class="text-center">Data belum tersedia.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+        {{-- ALERT --}}
+        @if (session('success'))
+            <div class="alert-box alert-success-box">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert-box alert-danger-box">{{ session('error') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert-box alert-danger-box">{{ $errors->first() }}</div>
+        @endif
 
-    {{-- Pagination --}}
-    <div style="margin-top:20px; text-align:center;">
-        {{ $kategoris->links() }}
+        {{-- CARD --}}
+        <div class="data-card">
+
+            {{-- FILTER --}}
+            <div class="filter-wrapper">
+                <form method="GET" action="{{ route('kategori.index') }}" class="filter-form">
+                    <div class="filter-group">
+                        <label for="search">Cari kategori</label>
+                        <input type="text" id="search" name="search"
+                               value="{{ request('search') }}"
+                               placeholder="Ketik nama kategori...">
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn-filter" type="submit">
+                            <i class="fas fa-search me-1"></i> Filter
+                        </button>
+                        <a href="{{ route('kategori.index') }}" class="btn-reset">Reset</a>
+                    </div>
+                </form>
+            </div>
+
+            {{-- TABLE --}}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Kategori</th>
+                            <th>Deskripsi</th>
+                            <th>Dibuat</th>
+                            <th>Diperbarui</th>
+                            <th style="text-align:right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($kategoris as $index => $kategori)
+                            <tr>
+                                <td>{{ $kategoris->firstItem() + $index }}</td>
+                                <td><span class="badge-kategori">{{ $kategori->kategori }}</span></td>
+                                <td>{{ $kategori->deskripsi ?? '-' }}</td>
+                                <td style="color:#64748b;">{{ optional($kategori->created_at)->format('d-m-Y H:i:s') ?? '-' }}</td>
+                                <td style="color:#64748b;">{{ optional($kategori->updated_at)->format('d-m-Y H:i:s') ?? '-' }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ route('kategori.edit', $kategori->id) }}"
+                                           class="action-edit" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <form action="{{ route('kategori.destroy', $kategori->id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Yakin ingin menghapus?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="action-delete" title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-folder-open fa-2x"></i>
+                                    <h5>Belum ada kategori</h5>
+                                    <p>Tambahkan kategori pertama untuk mulai mengelola data.</p>
+                                    <a href="{{ route('kategori.create') }}" class="btn-empty">Tambah Data</a>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- PAGINATION --}}
+            <div class="pagination-wrapper">
+                {{ $kategoris->links() }}
+            </div>
+
+        </div>
     </div>
-</div>
 @endsection

@@ -1,25 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Auth\MagicLinkController; // ⬅️ pastikan namespace sesuai file kamu
+use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\PublicVerifyEmailController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\BarangKeluarController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PemasokController;
-use App\Http\Controllers\KondisiController;
-use App\Http\Controllers\LokasiController;
-use App\Http\Controllers\KategoriController;
-use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\ExportController;
-use App\Http\Controllers\ItemController;
-use App\Http\Controllers\LaporanAsetController;
-use App\Http\Controllers\OmzetController;
-use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\DashboardGudangController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FormController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\KondisiController;
+use App\Http\Controllers\LaporanAsetController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OmzetController;
+use App\Http\Controllers\PemasokController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\UserController;
+use App\Providers\RouteServiceProvider;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +30,7 @@ use App\Http\Controllers\NotificationController;
 | Form permintaan magic link & endpoint untuk mengirim email magic link.
 | Endpoint login via magic link menggunakan signed URL + throttle.
 */
+
 Route::middleware('guest')->group(function () {
     // Form input email untuk minta magic link (opsional)
     Route::get('/magic-link', function () {
@@ -50,34 +53,43 @@ Route::get('/magic-login', [MagicLinkController::class, 'login'])
     ->middleware(['signed', 'throttle:6,1']) // validasi signature + limit
     ->name('magic.login');
 
+// Short URL redirect untuk link WA yang pendek & clickable
+Route::get('/l/{code}', function (string $code) {
+    $fullUrl = Cache::pull("short:{$code}");
+    if (! $fullUrl) {
+        return redirect()->route('magic.form')
+            ->withErrors(['login_input' => 'Link sudah tidak berlaku atau sudah digunakan.']);
+    }
+
+    return redirect($fullUrl);
+})->middleware('throttle:10,1')->name('short.redirect');
+
 /*
 |--------------------------------------------------------------------------
 | Public / Landing
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => view('welcome'))->name('welcome');
-Route::get('/welcome', fn () => view('home'));
 
-Route::get('/profil', fn () => view('landingpage.profil'))->name('profil');
-Route::get('/fitur/gudang', fn () => view('landingpage.gudang'))->name('gudang');
-Route::get('/fitur/superadmin', fn () => view('landingpage.superadmin'))->name('superadmin');
-Route::get('/fitur/viewer', fn () => view('landingpage.viewer'))->name('viewer');
-Route::get('/faq', fn () => view('landingpage.faq'))->name('faq');
-Route::get('/galeri', fn () => view('landingpage.galeri'))->name('galeri');
-Route::get('/kontak', fn () => view('landingpage.kontak'))->name('kontak');
+Route::get('/katalog', fn () => view('welcome'))->name('welcome');
+Route::get('/', fn () => view('landingpage.index'))->name('profil');
 
-Route::get('/learn-more', fn () => view('learn-more'))->name('learn.more');
+/*
+|--------------------------------------------------------------------------
+| Public Item
+|--------------------------------------------------------------------------
+| Bisa diakses pelanggan tanpa login.
+| Identitas publik menggunakan UUID public_token,
+| bukan kode_barang.
+*/
 
-Route::get('/barang-masuk/qr/{id}', [BarangMasukController::class, 'qrShow'])->name('barang-masuk.qrshow');
-Route::get('/qr/{kode_barang}', [BarangMasukController::class, 'qrShowByKode'])
-    ->name('barang-masuk.qrshow.kode');
+Route::get('/p/{public_token}', [ItemController::class, 'publicShow'])->name('item.public');
 
 /*
 |--------------------------------------------------------------------------
 | Dashboard (global)
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', fn () => redirect(App\Providers\RouteServiceProvider::redirectByRole()))
+Route::get('/dashboard', fn () => redirect(RouteServiceProvider::redirectByRole()))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -90,11 +102,10 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     // Dashboard per role
     Route::get('/dashboard/superadmin', [UserController::class, 'dashboardSuperadmin'])->name('dashboard.superadmin');
-    Route::get('/dashboard/gudang', [DashboardGudangController::class, 'index'])->name('dashboard.gudang');
-    Route::get('/dashboard/viewer', fn () => view('dashboard.viewer'))->name('dashboard.viewer');
+    Route::get('/dashboard/penjual', [DashboardGudangController::class, 'index'])->name('dashboard.penjual');
 
-    // Notifikasi (contoh: untuk gudang)
-    Route::middleware(['role:gudang'])->group(function () {
+    // Notifikasi (gudang & penjual)
+    Route::middleware(['role:penjual'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markSingleRead'])->name('notifications.markSingleRead');
@@ -102,10 +113,10 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | AJAX / Helper untuk Barang Keluar (gudang only)
+    | AJAX / Helper untuk Barang Keluar (gudang & penjual)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:gudang'])->group(function () {
+    Route::middleware(['role:penjual'])->group(function () {
         Route::get('/stok-terpakai', [BarangKeluarController::class, 'cekStok'])->name('barang-keluar.cekStok');
         Route::get('/barang-keluar/detail-barang', [BarangKeluarController::class, 'getDetailBarang'])->name('barang-keluar.detail-barang');
         Route::get('/barang-keluar/barang-bersisa', [BarangKeluarController::class, 'getBarangBersisa'])->name('barang-keluar.barang-bersisa');
@@ -122,7 +133,7 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/laporan/arus-barang', [LaporanController::class, 'arus'])->name('laporan.arus');
-    
+
     Route::get('/laporan', [ExportController::class, 'laporan'])->name('laporan');
 
     Route::get('/laporan/print/pdf', [ExportController::class, 'exportPdf'])->name('laporan.pdf');
@@ -142,13 +153,30 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Resource per Role
+    | Resource per Role (GUDANG & PENJUAL)
     |--------------------------------------------------------------------------
     */
 
     // GUDANG ONLY
-    Route::middleware(['role:gudang'])->group(function () {
-        // Master data 
+    Route::middleware(['role:penjual'])->group(function () {
+        // Master data
+        Route::get('/form', [FormController::class, 'index'])->name('form.index');
+        Route::get('/api/form/options', [FormController::class, 'getOptions'])->name('form.options');
+        Route::get('/api/form/item-detail/{kode}', [FormController::class, 'getItemDetail'])->name('form.item-detail');
+        Route::post('/form/item/store', [FormController::class, 'store'])->name('form.item.store');
+        Route::post('/form/item/store-bulk', [FormController::class, 'itemStoreBulk'])->name('form.item.store-bulk');
+        Route::post('/items/quick-store', [FormController::class, 'quickStoreItem'])->name('items.quick-store');
+        Route::post('/form/item/quick-store', [FormController::class, 'quickStoreItem'])->name('form.item.quick-store');
+        Route::post('/form/parse-voice', [FormController::class, 'parseVoice'])->name('form.parse-voice');
+        Route::post('/form/barang-masuk/store', [FormController::class, 'barangMasukStore'])->name('form.barang-masuk.store');
+        Route::post('/form/barang-masuk/store-bulk', [FormController::class, 'barangMasukStoreBulk'])->name('form.barang-masuk.store-bulk');
+        Route::post('/form/barang-masuk/parse-voice', [FormController::class, 'parseVoiceBarangMasuk'])->name('form.barang-masuk.parse-voice');
+        Route::post('/form/barang-keluar/store', [FormController::class, 'barangKeluarStore'])->name('form.barang-keluar.store');
+        Route::post('/form/barang-keluar/store-bulk', [FormController::class, 'barangKeluarStoreBulk'])->name('form.barang-keluar.store-bulk');
+        Route::post('/form/barang-keluar/parse-voice', [FormController::class, 'parseVoiceBarangKeluar'])->name('form.barang-keluar.parse-voice');
+        Route::match(['get', 'post'], '/form/barang-keluar/detail-barang', [FormController::class, 'getDetailBarang'])->name('form.barang-keluar.detail-barang');
+        Route::match(['get', 'post'], '/form/barang-keluar/pilihan-barang', [FormController::class, 'getPilihanBarang'])->name('form.barang-keluar.pilihan-barang');
+
         Route::resource('pemasok', PemasokController::class);
         Route::resource('kondisi', KondisiController::class);
         Route::resource('satuan', SatuanController::class);
@@ -159,17 +187,24 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::resource('omzet', OmzetController::class);
         Route::resource('barang-masuk', BarangMasukController::class);
         Route::resource('barang-keluar', BarangKeluarController::class);
-        
-        // Cetak / detail khusus
-        Route::get('/barang-masuk/{id}/qr-card', [BarangMasukController::class, 'qrCard'])->name('barang-masuk.qr-card');
-        Route::get('/barang-masuk/{id}/print', [BarangMasukController::class, 'print'])->name('barang-masuk.print');
-        Route::get('/barang-masuk/{id}/cetak-pdf', [BarangMasukController::class, 'cetakPDF'])->name('barang-masuk.cetak.pdf');
-        Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
-        Route::get('/barang-masuk/{id}/cetak-qr-kecil', [BarangMasukController::class, 'cetakQRKecil'])->name('barang-masuk.cetak-qr-kecil');
 
+        // item
+        Route::delete('/item/{id}', [ItemController::class, 'destroy'])->name('item.destroy');
+        Route::get('/item/{id}/cetak-pdf', [ItemController::class, 'cetakPDF'])->name('item.cetak.pdf');
+
+        // barang masuk
         Route::get('/barang-keluar/{id}/detail', [BarangKeluarController::class, 'show'])->name('barang-keluar.detail');
+        Route::get('/barang-masuk/{id}/detail', [BarangMasukController::class, 'detail'])->name('barang-masuk.detail');
+        Route::get('/barang-masuk/{id}/edit', [BarangMasukController::class, 'edit'])->name('barang-masuk.edit');
+        Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
+        Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
+        Route::get('/barang-masuk/{id}/cetak-detail', [BarangMasukController::class, 'cetakDetail'])->name('barang-masuk.cetak-detail');
+        Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy');
+
+        // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
         Route::get('/barang-keluar/{id}/cetak-detail', [BarangKeluarController::class, 'cetakDetail'])->name('barang-keluar.cetak-detail');
+        Route::delete('/barang-keluar/{id}', [BarangKeluarController::class, 'destroy'])->name('barang-keluar.destroy');
     });
 
     // SUPERADMIN ONLY
@@ -182,15 +217,13 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::patch('/user/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('user.toggleStatus');
     });
 
-    // Viewer/Admin (siapapun yang auth+verified) untuk lihat stok
+    // penjual (siapapun yang auth+verified) untuk lihat stok
     Route::get('/laporan-stok-viewer', [LaporanController::class, 'stokViewer'])->name('laporan.stok.viewer');
     Route::get('/laporan-stok-admin', [LaporanController::class, 'stokAdmin'])->name('laporan.stok.admin');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile/{user}', [ProfileController::class, 'update'])->name('profile.update');
-
-    
 });
 
 /*
@@ -199,4 +232,4 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 | (Semua route verifikasi email ada di sini → hindari duplikasi di web.php)
 |--------------------------------------------------------------------------
 */
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

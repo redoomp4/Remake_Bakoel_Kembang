@@ -97,16 +97,23 @@
             </div>
 
             {{-- Alerts --}}
+            @if (session('success'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+                    <i class="fas fa-check-circle text-md text-emerald-600"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
             @if (session('status'))
                 <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
-                    <i class="fas fa-check-circle text-md"></i>
+                    <i class="fas fa-check-circle text-md text-emerald-600"></i>
                     <span>{{ session('status') }}</span>
                 </div>
             @endif
 
             @if (session('error'))
                 <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold flex items-center gap-2">
-                    <i class="fas fa-exclamation-triangle text-md"></i>
+                    <i class="fas fa-exclamation-triangle text-md text-rose-600"></i>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
@@ -177,14 +184,15 @@
                     </div>
                 </div>
 
-                {{-- Role Selection --}}
+                {{-- Role (Otomatis Penjual) --}}
+                <input type="hidden" name="role" value="penjual">
                 <div class="space-y-1.5">
-                    <label for="role" class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Role Pengguna</label>
+                    <label class="text-xs font-bold text-brand-slate uppercase tracking-wider block">Role Pengguna</label>
                     <div class="relative">
                         <i class="fas fa-shield-alt absolute left-4 top-1/2 -translate-y-1/2 text-brand-sage text-sm"></i>
-                        <select id="role" name="role" required class="w-full pl-11 pr-4 py-3 bg-white border-2 border-brand-accent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-emerald focus:ring-4 focus:ring-brand-emerald/15 transition-all appearance-none">
-                            <option value="Viewer" {{ old('role') == 'Viewer' ? 'selected' : '' }}>Viewer (Pengunjung / Pemantau Stok)</option>
-                        </select>
+                        <div class="w-full pl-11 pr-4 py-3 bg-emerald-50 border-2 border-emerald-200 rounded-2xl text-sm font-bold text-brand-emerald">
+                            Penjual (Akses Penuh Transaksi & Inventory)
+                        </div>
                     </div>
                 </div>
 

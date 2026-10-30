@@ -3,23 +3,23 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithColumnWidths, WithEvents
+class LaporanKeuanganExport implements FromArray, WithColumnWidths, WithEvents, WithStyles, WithTitle
 {
     protected $data;
+
     protected $periodeStart;
+
     protected $periodeEnd;
+
     protected $userName;
 
     public function __construct(array $data, string $periodeStart, string $periodeEnd, string $userName)
@@ -43,7 +43,7 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
         $rows[] = ['LAPORAN KEUANGAN KEBUN - BAKOELKEMBANG V3'];
         $rows[] = ['Premium Orchid Nursery & Botanical Fintech System'];
         $rows[] = [''];
-        $rows[] = ['Periode', $this->periodeStart . ' s/d ' . $this->periodeEnd];
+        $rows[] = ['Periode', $this->periodeStart.' s/d '.$this->periodeEnd];
         $rows[] = ['Dicetak Oleh', $this->userName];
         $rows[] = ['Tanggal Cetak', now()->translatedFormat('d F Y H:i')];
         $rows[] = [''];
@@ -55,7 +55,7 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
         $totalOmzet = $this->data['total_omzet'] ?? 0;
         $totalModal = $this->data['total_modal'] ?? 0;
         $labaBersih = $totalOmzet - $totalModal;
-        $nilaiAset  = $this->data['nilai_aset'] ?? 0;
+        $nilaiAset = $this->data['nilai_aset'] ?? 0;
 
         $rows[] = ['Metrik', 'Nilai (Rp)'];
         $rows[] = ['Total Omzet (Penjualan)', $totalOmzet];
@@ -108,7 +108,7 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
 
         // === FOOTER ===
         $rows[] = [''];
-        $rows[] = ['© ' . date('Y') . ' BAKOELKEMBANG Premium Orchid & Inventory System'];
+        $rows[] = ['© '.date('Y').' BAKOELKEMBANG Premium Orchid & Inventory System'];
         $rows[] = ['Laporan ini dihasilkan secara otomatis oleh sistem Botanical Fintech V3.'];
 
         return $rows;
@@ -153,14 +153,14 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
                 // Bold section headers
                 $lastRow = $sheet->getHighestRow();
                 for ($i = 1; $i <= $lastRow; $i++) {
-                    $cellValue = $sheet->getCell('A' . $i)->getValue();
+                    $cellValue = $sheet->getCell('A'.$i)->getValue();
                     if (in_array($cellValue, [
                         'RINGKASAN EKSEKUTIF KEUANGAN KEBUN',
                         'RINCIAN BARANG MASUK (MODAL / PEMBELIAN)',
                         'RINCIAN BARANG KELUAR (PENJUALAN / OMZET)',
                     ])) {
-                        $sheet->mergeCells('A' . $i . ':H' . $i);
-                        $sheet->getStyle('A' . $i)->applyFromArray([
+                        $sheet->mergeCells('A'.$i.':H'.$i);
+                        $sheet->getStyle('A'.$i)->applyFromArray([
                             'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => '0B4F35']],
                             'fill' => [
                                 'fillType' => Fill::FILL_SOLID,
@@ -171,7 +171,7 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
 
                     // Style table headers (No, Nama Barang, etc.)
                     if ($cellValue === 'No') {
-                        $sheet->getStyle('A' . $i . ':H' . $i)->applyFromArray([
+                        $sheet->getStyle('A'.$i.':H'.$i)->applyFromArray([
                             'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
                             'fill' => [
                                 'fillType' => Fill::FILL_SOLID,
@@ -185,7 +185,7 @@ class LaporanKeuanganExport implements FromArray, WithTitle, WithStyles, WithCol
 
                     // Style Metrik header
                     if ($cellValue === 'Metrik') {
-                        $sheet->getStyle('A' . $i . ':B' . $i)->applyFromArray([
+                        $sheet->getStyle('A'.$i.':B'.$i)->applyFromArray([
                             'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
                             'fill' => [
                                 'fillType' => Fill::FILL_SOLID,

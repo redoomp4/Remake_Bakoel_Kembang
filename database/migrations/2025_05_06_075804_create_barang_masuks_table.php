@@ -11,33 +11,52 @@ return new class extends Migration
         Schema::create('barang_masuks', function (Blueprint $table) {
             $table->id();
 
-            // kolom yang dibutuhkan FK komposit
-            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
-            $table->string('kode_barang', 50); // harus sama dgn items.kode_barang
+            // Pemilik transaksi
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->restrictOnDelete();
 
-            // data transaksi
+            // Relasi langsung ke ITEM
+            $table->foreignId('item_id')
+                ->constrained('items')
+                ->restrictOnDelete();
+
+            // Data transaksi barang masuk
             $table->unsignedInteger('jumlah');
-            $table->decimal('harga_satuan', 15, 2)->unsigned();
-            $table->decimal('total_harga', 18, 2)->unsigned()->default(0);
-            $table->date('tanggal_masuk');
-            $table->date('tanggal_kadaluarsa')->nullable();
 
-            // relasi lain
-            $table->foreignId('id_pemasok')->constrained('pemasoks')->restrictOnDelete();
-            $table->foreignId('id_lokasi')->constrained('lokasis')->restrictOnDelete();
-            $table->foreignId('id_kondisi')->constrained('kondisis')->restrictOnDelete();
+            $table->decimal('harga_satuan', 15, 2)
+                ->unsigned();
 
-            $table->text('catatan')->nullable();
-            $table->string('qr_code')->nullable();
+            $table->decimal('total_harga', 18, 2)
+                ->unsigned()
+                ->default(0);
+
+            $table->dateTime('tanggal_masuk');
+
+            $table->date('tanggal_kadaluarsa')
+                ->nullable();
+
+            // Relasi transaksi
+            $table->foreignId('id_pemasok')
+                ->constrained('pemasoks')
+                ->restrictOnDelete();
+
+            $table->foreignId('id_lokasi')
+                ->constrained('lokasis')
+                ->restrictOnDelete();
+
+            $table->foreignId('id_kondisi')
+                ->constrained('kondisis')
+                ->restrictOnDelete();
+
+            $table->text('catatan')
+                ->nullable();
+
             $table->timestamps();
 
+            // Index
             $table->index(['user_id', 'tanggal_masuk']);
-
-            // FK komposit → didefinisikan SETELAH semua kolom ada
-            $table->foreign(['user_id', 'kode_barang'])
-                  ->references(['user_id', 'kode_barang'])
-                  ->on('items')
-                  ->cascadeOnDelete();
+            $table->index(['user_id', 'item_id']);
         });
     }
 
