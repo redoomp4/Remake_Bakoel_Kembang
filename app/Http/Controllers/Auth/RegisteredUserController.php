@@ -29,26 +29,26 @@ class RegisteredUserController extends Controller
     {
         // Validasi input
         $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:users,username'],
-            'email'    => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
-            'phone'    => ['required', 'string', 'max:30'],
-            'role'     => ['nullable', 'string', 'in:penjual,superadmin'],
-            'photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'note'     => ['nullable', 'string', 'max:500'],
+            'email' => ['required', 'string', 'email', 'max:191', 'unique:users,email', new NotDisposableEmail],
+            'phone' => ['required', 'string', 'max:30'],
+            'role' => ['nullable', 'string', 'in:penjual,superadmin'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'note' => ['nullable', 'string', 'max:500'],
             'password' => ['required', 'string', 'confirmed', 'min:8'],
         ], [
-            'name.required'        => 'Nama lengkap wajib diisi.',
-            'username.required'    => 'Username wajib diisi.',
-            'username.alpha_dash'  => 'Username hanya boleh berisi huruf, angka, tanda hubung (-), dan garis bawah (_).',
-            'username.unique'      => 'Username ini sudah terdaftar, silakan pilih username lain.',
-            'email.required'       => 'Alamat email wajib diisi.',
-            'email.email'          => 'Format alamat email tidak valid.',
-            'email.unique'         => 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.',
-            'phone.required'       => 'Nomor telepon/WA wajib diisi.',
-            'password.required'    => 'Kata sandi wajib diisi.',
-            'password.confirmed'   => 'Konfirmasi kata sandi tidak cocok.',
-            'password.min'         => 'Kata sandi minimal harus 8 karakter.',
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'username.required' => 'Username wajib diisi.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, tanda hubung (-), dan garis bawah (_).',
+            'username.unique' => 'Username ini sudah terdaftar, silakan pilih username lain.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'email.unique' => 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.',
+            'phone.required' => 'Nomor telepon/WA wajib diisi.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            'password.min' => 'Kata sandi minimal harus 8 karakter.',
         ]);
 
         // Simpan foto jika ada
@@ -57,34 +57,33 @@ class RegisteredUserController extends Controller
             : null;
 
         // Tentukan default role & status
-        $role     = strtolower($validated['role'] ?? 'penjual');
+        $role = strtolower($validated['role'] ?? 'penjual');
         $position = strtolower($request->input('position', $role));
-        $status   = 'Active';
+        $status = 'Active';
 
         // Simpan user baru ke database
         $user = User::create([
-            'name'      => $validated['name'],
-            'username'  => $validated['username'],
-            'email'     => strtolower($validated['email']),
-            'phone'     => $validated['phone'],
-            'role'      => $role,
-            'position'  => $position,
-            'status'    => $status,
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => strtolower($validated['email']),
+            'phone' => $validated['phone'],
+            'role' => $role,
+            'position' => $position,
+            'status' => $status,
             'is_active' => true,
-            'photo'     => $photoPath,
-            'note'      => $validated['note'] ?? null,
-            'password'  => Hash::make($validated['password']),
+            'photo' => $photoPath,
+            'note' => $validated['note'] ?? null,
+            'password' => Hash::make($validated['password']),
         ]);
 
         // Kirim event verifikasi email secara aman (try-catch agar kendala mail server tidak menggagalkan registrasi)
         try {
             event(new Registered($user));
         } catch (\Throwable $e) {
-            Log::warning('Email verification notice could not be sent: ' . $e->getMessage());
+            Log::warning('Email verification notice could not be sent: '.$e->getMessage());
         }
 
         // Arahkan ke halaman login dengan pesan sukses berhasil
         return redirect()->route('login')->with('success', 'Registrasi berhasil! Akun Anda telah berhasil disimpan di database. Silakan masuk.');
     }
 }
-

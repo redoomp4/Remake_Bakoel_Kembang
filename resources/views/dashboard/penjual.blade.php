@@ -113,7 +113,7 @@
                         </h3>
 
                         <p class="text-xs font-medium text-brand-slate mt-2">
-                            Nilai estimasi stok berdasarkan harga dasar.
+                            Nilai aset persediaan dihitung dari sisa batch riil (FIFO), bukan harga rata-rata.
                         </p>
                     </div>
 

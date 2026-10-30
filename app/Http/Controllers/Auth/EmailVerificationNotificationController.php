@@ -17,16 +17,19 @@ class EmailVerificationNotificationController extends Controller
 
         try {
             $request->user()->sendEmailVerificationNotification();
+
             // flag standar Laravel → cocok dengan pengecekan di Blade
             return back()->with('status', 'verification-link-sent');
         } catch (TransportExceptionInterface $e) {
             Log::error('SMTP gagal', ['message' => $e->getMessage()]);
+
             return back()->with('error', 'Gagal menghubungi server email. Coba lagi.');
         } catch (\Throwable $e) {
             Log::error('Mail error', [
                 'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return back()->with('error', 'Terjadi kesalahan saat mengirim email.');
         }
     }

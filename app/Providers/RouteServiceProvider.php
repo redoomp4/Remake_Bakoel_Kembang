@@ -11,19 +11,19 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public const HOME = '/dashboard/penjual';
+
     /**
      * Redirect user after authentication based on role.
-     *
-     * @return string
      */
     public static function redirectByRole(): string
     {
         $role = Auth::user()?->role;
 
         return match (strtolower($role ?? '')) {
-            'superadmin'        => route('dashboard.superadmin'),
-            'penjual'           => route('dashboard.penjual'),
-            default             => route('dashboard.penjual'),
+            'superadmin' => route('dashboard.superadmin'),
+            'penjual' => route('dashboard.penjual'),
+            default => route('dashboard.penjual'),
         };
     }
 

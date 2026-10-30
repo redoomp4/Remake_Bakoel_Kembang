@@ -15,11 +15,11 @@ class WhatsAppService
         $cleaned = preg_replace('/[^0-9]/', '', $phone);
 
         if (str_starts_with($cleaned, '0')) {
-            return '62' . substr($cleaned, 1);
+            return '62'.substr($cleaned, 1);
         }
 
         if (str_starts_with($cleaned, '8')) {
-            return '62' . $cleaned;
+            return '62'.$cleaned;
         }
 
         return $cleaned;
@@ -42,7 +42,7 @@ class WhatsAppService
     public static function sendMessage(string $phone, string $message): bool
     {
         $apiUrl = config('services.whatsapp.api_url');
-        $token  = config('services.whatsapp.api_token');
+        $token = config('services.whatsapp.api_token');
 
         $formattedPhone = self::formatPhoneNumber($phone);
 
@@ -51,13 +51,13 @@ class WhatsAppService
                 $response = Http::withHeaders([
                     'Authorization' => $token,
                 ])->post($apiUrl, [
-                    'target'  => $formattedPhone,
+                    'target' => $formattedPhone,
                     'message' => $message,
                 ]);
 
                 return $response->successful();
             } catch (\Throwable $e) {
-                Log::error('WhatsApp API sending failed: ' . $e->getMessage());
+                Log::error('WhatsApp API sending failed: '.$e->getMessage());
             }
         }
 

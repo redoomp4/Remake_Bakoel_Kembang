@@ -9,6 +9,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -34,7 +35,7 @@ class MagicLinkController extends Controller
             'email' => ['required', 'email'],
         ], [
             'email.required' => 'Masukkan alamat email Anda.',
-            'email.email'    => 'Format alamat email tidak valid.',
+            'email.email' => 'Format alamat email tidak valid.',
         ]);
 
         $email = strtolower(trim($data['email']));
@@ -62,7 +63,7 @@ class MagicLinkController extends Controller
         try {
             Mail::to($user->email)->send(new MagicLinkMail($signedUrl));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Gagal mengirim email login tanpa password: ' . $e->getMessage());
+            Log::error('Gagal mengirim email login tanpa password: '.$e->getMessage());
         }
 
         return back()

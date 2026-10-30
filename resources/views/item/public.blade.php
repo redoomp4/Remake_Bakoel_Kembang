@@ -184,25 +184,7 @@
                         
 
 
-                        {{-- HARGA --}}
-                        <!-- {{-- <div class="bg-emerald-50/70 p-2.5 rounded-xl
-                                border border-emerald-100">
 
-                        <span class="text-[7px] font-black uppercase
-                                     tracking-widest text-emerald-600">
-
-                            💰 HARGA DASAR
-
-                        </span>
-
-                        <p class="text-base md:text-lg font-black
-                                  text-brand-emerald mt-0.5">
-
-                            Rp {{ number_format($item->harga_dasar, 0, ',', '.') }}
-
-                        </p>
-
-                    </div> --}} -->
 
 
                         {{-- KATEGORI --}}

@@ -163,7 +163,7 @@
     {
       "id": "452",
       "nama": "Lady of the Night",
-      "harga_dasar": 75000,
+      "harga": 75000,
       "kategori": "Spesies",
       "genus": "Brassavola",
       "indukan": "",
@@ -178,7 +178,7 @@
     {
       "id": "453",
       "nama": "Anggrek Hitam Papua",
-      "harga_dasar": 85000,
+      "harga": 85000,
       "kategori": "Spesies",
       "genus": "Bulbophyllum",
       "indukan": "",
@@ -192,7 +192,7 @@
     {
       "id": "457",
       "nama": "Anggrek Hitam",
-      "harga_dasar": 90000,
+      "harga": 90000,
       "kategori": "Spesies",
       "genus": "Coelogyne",
       "indukan": "",
@@ -206,7 +206,7 @@
     {
       "id": "461",
       "nama": "Coelogyne Dayana",
-      "harga_dasar": 80000,
+      "harga": 80000,
       "kategori": "Spesies",
       "genus": "Coelogyne",
       "indukan": "",
@@ -219,7 +219,7 @@
     {
       "id": "462",
       "nama": "Anggrek Mutiara",
-      "harga_dasar": 75000,
+      "harga": 75000,
       "kategori": "Spesies",
       "genus": "Coelogyne",
       "indukan": "",
@@ -233,7 +233,7 @@
     {
       "id": "469",
       "nama": "Anggrek Antena",
-      "harga_dasar": 95000,
+      "harga": 95000,
       "kategori": "Spesies",
       "genus": "Dendrobium",
       "indukan": "",
@@ -246,7 +246,7 @@
     {
       "id": "474",
       "nama": "Anggrek Besi",
-      "harga_dasar": 120000,
+      "harga": 120000,
       "kategori": "Spesies",
       "genus": "Dendrobium",
       "indukan": "",
@@ -259,7 +259,7 @@
     {
       "id": "479",
       "nama": "Anggrek Tirai",
-      "harga_dasar": 65000,
+      "harga": 65000,
       "kategori": "Spesies",
       "genus": "Dendrobium",
       "indukan": "",
@@ -272,7 +272,7 @@
     {
       "id": "485",
       "nama": "Anggrek Sikat",
-      "harga_dasar": 70000,
+      "harga": 70000,
       "kategori": "Spesies",
       "genus": "Dendrobium",
       "indukan": "",
@@ -285,7 +285,7 @@
     {
       "id": "491",
       "nama": "Anggrek Macan",
-      "harga_dasar": 110000,
+      "harga": 110000,
       "kategori": "Spesies",
       "genus": "Grammatophyllum",
       "indukan": "",
@@ -298,7 +298,7 @@
     {
       "id": "497",
       "nama": "Anggrek Hitam Sulawesi",
-      "harga_dasar": 125000,
+      "harga": 125000,
       "kategori": "Spesies",
       "genus": "Grammatophyllum",
       "indukan": "",
@@ -311,7 +311,7 @@
     {
       "id": "503",
       "nama": "Anggrek Kelapa",
-      "harga_dasar": 60000,
+      "harga": 60000,
       "kategori": "Spesies",
       "genus": "Maxillaria",
       "indukan": "",
@@ -324,7 +324,7 @@
     {
       "id": "509",
       "nama": "Vanda Douglas - Papilionanthe teres",
-      "harga_dasar": 55000,
+      "harga": 55000,
       "kategori": "Spesies",
       "genus": "Papilionanthe",
       "indukan": "",
@@ -337,7 +337,7 @@
     {
       "id": "516",
       "nama": "Anggrek Ekor Tikus sp Kalimantan / Capung Jawa",
-      "harga_dasar": 135000,
+      "harga": 135000,
       "kategori": "Spesies",
       "genus": "Paraphalaenopsis",
       "indukan": "",
@@ -350,7 +350,7 @@
     {
       "id": "523",
       "nama": "Anggrek Bulan Sp Kalimantan",
-      "harga_dasar": 115000,
+      "harga": 115000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -363,7 +363,7 @@
     {
       "id": "530",
       "nama": "Anggrek Kelip",
-      "harga_dasar": 120000,
+      "harga": 120000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -376,7 +376,7 @@
     {
       "id": "537",
       "nama": "Anggrek Bulan Puspa Pesona",
-      "harga_dasar": 65000,
+      "harga": 65000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -389,7 +389,7 @@
     {
       "id": "547",
       "nama": "Anggrek Bulan Seleriana",
-      "harga_dasar": 130000,
+      "harga": 130000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -402,7 +402,7 @@
     {
       "id": "555",
       "nama": "Anggrek Bulan Raksasa",
-      "harga_dasar": 250000,
+      "harga": 250000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -415,7 +415,7 @@
     {
       "id": "563",
       "nama": "Phalaenopsis modesta",
-      "harga_dasar": 85000,
+      "harga": 85000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -428,7 +428,7 @@
     {
       "id": "571",
       "nama": "Anggrek Tanduk Rusa",
-      "harga_dasar": 75000,
+      "harga": 75000,
       "kategori": "Spesies",
       "genus": "Phalaenopsis",
       "indukan": "",
@@ -441,7 +441,7 @@
     {
       "id": "580",
       "nama": "Anggrek Bintang",
-      "harga_dasar": 60000,
+      "harga": 60000,
       "kategori": "Spesies",
       "genus": "Pomatocalpa",
       "indukan": "",
@@ -454,7 +454,7 @@
     {
       "id": "586",
       "nama": "Anggrek Ekor Tupai",
-      "harga_dasar": 90000,
+      "harga": 90000,
       "kategori": "Spesies",
       "genus": "Rhynchostylis",
       "indukan": "",
@@ -467,7 +467,7 @@
     {
       "id": "594",
       "nama": "Vanda dearei",
-      "harga_dasar": 140000,
+      "harga": 140000,
       "kategori": "Spesies",
       "genus": "Vanda",
       "indukan": "",
@@ -480,7 +480,7 @@
     {
       "id": "603",
       "nama": "Zygopetalum Big Country",
-      "harga_dasar": 150000,
+      "harga": 150000,
       "kategori": "Spesies",
       "genus": "Zygopetalum",
       "indukan": "",
@@ -493,7 +493,7 @@
     {
       "id": "617",
       "nama": "Cattleya Mantinii",
-      "harga_dasar": 100000,
+      "harga": 100000,
       "kategori": "Hibrid",
       "genus": "Cattleya",
       "indukan": "Cattleya grandis × Cattleya purpurata",
@@ -507,7 +507,7 @@
     {
       "id": "624",
       "nama": "Cymbidium Golden Boy",
-      "harga_dasar": 95000,
+      "harga": 95000,
       "kategori": "Hibrid",
       "genus": "Cymbidium",
       "indukan": "Cymbidium Pixie Moor × Cymbidium Wallara",
@@ -521,7 +521,7 @@
     {
       "id": "629",
       "nama": "Dendrobium Burana Jade Fancy Splash",
-      "harga_dasar": 120000,
+      "harga": 120000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Bangkok Green × Dendrobium Burana Fancy",
@@ -534,7 +534,7 @@
     {
       "id": "636",
       "nama": "Dendrobium Caesar Yellow",
-      "harga_dasar": 85000,
+      "harga": 85000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium bigibbum var. schroederianum × Dendrobium stratiotes",
@@ -547,7 +547,7 @@
     {
       "id": "647",
       "nama": "Dendrobium Meesangnil",
-      "harga_dasar": 90000,
+      "harga": 90000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Helen Izuta × Dendrobium Jaquelyn Thomas",
@@ -560,7 +560,7 @@
     {
       "id": "654",
       "nama": "Dendrobium Carol Goo",
-      "harga_dasar": 85000,
+      "harga": 85000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Caesar × Dendrobium Janice Tanaka",
@@ -573,7 +573,7 @@
     {
       "id": "661",
       "nama": "Dendrobium Alesa Agustina putri Azzahra",
-      "harga_dasar": 110000,
+      "harga": 110000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Grímsson-Moussaieff × Dendrobium Najwa Jelita",
@@ -586,7 +586,7 @@
     {
       "id": "665",
       "nama": "Dendrobium Caesar Red",
-      "harga_dasar": 85000,
+      "harga": 85000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Caesar × Dendrobium Tokiko Inaba",
@@ -599,7 +599,7 @@
     {
       "id": "671",
       "nama": "Dendrobium Bantimurung",
-      "harga_dasar": 95000,
+      "harga": 95000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Clara Bundt × Dendrobium lasianthera",
@@ -612,7 +612,7 @@
     {
       "id": "678",
       "nama": "Dendrobium Superbien - Dendrobium Tual Maluku",
-      "harga_dasar": 105000,
+      "harga": 105000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium bigibbum × Dendrobium discolor",
@@ -625,7 +625,7 @@
     {
       "id": "688",
       "nama": "Dendrobium Sonia",
-      "harga_dasar": 75000,
+      "harga": 75000,
       "kategori": "Hibrid",
       "genus": "Dendrobium",
       "indukan": "Dendrobium Caesar × Dendrobium Tomie Drake",
@@ -638,7 +638,7 @@
     {
       "id": "696",
       "nama": "Oncidium Golden Shower",
-      "harga_dasar": 80000,
+      "harga": 80000,
       "kategori": "Hibrid",
       "genus": "Oncidium",
       "indukan": "Gom. Palolo Gold x Gom. Boissiense",
@@ -651,7 +651,7 @@
     {
       "id": "702",
       "nama": "Phalaenopsis Indonesia Raya",
-      "harga_dasar": 130000,
+      "harga": 130000,
       "kategori": "Hibrid",
       "genus": "Phalaenopsis",
       "indukan": "Phalaenopsis Mad Hatter × Phalaenopsis Tretes Beauty",
@@ -696,7 +696,7 @@
     }
 
     list.forEach(item => {
-      const calculatedPrice = item.harga_dasar;
+      const calculatedPrice = item.harga;
       const priceFormatted = calculatedPrice.toLocaleString("id-ID");
 
       // Validasi foto & photo list
@@ -792,9 +792,9 @@
 
     // Sorting
     if (sortVal === 'price-asc') {
-      filtered.sort((a, b) => a.harga_dasar - b.harga_dasar);
+      filtered.sort((a, b) => a.harga - b.harga);
     } else if (sortVal === 'price-desc') {
-      filtered.sort((a, b) => b.harga_dasar - a.harga_dasar);
+      filtered.sort((a, b) => b.harga - a.harga);
     } else if (sortVal === 'name-asc') {
       filtered.sort((a, b) => a.nama.localeCompare(b.nama));
     }

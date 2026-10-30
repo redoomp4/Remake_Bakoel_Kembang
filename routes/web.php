@@ -1,26 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\PublicVerifyEmailController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\BarangKeluarController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PemasokController;
-use App\Http\Controllers\KondisiController;
-use App\Http\Controllers\LokasiController;
-use App\Http\Controllers\KategoriController;
-use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\ExportController;
-use App\Http\Controllers\ItemController;
-use App\Http\Controllers\LaporanAsetController;
-use App\Http\Controllers\OmzetController;
-use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\DashboardGudangController;
-use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\KondisiController;
+use App\Http\Controllers\LaporanAsetController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OmzetController;
+use App\Http\Controllers\PemasokController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\UserController;
+use App\Providers\RouteServiceProvider;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,11 +55,12 @@ Route::get('/magic-login', [MagicLinkController::class, 'login'])
 
 // Short URL redirect untuk link WA yang pendek & clickable
 Route::get('/l/{code}', function (string $code) {
-    $fullUrl = \Illuminate\Support\Facades\Cache::pull("short:{$code}");
+    $fullUrl = Cache::pull("short:{$code}");
     if (! $fullUrl) {
         return redirect()->route('magic.form')
             ->withErrors(['login_input' => 'Link sudah tidak berlaku atau sudah digunakan.']);
     }
+
     return redirect($fullUrl);
 })->middleware('throttle:10,1')->name('short.redirect');
 
@@ -68,8 +70,8 @@ Route::get('/l/{code}', function (string $code) {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/katalog', fn() => view('welcome'))->name('welcome');
-Route::get('/', fn() => view('landingpage.index'))->name('profil');
+Route::get('/katalog', fn () => view('welcome'))->name('welcome');
+Route::get('/', fn () => view('landingpage.index'))->name('profil');
 
 /*
 |--------------------------------------------------------------------------
@@ -82,13 +84,12 @@ Route::get('/', fn() => view('landingpage.index'))->name('profil');
 
 Route::get('/p/{public_token}', [ItemController::class, 'publicShow'])->name('item.public');
 
-
 /*
 |--------------------------------------------------------------------------
 | Dashboard (global)
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', fn() => redirect(App\Providers\RouteServiceProvider::redirectByRole()))
+Route::get('/dashboard', fn () => redirect(RouteServiceProvider::redirectByRole()))
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -199,7 +200,6 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
         Route::get('/barang-masuk/{id}/cetak-ba', [BarangMasukController::class, 'cetakBeritaAcara'])->name('barang-masuk.cetak-berita-acara');
         Route::get('/barang-masuk/{id}/cetak-detail', [BarangMasukController::class, 'cetakDetail'])->name('barang-masuk.cetak-detail');
         Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy');
- 
 
         // barang keluar
         Route::get('/barang-keluar/{id}/cetak-ba', [BarangKeluarController::class, 'cetakBA'])->name('barang-keluar.cetak-ba');
@@ -232,4 +232,4 @@ Route::middleware(['auth', 'verified', 'auto.logout'])->group(function () {
 | (Semua route verifikasi email ada di sini → hindari duplikasi di web.php)
 |--------------------------------------------------------------------------
 */
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
